@@ -1,7 +1,7 @@
-# Nhớ Dai: Design Spec
+# Judexp: Design Spec
 
 > **Trạng thái:** đã duyệt qua brainstorming ngày 2026-10-16 (3/3 phần), chưa có plan triển khai, chưa có dòng code nào.
-> **Tên app:** "Nhớ Dai" là tên tạm. Tên chốt phải có trước M0 vì nó quyết định `appId` và folder repo. Các phương án đã bàn: Nhớ Dai, Gặp Lại, Đã Gặp, Sổ Gặp.
+> **Tên app:** Judexp, chốt ngày 2026-10-16 (judge + experience). `appId` là `com.judexp.app`, theo lối `com.gulibrary.app` của Gú's Library.
 > **Người dùng thật:** huynh và Gú. Prod có người dùng thật ngay từ đầu, mức cẩn thận bằng Gú's Library.
 
 ## 1. Mục tiêu
@@ -54,8 +54,8 @@ Ghi rõ để sau này không ai tưởng là bị bỏ quên:
   Điện thoại huynh                    Atomman (Windows, 24/7)              Máy Gú
   ┌──────────────────┐                ┌───────────────────────┐          ┌─────────────┐
   │ App (Capacitor)  │                │ Syncthing (service)   │          │ App         │
-  │  SAF ──► kho     │◄──Syncthing───►│ D:\Review\huynh\kho   │          │             │
-  │  index SQLite    │   (relay,      │ D:\Review\gu\kho      │◄────────►│ kho của Gú  │
+  │  SAF ──► kho     │◄──Syncthing───►│ D:\Judexp\huynh\kho   │          │             │
+  │  index SQLite    │   (relay,      │ D:\Judexp\gu\kho      │◄────────►│ kho của Gú  │
   │  (local, phái    │    4G, LAN)    │                       │ Syncthing│             │
   │   sinh, ko sync) │                │ Worker Python         │          │             │
   └──────────────────┘                │  (Scheduled Task 1')  │          └─────────────┘
@@ -77,10 +77,10 @@ Nguyên tắc gốc, kế thừa nguyên văn từ Gú's Library:
 Tách môi trường ở **cấp cha**, tách profile thành **folder Syncthing riêng**:
 
 ```
-D:\Review\huynh\kho\          folder-ID  review-huynh-qa
-D:\Review\gu\kho\             folder-ID  review-gu-qa
-D:\Review-Prod\huynh\kho\     folder-ID  review-huynh-prod
-D:\Review-Prod\gu\kho\        folder-ID  review-gu-prod
+D:\Judexp\huynh\kho\          folder-ID  judexp-huynh-qa
+D:\Judexp\gu\kho\             folder-ID  judexp-gu-qa
+D:\Judexp-Prod\huynh\kho\     folder-ID  judexp-huynh-prod
+D:\Judexp-Prod\gu\kho\        folder-ID  judexp-gu-prod
 ```
 
 Mỗi `kho\` có:
@@ -92,7 +92,7 @@ parsed\        worker trả kết quả bóc trường
 _worker.log    log worker, đọc được từ điện thoại
 ```
 
-`.stversions\` và archive ảnh gốc để **sibling ngoài cây sync** (ví dụ `D:\Review\huynh\_archive\`), đúng cách huynh đang làm, để cô lập và tránh copy nhầm.
+`.stversions\` và archive ảnh gốc để **sibling ngoài cây sync** (ví dụ `D:\Judexp\huynh\_archive\`), đúng cách huynh đang làm, để cô lập và tránh copy nhầm.
 
 Điện thoại huynh chỉ ghép folder của huynh, máy Gú chỉ ghép folder của Gú. **Không share chéo:** máy test không thấy kho Prod, máy Gú không thấy kho QA.
 
@@ -352,7 +352,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 
 | Mốc | Nội dung | Nghiệm thu |
 |---|---|---|
-| **M0** | Dựng khung repo, lift ba plugin native, chốt tên và `appId` | Ghi được một event vào kho thật và **máy kia thấy được**. S1 và S2 xong. |
+| **M0** | Dựng khung repo, lift ba plugin native, đặt `appId` `com.judexp.app` | Ghi được một event vào kho thật và **máy kia thấy được**. S1 và S2 xong. |
 | **M1** | `domain` + `search` + `index` + màn Tra cứu + chấm tay | Tra biển số gõ sai một ký tự vẫn ra. App dùng được thật dù chưa có ảnh. |
 | **M2** | Phase test parser đối đầu | Có bảng số đo, chốt parser theo quy tắc §10. |
 | **M3** | Worker + luồng share tới parse tới attach | Share một ảnh thật, dưới 2 phút sau app hiện đúng biển số. |
