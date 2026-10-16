@@ -218,7 +218,7 @@ export default function AppShell({
       )}
 
       {view.name === 'rate' && (
-        <QuickRateSheet kind="driver" author={author} device={device} onSave={save} />
+        <QuickRateSheet author={author} device={device} onSave={save} />
       )}
 
       {view.name === 'entity' && (

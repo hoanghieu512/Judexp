@@ -75,3 +75,48 @@ describe('QuickRateSheet', () => {
     expect(onSave.mock.calls[0][0].context?.geo).toEqual({ lat: 10.77, lng: 106.7, accuracy: 12 });
   });
 });
+
+describe('QuickRateSheet, choosing what is being rated', () => {
+  function open() {
+    const onSave = vi.fn<(e: JudexpEvent) => void>();
+    render(<QuickRateSheet author="huynh" device="zflip4" onSave={onSave} />);
+    return { onSave };
+  }
+
+  it('offers all four kinds, not drivers alone', () => {
+    open();
+    for (const label of [/^xe$/i, /^quán$/i, /^món$/i, /^địa điểm$/i]) {
+      expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it('switches the field label and the tag vocabulary with the kind', () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: /^quán$/i }));
+    expect(screen.getByLabelText(/tên quán/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ship lâu' })).toBeInTheDocument();
+  });
+
+  it('writes a restaurant with its normalized key', () => {
+    const { onSave } = open();
+    fireEvent.click(screen.getByRole('button', { name: /^quán$/i }));
+    fireEvent.change(screen.getByLabelText(/tên quán/i), { target: { value: 'Quán Bún Bò Huế 14' } });
+    fireEvent.click(screen.getByRole('button', { name: /^tốt$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
+    expect(onSave.mock.calls[0][0].entityRef).toMatchObject({ kind: 'restaurant', key: 'bun bo hue 14' });
+  });
+
+  // §6: a place keeps a generated key, so renaming it does not create a new one
+  // and two places sharing a name do not collapse into one.
+  it('gives a place a generated key and keeps the typed name as its label', () => {
+    const { onSave } = open();
+    fireEvent.click(screen.getByRole('button', { name: /^địa điểm$/i }));
+    fireEvent.change(screen.getByLabelText(/tên địa điểm/i), { target: { value: 'Chỗ ngồi hóng gió' } });
+    fireEvent.click(screen.getByRole('button', { name: /^tốt$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
+    const ref = onSave.mock.calls[0][0].entityRef!;
+    expect(ref.kind).toBe('place');
+    expect(ref.key).toMatch(/^place-[0-9a-f]{8,}/);
+    expect(ref.label).toBe('Chỗ ngồi hóng gió');
+  });
+});
