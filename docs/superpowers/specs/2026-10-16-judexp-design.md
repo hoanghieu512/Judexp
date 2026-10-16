@@ -65,7 +65,7 @@ Ghi rõ để sau này không ai tưởng là bị bỏ quên:
   Điện thoại huynh                    Atomman (Windows, 24/7)              Máy Gú
   ┌──────────────────┐                ┌───────────────────────┐          ┌─────────────┐
   │ App (Capacitor)  │                │ Syncthing (service)   │          │ App         │
-  │  SAF ──► kho     │◄──Syncthing───►│ D:\Judexp\huynh\kho   │          │             │
+  │  SAF ──► kho     │◄──Syncthing───►│ D:\Judexp\Hieu\kho    │          │             │
   │  index SQLite    │   (relay,      │ D:\Judexp\gu\kho      │◄────────►│ kho của Gú  │
   │  (local, phái    │    4G, LAN)    │                       │ Syncthing│             │
   │   sinh, ko sync) │                │ Worker Python         │          │             │
@@ -88,9 +88,9 @@ Nguyên tắc gốc, kế thừa nguyên văn từ Gú's Library:
 Tách môi trường ở **cấp cha**, tách profile thành **folder Syncthing riêng**:
 
 ```
-D:\Judexp\huynh\kho\          folder-ID  judexp-huynh-qa
+D:\Judexp\Hieu\kho\           folder-ID  judexp-hieu-qa
 D:\Judexp\gu\kho\             folder-ID  judexp-gu-qa
-D:\Judexp-Prod\huynh\kho\     folder-ID  judexp-huynh-prod
+D:\Judexp-Prod\Hieu\kho\      folder-ID  judexp-hieu-prod
 D:\Judexp-Prod\gu\kho\        folder-ID  judexp-gu-prod
 ```
 
@@ -107,6 +107,8 @@ _worker.log    log worker, đọc được từ điện thoại
 `.stversions\` và archive ảnh gốc để **sibling ngoài cây sync** (ví dụ `D:\Judexp\huynh\_archive\`), đúng cách huynh đang làm, để cô lập và tránh copy nhầm.
 
 Điện thoại huynh chỉ ghép folder của huynh, máy Gú chỉ ghép folder của Gú. **Không share chéo:** máy test không thấy kho Prod, máy Gú không thấy kho QA.
+
+Hiện trạng QA, dựng ngày 2026-10-16: **dGen1** ghép `judexp-hieu-qa`, **UBS1** ghép `judexp-gu-qa`. Hai máy test khác lớp nhau (dGen1 màn vuông 480x480dp Android 15, UBS1 720x1600 Android 14), nên số đo bố cục của máy này không suy sang máy kia được.
 
 ## 5. Schema event
 
