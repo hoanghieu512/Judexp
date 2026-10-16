@@ -32,6 +32,34 @@ describe('applyEvents', () => {
     expect(entity.encounters[0].tags).toEqual(['chạy ẩu']);
   });
 
+  it('uses when it happened, when that is before it was written down', () => {
+    const e = ev({ context: { happenedAt: '2026-10-15T08:00:00Z' } });
+    const s = applyEvents(emptyState(), [e]);
+    expect(s.entities.get('59H123456')!.encounters[0].happenedAt).toBe('2026-10-15T08:00:00Z');
+  });
+
+  // A ride cannot happen after it was written down. A date like that is a
+  // misread (the worker reading a year wrong), and trusted it would make this
+  // rating the "latest" one deciding the colour for years.
+  it('does not trust a happenedAt later than the moment it was written down', () => {
+    const e = ev({ context: { happenedAt: '2036-10-16T08:00:00Z' } });
+    const s = applyEvents(emptyState(), [e]);
+    expect(s.entities.get('59H123456')!.encounters[0].happenedAt).toBe('2026-10-16T12:00:00Z');
+  });
+
+  it('falls back to when it was written down when happenedAt is not a date', () => {
+    const e = ev({ context: { happenedAt: 'hôm qua' } });
+    const s = applyEvents(emptyState(), [e]);
+    expect(s.entities.get('59H123456')!.encounters[0].happenedAt).toBe('2026-10-16T12:00:00Z');
+  });
+
+  it('keeps a later rating last even when an earlier one carries a future date', () => {
+    const misdated = ev({ verdict: 'bad', createdAt: '2026-10-16T10:00:00Z', context: { happenedAt: '2036-01-01T00:00:00Z' } });
+    const later = ev({ verdict: 'good', createdAt: '2026-10-16T12:00:00Z' });
+    const s = applyEvents(emptyState(), [misdated, later]);
+    expect(s.entities.get('59H123456')!.encounters.map((x) => x.verdict)).toEqual(['bad', 'good']);
+  });
+
   it('keeps an encounter with no entity out of the entity map until it is attached', () => {
     const e = ev({ entityRef: null, verdict: 'ok' });
     const s = applyEvents(emptyState(), [e]);

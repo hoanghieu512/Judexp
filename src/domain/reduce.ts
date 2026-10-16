@@ -49,13 +49,26 @@ export function emptyState(): State {
   return { events: [], entities: new Map(), pending: new Map() };
 }
 
+/**
+ * When it happened, never later than when it was written down. A later date
+ * is a misread, and trusting it would make that rating the latest one for as
+ * long as the date stays in the future. Something that is not a date at all
+ * falls back the same way.
+ */
+function happenedAtOf(e: JudexpEvent): string {
+  const claimed = e.context?.happenedAt;
+  if (typeof claimed !== 'string' || Number.isNaN(Date.parse(claimed))) return e.createdAt;
+  if (instant(claimed) > instant(e.createdAt)) return e.createdAt;
+  return claimed;
+}
+
 function encounterOf(e: JudexpEvent): Encounter {
   return {
     eventId: e.eventId,
     verdict: e.verdict ?? null,
     tags: e.tags ?? [],
     note: e.note,
-    happenedAt: e.context?.happenedAt ?? e.createdAt,
+    happenedAt: happenedAtOf(e),
     context: e.context,
   };
 }
