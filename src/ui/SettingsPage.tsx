@@ -36,8 +36,10 @@ export default function SettingsPage({
   workerLog,
   syncConfig,
   pin,
+  author,
   khoLog,
   onPin,
+  onAuthor,
   onPickKho,
   onRebuild,
   onDeviceId,
@@ -50,8 +52,10 @@ export default function SettingsPage({
   workerLog: string;
   syncConfig: SyncConfig;
   pin: string | null;
+  author: string;
   khoLog: string[];
   onPin: (pin: string | null) => void;
+  onAuthor: (author: string) => void;
   onPickKho: () => void;
   onSyncConfig: (cfg: SyncConfig) => void;
   onRebuild: () => void;
@@ -126,6 +130,16 @@ export default function SettingsPage({
       />
 
       <h2 className="jx-section-title">Máy này</h2>
+      <label className="jx-sub" htmlFor="jx-author">
+        Người ghi, đứng tên trên mọi lần chấm từ máy này
+      </label>
+      <input
+        id="jx-author"
+        className="jx-search"
+        defaultValue={author}
+        onBlur={(e) => onAuthor(e.target.value)}
+      />
+
       <label className="jx-sub" htmlFor="jx-device">
         Tên máy, dùng trong tên file event
       </label>

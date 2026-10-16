@@ -1,3 +1,17 @@
+html, body, #root { height: 100%; }
+
+/* Ionic pins ion-app to the viewport and hides its overflow, so the app needs
+   its own scroll container. Without this the settings screen just stops at the
+   bottom edge of the phone and nothing below it can be reached. */
+.jx-app {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--jx-bg);
+  padding-bottom: var(--jx-space-6);
+}
+
 .jx-screen {
   background: var(--jx-bg);
   color: var(--jx-text);
@@ -135,6 +149,25 @@
   gap: var(--jx-space-2);
   padding: var(--jx-space-3) var(--jx-space-4) 0;
   background: var(--jx-bg);
+}
+
+/* Thumb sized, per the token the rest of the app honours: this gets tapped
+   one handed, in a hurry, often while walking. */
+.jx-nav-item {
+  min-height: var(--jx-touch-min);
+  flex: 1;
+  padding: 0 var(--jx-space-3);
+  border-radius: var(--jx-radius-md);
+  background: var(--jx-surface);
+  border: 1px solid var(--jx-border);
+  color: var(--jx-text);
+  font-size: var(--jx-text-sm);
+  font-weight: var(--jx-weight-medium);
+}
+
+.jx-nav-item[data-selected='true'] {
+  background: var(--jx-surface-raised);
+  border-color: var(--jx-text-dim);
 }
 
 .jx-problem {

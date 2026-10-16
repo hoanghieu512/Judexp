@@ -15,6 +15,7 @@ import {
   getSyncConfig,
   khoLabelFromUri,
   setSyncConfig,
+  setAuthor,
   setDeviceId,
   setKho,
   setPin,
@@ -182,7 +183,7 @@ export default function AppShell({
     }
   }
 
-  if (!ready) return <p className="jx-empty">Đang mở kho...</p>;
+  if (!ready) return <div className="jx-app"><p className="jx-empty">Đang mở kho...</p></div>;
 
   const banner = problem ? (
     <p className="jx-problem" role="alert">
@@ -192,7 +193,7 @@ export default function AppShell({
 
   if (!kho || !dirs) {
     return (
-      <>
+      <div className="jx-app">
         {banner}
       <SettingsPage
         kho={null}
@@ -202,10 +203,15 @@ export default function AppShell({
         workerLog=""
         syncConfig={sync}
         pin={pin}
+        author={author}
         khoLog={khoLog}
         onPin={async (value) => {
           await setPin(value, prefs);
           setPinValue(value);
+        }}
+        onAuthor={async (value) => {
+          await setAuthor(value, prefs);
+          setAuthorName(await getAuthor(prefs));
         }}
         onPickKho={pickKho}
         onRebuild={() => {}}
@@ -215,20 +221,21 @@ export default function AppShell({
           setSync(cfg);
         }}
         />
-      </>
+      </div>
     );
   }
 
   return (
     <PinGate pin={pin}>
+      <div className="jx-app">
       <nav className="jx-nav">
-        <button type="button" className="jx-tag" onClick={() => setView({ name: 'lookup' })}>
+        <button type="button" className="jx-nav-item" data-selected={view.name === 'lookup'} onClick={() => setView({ name: 'lookup' })}>
           Tra cứu
         </button>
-        <button type="button" className="jx-tag" onClick={() => setView({ name: 'rate' })}>
+        <button type="button" className="jx-nav-item" data-selected={view.name === 'rate'} onClick={() => setView({ name: 'rate' })}>
           Chấm nhanh
         </button>
-        <button type="button" className="jx-tag" onClick={() => setView({ name: 'settings' })}>
+        <button type="button" className="jx-nav-item" data-selected={view.name === 'settings'} onClick={() => setView({ name: 'settings' })}>
           Cài đặt
         </button>
       </nav>
@@ -262,10 +269,15 @@ export default function AppShell({
           workerLog=""
           syncConfig={sync}
           pin={pin}
+          author={author}
           khoLog={khoLog}
           onPin={async (value) => {
             await setPin(value, prefs);
             setPinValue(value);
+          }}
+          onAuthor={async (value) => {
+            await setAuthor(value, prefs);
+            setAuthorName(await getAuthor(prefs));
           }}
           onPickKho={pickKho}
           onSyncConfig={async (cfg) => {
@@ -279,6 +291,7 @@ export default function AppShell({
           }}
         />
       )}
+      </div>
     </PinGate>
   );
 }

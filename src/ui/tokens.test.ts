@@ -52,3 +52,26 @@ describe('mark colours have a stylesheet rule', () => {
     }
   });
 });
+
+/**
+ * Ionic pins ion-app to the viewport and hides its overflow, so a screen made
+ * of plain divs has no scroll container at all: on a 720x720 phone the
+ * settings screen simply stops at the bottom edge. jsdom does no layout, so
+ * only the stylesheet can be checked here.
+ */
+describe('the app has somewhere to scroll', () => {
+  it('gives the app shell a scrollable full-height container', () => {
+    expect(css).toMatch(/\.jx-app\s*{[^}]*height:\s*100%/);
+    expect(css).toMatch(/\.jx-app\s*{[^}]*overflow-y:\s*auto/);
+  });
+
+  it('lets that container fill the page', () => {
+    expect(css).toMatch(/html,\s*body,\s*#root\s*{[^}]*height:\s*100%/);
+  });
+})
+
+describe('navigation is thumb sized', () => {
+  it('gives the nav buttons the touch target the tokens promise', () => {
+    expect(css).toMatch(/\.jx-nav-item\s*{[^}]*min-height:\s*var\(--jx-touch-min\)/);
+  });
+});

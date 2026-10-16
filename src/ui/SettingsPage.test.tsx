@@ -13,6 +13,8 @@ function show(over: Record<string, unknown> = {}) {
     onSyncConfig: vi.fn(),
     pin: null as string | null,
     khoLog: [] as string[],
+    author: 'hieu',
+    onAuthor: vi.fn(),
     onPin: vi.fn(),
     onPickKho: vi.fn(),
     onRebuild: vi.fn(),
@@ -91,5 +93,18 @@ describe('SettingsPage, pin', () => {
   it('shows the kho log so a sync-conflict is not swallowed', () => {
     show({ khoLog: ['skipping sync-conflict file: a.sync-conflict-x.json'] });
     expect(screen.getByTestId('kho-log')).toHaveTextContent(/sync-conflict/i);
+  });
+});
+
+describe('SettingsPage, author', () => {
+  it('shows who events on this phone are written by', () => {
+    show({ author: 'hieu' });
+    expect(screen.getByLabelText(/người ghi/i)).toHaveValue('hieu');
+  });
+
+  it('saves a different author when huynh changes it', () => {
+    const props = show({ author: 'judexp-hieu' });
+    fireEvent.blur(screen.getByLabelText(/người ghi/i), { target: { value: 'Hieu' } });
+    expect(props.onAuthor).toHaveBeenCalledWith('Hieu');
   });
 });

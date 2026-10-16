@@ -13,7 +13,8 @@ export default function PinGate({ pin, children }: { pin: string | null; childre
   if (pin === null || typed === pin) return <>{children}</>;
 
   return (
-    <div className="jx-screen">
+    <div className="jx-app">
+      <div className="jx-screen">
       <label className="jx-sub" htmlFor="jx-pin">
         PIN
       </label>
@@ -26,6 +27,7 @@ export default function PinGate({ pin, children }: { pin: string | null; childre
         onChange={(e) => setTyped(e.target.value)}
       />
       <p className="jx-sub">PIN chỉ chặn người cầm máy, nó không mã hoá dữ liệu trong kho.</p>
+      </div>
     </div>
   );
 }
