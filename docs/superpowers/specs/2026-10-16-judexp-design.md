@@ -8,7 +8,14 @@
 
 App là một **sổ ký ức trải nghiệm cá nhân** cho sinh hoạt thường ngày: tài xế từng chở, quán từng ăn, món từng gọi, địa điểm từng tới.
 
-Giá trị cốt lõi **không** phải là ghi review cho đẹp, mà là **tra cứu tại hiện trường**: biển số vừa hiện trên app đặt xe, gõ vào là biết lần trước thế nào, trong vài giây, trước khi bấm đồng ý. Mọi quyết định thiết kế trong tài liệu này phục vụ đúng một câu đó.
+Giá trị cốt lõi **không** phải là ghi review cho đẹp, mà là **tra cứu tại hiện trường**: biển số vừa hiện trên app đặt xe, gõ vào là biết lần trước thế nào, trong vài giây, trước khi bấm đồng ý.
+
+App vì vậy sống ở **hai thời điểm khác nhau**. Tài liệu này tách rạch ròi hai thời điểm đó, vì gộp lại thì mọi thiết kế phía sau đều lệch:
+
+- **Thời điểm Hỏi:** lúc app đặt xe vừa ghép tài xế. Trên màn hình có tên, biển số, sao, loại xe, quãng đường, giá. Huynh cần một quyết định, và **chưa có gì để đánh giá** vì chuyến chưa xảy ra.
+- **Thời điểm Ghi:** sau khi chuyến xong hoặc bữa ăn xong. Giờ mới có trải nghiệm thật để chấm, và đầu vào là **lịch sử chuyến** hoặc nhập tay.
+
+Hai luồng nối với nhau ở §9.3: **mỗi lần tra cứu là một tín hiệu huynh sắp đi chuyến đó**, nên luồng Hỏi tự sinh đầu vào cho luồng Ghi mà không thêm bước nào cho huynh.
 
 Ba điều kiện sinh tử, theo thứ tự:
 
@@ -27,6 +34,7 @@ Ghi rõ để sau này không ai tưởng là bị bỏ quên:
 - Nối dữ liệu với Ăn Khéo.
 - Thống kê, biểu đồ, bảng xếp hạng (tốn công mà không giúp quyết định tại hiện trường).
 - Thang 5 sao (xem D8).
+- Điểm dự đoán tự động trước chuyến (ý của Gú). Ngoài v1, nhưng **có một yêu cầu đặt lên v1**, xem §19.1.
 - Bong bóng nổi đè lên app đặt xe.
 
 ## 2. Quyết định đã chốt
@@ -42,6 +50,8 @@ Ghi rõ để sau này không ai tưởng là bị bỏ quên:
 | D7 | Hướng A: kho file chỉ-thêm, index dựng ở local | Hướng duy nhất mà mọi rủi ro còn lại đều đã được kiểm chứng trên máy thật ở Gú's Library. Xem §3. |
 | D8 | Ba mức verdict thay cho 5 sao | Huynh không cần xếp hạng, huynh cần một màu đỏ hiện lên trước khi bấm. Ba mức thì một chạm là xong; năm sao thì lưỡng lự giữa 3 và 4 mỗi lần, mà lưỡng lự giết thói quen ghi chép. Chi tiết nằm ở tag. |
 | D9 | Gộp thực thể phải hỏi, không bao giờ tự gộp | Gộp sai thì lịch sử hai quán lẫn vào nhau và gỡ ra rất mệt. |
+| D10 | Tách hẳn luồng Hỏi và luồng Ghi, `verdict` thành tùy chọn | Thời điểm quyết định và thời điểm đánh giá là hai thời điểm khác nhau. Chuyến cũ nạp từ lịch sử thì huynh không còn nhớ, nên vào app dưới dạng đã gặp chưa chấm. Góp ý của huynh ngày 2026-10-16. |
+| D11 | Nhắc chấm 90 phút sau mỗi lần tra cứu, bốn nút trên thông báo | Bắt nhãn lúc còn nóng mà không thêm bước nào cho huynh. Gom cuối ngày thì nhớ lơ mơ hơn; không nhắc thì hộp Chờ chấm sẽ đầy dần rồi bị bỏ qua. |
 
 ### Hai hướng đã xét và loại
 
@@ -89,6 +99,7 @@ Mỗi `kho\` có:
 events\        chỉ thêm, 1 file = 1 việc đã xảy ra, không bao giờ sửa
 inbox\         ảnh share từ điện thoại, chờ worker đọc
 parsed\        worker trả kết quả bóc trường
+attachments\   ảnh biển hiệu chụp tại chỗ, giữ lại và vẫn sync (§9.5)
 _worker.log    log worker, đọc được từ điện thoại
 ```
 
@@ -116,7 +127,7 @@ Tên file: `<ISO8601 compact>_<device>_<uuid7>.json`, ví dụ `20261016T190322Z
     "label": "Nguyễn Văn A"         // nhãn thấy được lúc đó
   },
 
-  "verdict": "bad",                 // good | ok | bad
+  "verdict": "bad",                 // good | ok | bad | null  (null = đã gặp, chưa chấm)
   "tags": ["chạy ẩu", "nói nhiều"], // tùy chọn
   "note": "vượt đèn đỏ 2 lần",      // tùy chọn
 
@@ -125,12 +136,21 @@ Tên file: `<ISO8601 compact>_<device>_<uuid7>.json`, ví dụ `20261016T190322Z
     "price": 42000,
     "route": "Q1 → Q7",
     "happenedAt": "2026-10-16T18:40:00+07:00",
-    "geo": { "lat": 10.7769, "lng": 106.7009 }
+    "geo": { "lat": 10.7769, "lng": 106.7009 },
+
+    // Đặc trưng đọc được ở thời điểm Hỏi. Thu ngay từ v1 để §19.1 có dữ liệu hiệu chỉnh.
+    "driverStars": 4.6,
+    "vehicleType": "bike",
+    "distanceKm": 7.2,
+    "durationMin": 24
   },
 
   "source": {
-    "kind": "share",                // share | manual
+    "kind": "share_history",        // share_booking | share_history | manual
     "imageRef": "a3f9c21.jpg",      // tên file trong inbox\, nếu có
+    "imageKind": "history_list",    // booking | history_list | order_detail | unknown
+    "batchRef": "a3f9c21",          // nhiều encounter sinh từ cùng một ảnh thì chung batchRef
+    "rowIndex": 2,                  // dòng thứ mấy trong ảnh lịch sử
     "parsedBy": "openrouter_vision",
     "confidence": 0.94
   }
@@ -141,9 +161,9 @@ Tên file: `<ISO8601 compact>_<device>_<uuid7>.json`, ví dụ `20261016T190322Z
 
 | Loại | Việc nó ghi | Trường riêng |
 |---|---|---|
-| `encounter` | Một lần gặp: verdict, tag, note, thực thể (hoặc chưa biết thực thể) | như trên |
+| `encounter` | Một lần gặp: verdict, tag, note, thực thể (hoặc chưa biết thực thể). `verdict` có thể null, nghĩa là **đã gặp nhưng chưa chấm** | như trên |
 | `attach` | Gắn thực thể vào một encounter sau khi parse về muộn | `targetEventId`, `entityRef` |
-| `amend` | Sửa nội dung một event cũ; index lấy bản mới nhất theo `createdAt` | `targetEventId`, các trường cần thay |
+| `amend` | Sửa nội dung một event cũ; index lấy bản mới nhất theo `createdAt`. Cũng là cách **verdict tới sau** cho một lần gặp chưa chấm | `targetEventId`, các trường cần thay |
 | `merge` | Gộp hai thực thể bị tách đôi | `fromKey`, `intoKey`, cả hai giữ lại |
 | `tombstone` | Ẩn một event (kể cả ẩn một event `merge` để gỡ gộp) | `targetEventId` |
 
@@ -164,6 +184,8 @@ Tên tài xế chỉ là nhãn: app đặt xe đổi tên hiển thị, và mộ
 Không có khóa sạch. Khóa là tên chuẩn hóa cộng toạ độ nếu có. Chuẩn hóa tên: NFD rồi bỏ dấu, lowercase, gộp khoảng trắng, bỏ các tiền tố chung chung `quán`, `tiệm`, `nhà hàng`, `cửa hàng` (chỉ bỏ ở đầu chuỗi, và chỉ các từ trong danh sách này, để không làm sai nghĩa tên riêng).
 
 Hai thực thể cách nhau **dưới 150m** mà tên gần giống thì app **hỏi** "có phải quán này không". Không tự gộp (D9). Đồng ý thì ghi event `merge`.
+
+GPS trong hẻm hoặc trong nhà lệch được 50 tới 100m, nên toạ độ luôn lưu kèm `accuracy`, và **`accuracy` trên 100m thì không được dùng để gợi ý gộp**: lúc đó chỉ so tên.
 
 ### `dish`
 
@@ -199,9 +221,12 @@ Bỏ qua mọi file có `.sync-conflict` trong tên và ghi log, không im lặn
 
 Màu phải trả lời được câu "có nên dùng lại không", nên không lấy trung bình:
 
-- **Đỏ** nếu lần gần nhất là `bad`, hoặc có từ 2 lần `bad` trong 5 lần gần nhất.
-- **Xanh** nếu không có `bad` nào trong 5 lần gần nhất và lần gần nhất là `good`.
+- **Xám** nếu chưa có lần gặp nào được chấm: hiện "đã gặp N lần, chưa chấm lần nào". Sau khi nạp nền từ lịch sử (§9.4) thì đây là trạng thái **thường gặp nhất**, nên nó phải trông bình thường chứ không trông như lỗi.
+- **Đỏ** nếu lần **được chấm** gần nhất là `bad`, hoặc có từ 2 lần `bad` trong 5 lần được chấm gần nhất.
+- **Xanh** nếu không có `bad` nào trong 5 lần được chấm gần nhất và lần được chấm gần nhất là `good`.
 - **Vàng** cho mọi trường hợp còn lại.
+
+Lần gặp chưa chấm **không tham gia** tính màu nhưng **vẫn tính** vào số lần gặp, vì "đã đi xe này 3 lần" tự nó là một tín hiệu, dù yếu.
 
 Quy tắc này là hàm thuần, có test bảng ca.
 
@@ -215,29 +240,74 @@ Quy tắc này là hàm thuần, có test bảng ca.
 
 Toàn bộ khớp mờ chạy trên index ở máy, nên **mất mạng, Atomman tắt, đi tỉnh, vẫn tra được**.
 
-## 9. Các luồng
+## 9. Hai luồng
 
-### 9.1 Share ảnh (luồng nhập chính)
+Hai thời điểm ở §1 thành hai luồng có tên riêng: luồng **Hỏi** phục vụ quyết định, luồng **Ghi** phục vụ ký ức. §9.3 là chỗ nối chúng lại.
 
-1. Huynh đang ở app đặt xe hoặc app đồ ăn, bấm **Chia sẻ**, chọn app này. `ShareTargetPlugin` nhận ảnh.
-2. App ghi ảnh vào `inbox/<uuid>.jpg` rồi **mở ngay bảng chấm**: ba nút verdict khổ lớn, dưới là chip tag. Chạm một nút là event `encounter` đã nằm trong kho, kể cả khi app chưa biết đó là ai (`entityRef: null`).
-3. Thoát giữa đường thì ảnh vẫn nằm `inbox/` và hiện trong hộp **Chờ chấm** có badge. Worker vẫn parse song song, nên lúc quay lại đã có sẵn tên và biển số.
-4. Syncthing đẩy ảnh lên Atomman, worker parse, ghi `parsed/<uuid>.json`, Syncthing đẩy về. App thấy file thì ghi event `attach`.
-5. Nếu huynh đã tự gõ biển số trước đó thì kết quả parse **không ghi đè**, chỉ lưu trong `source` để đối chiếu. Người thắng luôn là huynh.
+### 9.1 Luồng Hỏi: đi hay hủy
 
-Thiết kế có chủ ý: **chấm điểm và nhận dạng là hai việc rời nhau.** Parse chậm hay Atomman đang tắt cũng không cản được việc ghi.
+Xảy ra lúc app đặt xe vừa ghép tài xế, hoặc lúc huynh đang đứng trước một quán lạ.
 
-### 9.2 Tra cứu
+Hai đường vào:
 
-Màn mặc định khi mở app. Ô tìm duy nhất, bàn phím bật sẵn. Kết quả hiện thẳng trong dòng: màu, lần gần nhất cách đây bao lâu, số lần gặp, ba tag hay gặp nhất. Không phải mở chi tiết mới thấy điều cần thấy.
+- **Gõ:** mở app, gõ biển số hoặc tên, bàn phím bật sẵn. Đường nhanh nhất, gõ bốn số là xong.
+- **Share ảnh màn ghép tài xế:** khỏi gõ, và bóc luôn được các đặc trưng (sao, loại xe, quãng đường, giá) mà gõ tay không có. Đổi lại phải chờ một vòng worker.
 
-Chưa gõ gì thì hiện "Chờ chấm (N)" và "Gặp gần đây". Hai chip lọc "danh sách đen" và "danh sách ruột" nằm ngay đây, không làm màn riêng.
+Đầu ra là **thẻ quyết định**, và nó phải trung thực về chuyện nó biết gì:
 
-### 9.3 Chấm tay
+| Tình huống | Thẻ hiện gì |
+|---|---|
+| Từng chấm người này | Màu, verdict từng lần, lần gần nhất cách đây bao lâu, ba tag hay gặp nhất. Bằng chứng mạnh. |
+| Đã gặp nhưng chưa chấm | Xám, "đã đi xe này 3 lần, chưa chấm lần nào". Tín hiệu yếu, và nói rõ là yếu. |
+| Chưa gặp bao giờ | Nói thẳng "chưa gặp người này". Đây là **trường hợp thường gặp nhất**, nhất là trong tháng đầu, nên nó phải là một câu trả lời đàng hoàng chứ không phải một màn hình rỗng. |
 
-Nút cộng, chọn loại, gõ biển số hoặc tên, ba nút verdict, chip tag, xong. Mục tiêu dưới 10 giây. Với `place` thì có thêm nút lấy toạ độ hiện tại.
+**Luồng Hỏi không sinh encounter.** Chuyến chưa xảy ra thì chưa có gì để ghi. Nó chỉ sinh một nhắc chờ ở §9.3.
 
-### 9.4 Offline
+### 9.2 Luồng Ghi: lịch sử trải nghiệm
+
+Xảy ra sau khi chuyến xong hoặc bữa ăn xong. Bốn đường vào, xếp theo mức tiện:
+
+1. **Trả lời nhắc** (§9.3): chạm một nút trên thông báo. Nhanh nhất, và là đường đệ muốn huynh dùng nhiều nhất.
+2. **Chụp lịch sử chuyến hoặc lịch sử đơn:** một ảnh sinh **nhiều** encounter. App hiện danh sách dòng bóc được, mỗi dòng ba nút verdict. Chấm dòng nào thì dòng đó có verdict; bỏ qua thì dòng đó vào kho dưới dạng **đã gặp, chưa chấm**.
+3. **Chụp tại chỗ bằng camera trong app** (§9.5): dành cho quán ăn ngoài đường, không đặt qua app nào.
+4. **Nhập tay:** nút cộng, chọn loại, gõ biển số hoặc tên, ba nút verdict, chip tag. Mục tiêu dưới 10 giây.
+
+Nguyên tắc xuyên suốt: **chấm điểm và nhận dạng là hai việc rời nhau.** Parse chậm hay Atomman đang tắt cũng không cản được việc ghi, và ghi xong rồi mới biết là ai cũng không sao.
+
+### 9.3 Nhắc chấm, chỗ hai luồng nối vào nhau
+
+**Mỗi lần tra cứu là một tín hiệu huynh sắp đi chuyến đó.** App không cần huynh làm thêm gì: nó đã biết lúc 18h40 huynh tra `59H123456`.
+
+- Mỗi lần tra cứu sinh một **nhắc chờ**, hẹn **90 phút** sau.
+- Thông báo có bốn nút: **tốt, ổn, xấu, không đi**. Chạm là event `encounter` vào kho, không cần mở app.
+- Chạm **không đi** thì **không ghi gì vào kho**, chỉ tắt nhắc. Chuyến không xảy ra thì không có ký ức nào để lưu.
+- Nhắc chờ quá **48 giờ** không trả lời thì tự bỏ, vì sau đó huynh cũng không còn nhớ để chấm cho đúng.
+- Nhắc chờ lưu trong `pending.json` ở vùng dữ liệu riêng của app: **không nằm trong kho, không sync**, vì máy nào tra thì máy đó nhắc. Cố ý để ngoài index SQLite, vì dựng lại index sẽ xóa mất nhắc đang chờ.
+
+Hộp **Chờ chấm** trong màn Tra cứu là đường lùi cho mọi nhắc bị bỏ qua và mọi dòng chưa chấm.
+
+### 9.4 Nạp nền lần đầu
+
+App chỉ có giá trị khi đã có dữ liệu, mà ngày đầu thì không có gì. Cách giải không phải là chờ ba tháng.
+
+Lần đầu mở app, nó hướng huynh mở **lịch sử chuyến** trong app đặt xe và chụp vài ảnh cuộn. Mỗi ảnh ra hàng chục dòng, nên vài phút là app có vài chục tài xế và vài chục quán **đã từng gặp**. Hầu hết ở trạng thái chưa chấm, và như vậy là đúng: không ai nhớ nổi chuyến ba tháng trước ra sao. Chuyến nào nhớ rõ là tệ thì chấm luôn lúc đó.
+
+Nhờ bước này, ngay tuần đầu thẻ quyết định đã nói được "huynh đã đi xe này 3 lần" thay vì "chưa gặp người này".
+
+### 9.5 Chụp tại chỗ: quán ăn ngoài đường
+
+Quán vỉa hè không có đơn, không có lịch sử, nên hai đường share ở trên không với tới. Đường duy nhất còn lại là gõ tay lúc vừa ăn xong, đúng cái ma sát giết thói quen ghi chép.
+
+Camera trong app giải chỗ đó, và **giá trị chính nằm ở toạ độ chứ không ở chữ trên biển hiệu**: lúc huynh đứng tại quán, toạ độ chính là nửa khóa định danh theo §6, và nó không sai kiểu OCR sai.
+
+- Chụp, **nén ngay trên máy** về cạnh dài 1600px, JPEG chất lượng 80 (khoảng 200 tới 400KB thay vì 3 tới 10MB), rồi mới ghi vào kho. Không nén thì Syncthing đẩy nặng và điện thoại đầy dần.
+- Lưu kèm toạ độ và **`accuracy`** của phép định vị.
+- Chấm ngay tại chỗ, không chờ parse.
+- Worker đọc biển hiệu chỉ để **gợi ý nhãn**. Sai thì huynh sửa một chữ, vì khóa thật là toạ độ. Đây là khác biệt rủi ro so với biển số: biển số sai là tra nhầm sang người khác, tên quán sai chỉ là phiền nhẹ.
+- **Ảnh nhòe không phải ca lỗi.** Toạ độ vẫn đúng và ảnh vẫn giúp huynh nhận ra quán. App có nút chụp lại nhưng **không bắt** chụp lại, chỉ nói "không đọc được tên, huynh gõ giúp" rồi đi tiếp.
+- **Ảnh biển hiệu giữ lại** trong `attachments/`, ngược chính sách với ảnh đơn hàng (§10), vì chính tấm ảnh là thứ giúp huynh nhận ra quán sau này.
+
+### 9.6 Offline
 
 Không cần viết hàng đợi: app ghi file xuống kho local, Syncthing tự đẩy khi có mạng. Đây là một trong những lý do chọn hướng A.
 
@@ -250,25 +320,43 @@ Bên trong là **một cổng `parser` với hai bản cài**, chọn bằng con
 - `local_ocr`: OCR trên máy cộng heuristic bóc trường.
 - `openrouter_vision`: gửi ảnh cho vision model, nhận về JSON đúng trường. API key nằm **trên Atomman**, không bao giờ nằm trong app, nên điện thoại không giữ secret nào.
 
+**Hợp đồng của cổng `parser`:** nhận một ảnh, trả về `imageKind` (`booking`, `history_list`, `order_detail`, `signboard`, `unknown`) và một **mảng** bản ghi, vì một ảnh lịch sử chứa nhiều dòng. Ảnh đơn lẻ trả mảng một phần tử. Nhận sai `imageKind` là xử lý sai luồng, nên nó là một chỉ số đo riêng ở phase test.
+
 `parsed/<uuid>.json` ghi: các trường bóc được, `confidence`, tên parser, thời gian, và **text thô khi dùng OCR** để sau này sửa heuristic mà không cần giữ ảnh.
 
-Ảnh gốc sau khi parse thì **chuyển sang archive sibling ngoài cây sync**, không xóa thẳng: còn bằng chứng để đối chiếu khi parse sai, không chiếm chỗ điện thoại, và không rời mạng nhà.
+**Chính sách ảnh theo loại, không phải một chính sách cho tất cả:**
+
+| Loại ảnh | Sau khi parse | Vì sao |
+|---|---|---|
+| `booking`, `history_list`, `order_detail` | Chuyển sang archive sibling **ngoài cây sync**, không xóa thẳng | Chứa địa chỉ nhà và số điện thoại. Vẫn còn bằng chứng để đối chiếu khi parse sai, mà không chiếm chỗ điện thoại. |
+| `signboard` (chụp tại chỗ, §9.5) | **Giữ trong `attachments/`**, vẫn sync | Chính tấm ảnh là thứ giúp huynh nhận ra quán sau này, và nó không chứa gì nhạy cảm. |
+
+Khác biệt này cho phép đặt **chính sách parser theo loại ảnh**: ảnh đơn hàng xử lý tại nhà, còn ảnh biển hiệu gửi vision model thoải mái vì không có gì để lộ.
 
 ### Phase test parser đối đầu (M2)
 
-Đầu vào huynh chuẩn bị: **15 đến 20 screenshot thật**, phủ Grab bike, Grab car, Be, ShopeeFood, cố tình có vài ca khó (chụp lúc tối màu, ảnh crop thiếu, đơn nhiều món).
+Đầu vào huynh chuẩn bị: **25 tới 30 ảnh thật**, chia ba nhóm vì ba nhóm khó theo cách khác nhau:
+
+- **Nhóm Hỏi (6 tới 8 ảnh):** màn hình vừa ghép tài xế của Grab bike, Grab car, Be. Cần bóc biển số, sao, loại xe, quãng đường, giá.
+- **Nhóm Ghi dạng màn hình (14 tới 17 ảnh):** danh sách lịch sử chuyến và lịch sử đơn của Grab, Be, ShopeeFood, cộng vài ảnh chi tiết một đơn. Cần bóc **đúng số dòng** và đúng trường từng dòng.
+- **Nhóm biển hiệu (5 tới 6 ảnh):** ảnh chụp thật biển hiệu quán, có cả ảnh nghiêng, chói nắng và chụp ban đêm. Đây là nhóm đệ dự đoán sẽ tách hai parser rõ nhất.
+
+Cố tình nhét vài ca khó: chụp lúc tối màu, ảnh crop thiếu nửa dòng, đơn nhiều món, danh sách dài phải cuộn.
 
 Đo trên cùng bộ ảnh, cho cả hai parser:
 
 | Chỉ số | Ngưỡng đạt | Ghi chú |
 |---|---|---|
+| Nhận đúng `imageKind` | 100% | Nhận sai loại là xử lý sai luồng |
 | Biển số đúng **từng ký tự** | >= 90% | Sai một ký tự là tra sang người khác, không có vùng xám |
+| Số dòng bóc đúng trong ảnh lịch sử | 100% | Thiếu dòng thì mất chuyến mà không ai biết, thừa dòng thì rác vào kho |
+| Tên quán trên **biển hiệu** | không đặt ngưỡng | Chỉ là gợi ý nhãn, khóa thật là toạ độ. Vẫn đo để thấy chênh lệch giữa hai parser |
 | Tên quán đúng sau chuẩn hóa | >= 85% | Cho phép sai dấu và hoa thường |
 | Giá đúng con số | >= 90% | Bỏ qua định dạng |
 | Thời gian mỗi ảnh | ghi số | |
 | Chi phí mỗi ảnh | ghi số | |
 
-**Quy tắc chốt:** `local_ocr` đạt ngưỡng biển số thì chọn **lai** (local trước, gọi vision khi hụt trường). Không đạt thì chọn **`openrouter_vision` thuần**. Kết quả đo ghi vào `docs/` kèm ngày và phiên bản parser.
+**Quy tắc chốt:** `local_ocr` đạt ngưỡng biển số thì chọn **lai** (local trước, gọi vision khi hụt trường). Không đạt thì chọn **`openrouter_vision` thuần**. Nhóm biển hiệu được phép chốt **khác** nhóm màn hình, vì nó không chứa gì nhạy cảm nên không có lý do giữ nó ở nhà bằng mọi giá. Kết quả đo ghi vào `docs/` kèm ngày và phiên bản parser.
 
 Bộ ảnh này thành **bộ test hồi quy** của worker, nên công sức làm phase test không phải đồ bỏ.
 
@@ -287,7 +375,7 @@ src/
   domain/    chuẩn hóa khóa, apply event → state, gộp và gỡ gộp, quy tắc màu
   search/    khớp mờ biển số và tên
   index/     SQLite phái sinh, dựng tăng dần, query
-  intake/    share target, inbox, theo dõi parsed
+  intake/    share target, camera, nén ảnh, inbox, theo dõi parsed
   sync/      đọc trạng thái Syncthing, đèn ba mức
   profile/   chọn kho, PIN
   ui/        màn hình
@@ -297,9 +385,9 @@ Ranh giới bắt buộc: **`domain` và `search` không được biết gì v�
 
 ### Bốn màn hình
 
-1. **Tra cứu** (mặc định, §9.2)
-2. **Chấm nhanh** (sheet, mở từ share hoặc nút cộng, §9.1 và §9.3)
-3. **Chi tiết thực thể**: dòng thời gian các lần gặp, mọi nhãn từng thấy, nút sửa và nút gộp
+1. **Tra cứu** (mặc định, §9.1), gồm hộp Chờ chấm và hai chip lọc danh sách đen, danh sách ruột
+2. **Chấm nhanh** (sheet, mở từ nhắc, từ share, từ camera hoặc từ nút cộng, §9.2)
+3. **Chi tiết thực thể**: dòng thời gian các lần gặp, mọi nhãn từng thấy, ảnh biển hiệu nếu có, nút sửa và nút gộp
 4. **Cài đặt**: chọn kho (profile và môi trường), đèn Syncthing, PIN, dựng lại index, xem `_worker.log`
 
 ## 12. Profile và riêng tư
@@ -330,11 +418,16 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | Đồng hồ hai máy lệch | Index sắp theo `createdAt` trong nội dung, không theo tên file. `amend` trỏ `eventId` nên không phụ thuộc thứ tự tới. |
 | File `.sync-conflict-*` vẫn lọt | Index bỏ qua và ghi log. |
 | Gộp thực thể sai | `tombstone` lên chính event `merge` đó. Không cần loại event mới. |
+| Tra cứu nhưng không đi | Nút "không đi" trên thông báo: không ghi gì vào kho, chỉ tắt nhắc. |
+| Nhắc bị bỏ qua | Quá 48 giờ thì tự bỏ. Hộp Chờ chấm vẫn giữ ảnh và dòng chưa chấm. |
+| Ảnh lịch sử bóc thiếu dòng | Ngưỡng số dòng là 100% ở §10, và app hiện số dòng bóc được để huynh đối chiếu bằng mắt với ảnh. |
+| Ảnh chụp nhòe, không đọc được tên quán | Không chặn. Toạ độ vẫn đúng, ảnh vẫn giữ, app chỉ xin huynh gõ tên. |
+| Ảnh chụp quá nặng | Nén trên máy trước khi ghi vào kho (§9.5). |
 | Index hỏng | Xóa dựng lại từ kho. Có nút trong Cài đặt. |
 
 ## 15. Chiến lược test
 
-- **Hàm thuần (`domain`, `search`), test dày bằng vitest:** chuẩn hóa khóa, khớp mờ, apply event vào state, idempotent khi đọc lại file, quy tắc màu, gộp và gỡ gộp. Đây là chỗ bug đau nhất mà lại khó phát hiện bằng mắt.
+- **Hàm thuần (`domain`, `search`), test dày bằng vitest:** chuẩn hóa khóa, khớp mờ, apply event vào state, idempotent khi đọc lại file, quy tắc màu, gộp và gỡ gộp. Đây là chỗ bug đau nhất mà lại khó phát hiện bằng mắt. Ba tính chất thêm từ bản sửa 2026-10-16: lần gặp **chưa chấm** không tham gia tính màu nhưng vẫn tính số lần gặp; một ảnh sinh N encounter cùng `batchRef` mà chấm một dòng không đụng dòng khác; lịch hẹn nhắc (tra lúc t thì nhắc lúc t cộng 90 phút, quá t cộng 48 giờ thì bỏ).
 - **Worker, pytest:** bộ ảnh thật của huynh làm bộ hồi quy, so với giá trị đúng đã ghi.
 - **Không mock được, bắt buộc máy thật:** SAF ghi vào kho, share sheet nhận ảnh từ app đặt xe, Syncthing đẩy qua lại giữa hai máy.
 
@@ -346,20 +439,21 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | S2 | `ShareTargetPlugin` nhận được `image/*` share từ app đặt xe và app đồ ăn | Đã nhận file tài liệu, chưa xác nhận với ảnh từ các app đó. Làm ở M0. |
 | S3 | Thư viện SQLite cho Capacitor | Gú's Library ghi rõ "chưa chốt thư viện". Nếu plugin SQLite gây rắc rối cho build CLI thì **phương án lùi**: giữ index trong bộ nhớ và cache ra một file JSON, vẫn đủ nhanh ở mức vài nghìn event. |
 | S4 | iOS đọc folder Möbius Sync từ Capacitor | Möbius Pro sync được (đã chứng minh với Obsidian), nhưng app của mình đọc folder đó cần document picker và security-scoped bookmark, là việc native, chưa thử. Ngoài v1. |
-| S5 | Nút hành động trên thông báo để chấm điểm không cần mở app | Tính năng M5, bỏ được nếu vướng. |
+| S5 | Nút hành động trên thông báo để chấm không cần mở app | Tính năng M4, **không còn là tùy sức** vì nhãn verdict là thứ §19.1 sống nhờ. Nếu nút trên thông báo vướng thì lùi về: chạm thông báo mở thẳng hộp Chờ chấm. |
 
 ## 17. Mốc triển khai
 
 | Mốc | Nội dung | Nghiệm thu |
 |---|---|---|
 | **M0** | Dựng khung repo, lift ba plugin native, đặt `appId` `com.judexp.app` | Ghi được một event vào kho thật và **máy kia thấy được**. S1 và S2 xong. |
-| **M1** | `domain` + `search` + `index` + màn Tra cứu + chấm tay | Tra biển số gõ sai một ký tự vẫn ra. App dùng được thật dù chưa có ảnh. |
-| **M2** | Phase test parser đối đầu | Có bảng số đo, chốt parser theo quy tắc §10. |
-| **M3** | Worker + luồng share tới parse tới attach | Share một ảnh thật, dưới 2 phút sau app hiện đúng biển số. |
-| **M4** | Áp hệ thiết kế, bộ icon | Ba màn hình mẫu khớp với app thật. |
-| **M5** | Nhắc lại đúng lúc bằng thông báo | Tùy sức, bỏ được. |
+| **M0.5** | Hệ thiết kế: file token cộng ba màn hình mẫu (§13) | Có token trước khi code UI, đúng D6, khỏi sơn lại sau. |
+| **M1** | `domain` + `search` + `index` + luồng Hỏi đường gõ + nhập tay | Tra biển số gõ sai một ký tự vẫn ra. Thẻ quyết định hiện đúng cả ba tình huống §9.1. App dùng được thật dù chưa có ảnh. |
+| **M2** | Phase test parser đối đầu, ba nhóm ảnh | Có bảng số đo, chốt parser theo quy tắc §10. |
+| **M3** | Worker, share ảnh lịch sử (một ảnh nhiều dòng), nạp nền §9.4, share ảnh màn ghép tài xế, **camera chụp tại chỗ §9.5** | Chụp một ảnh lịch sử ra đúng số dòng, chấm được từng dòng. Chụp một quán ngoài đường, lưu được kèm toạ độ. |
+| **M4** | Nhắc chấm 90 phút, bốn nút trên thông báo (§9.3) | Tra một biển số, 90 phút sau nhận thông báo, chạm một nút là event vào kho. |
+| **M5** | Bộ icon app và icon bốn loại | Khớp với hệ thiết kế M0.5. |
 
-M0 cố tình đứng đầu vì nó là **rủi ro cao nhất**, không phải vì nó dễ.
+M0 cố tình đứng đầu vì nó là **rủi ro cao nhất**, không phải vì nó dễ. M4 không phải tính năng phụ: không có nó thì nhãn verdict không tích lũy, và §19.1 vĩnh viễn không có dữ liệu để hiệu chỉnh.
 
 ## 18. Tái dụng từ repo sẵn có
 
@@ -375,7 +469,26 @@ M0 cố tình đứng đầu vì nó là **rủi ro cao nhất**, không phải 
 
 Ước lượng: app mới bắt đầu từ khoảng 60% chứ không phải từ số không.
 
-## 19. Phụ lục: bộ tag v1
+## 19. Tính năng tương lai đã bàn
+
+### 19.1 Điểm dự đoán trước chuyến (ý của Gú, 2026-10-16)
+
+Ý: tự chấm điểm một chuyến dựa trên **sao tài xế, loại phương tiện, quãng đường**, cho ra một khoảng điểm để quyết định hủy tìm tài xế khác hay không. Giá trị lớn nhất của nó nằm ở đúng trường hợp thường gặp nhất: **chưa từng gặp người này**, lúc đó lịch sử cá nhân không giúp được gì.
+
+**Vì sao không làm ở v1:** một công thức chấm điểm chỉ có nghĩa khi hiệu chỉnh được bằng kết quả thật. Đặt ra bây giờ "sao dưới 4.7 thì trừ 2 điểm" là con số bịa. Khi đã có vài trăm chuyến vừa có đặc trưng lúc đặt vừa có verdict sau chuyến, app mới nói được câu có thật: *"sao dưới 4.7 thì tỉ lệ chuyến xấu của huynh là 35%, trên 4.8 là 8%"*. Lúc đó khoảng điểm là số của riêng huynh, không phải số của người viết app.
+
+**Yêu cầu nó đặt lên v1, và đây mới là phần quan trọng:** v1 phải **thu đủ đặc trưng lúc đặt** (`driverStars`, `vehicleType`, `distanceKm`, `durationMin`, `price`, giờ đi) ngay trong `context` của encounter, cộng verdict sau chuyến. Không thu từ bây giờ thì tính năng này sinh ra với dữ liệu bằng không và phải chờ thêm vài trăm chuyến nữa. Dữ liệu huấn luyện sinh ra như **sản phẩm phụ** của §9.1 cộng §9.3, không cần huynh làm gì thêm.
+
+**Hai ràng buộc chốt trước để sau này không trượt:**
+
+- **Không hiện điểm số dạng 7.3 trên 10.** Chỉ ba mức: nên đi, cân nhắc, nên hủy. Số thập phân giả vờ chính xác trong khi nó không chính xác.
+- **Chỉ khuyên hủy khi có bằng chứng cá nhân**, tức chính người này huynh từng chấm xấu. Tín hiệu chung như sao thấp chỉ để tham khảo, vì hủy chuyến có phí thật và tụt điểm tài khoản thật. App không được khuyên huynh mất tiền dựa trên một tương quan yếu.
+
+### 19.2 Những cái khác đã nhắc tới
+
+Chia sẻ cảnh báo chéo với Gú (đã chừa `visibility`), iOS (S4), nối dữ liệu với Ăn Khéo, và thống kê dạng "tháng này huynh đi 23 chuyến, 3 chuyến tệ".
+
+## 20. Phụ lục: bộ tag v1
 
 Tag lưu trong event dưới dạng chuỗi. **Từ vựng nằm trong code app, không nằm trong kho**, nên thêm hay bỏ tag ở bản sau cũng không làm hỏng event cũ. Tag tự gõ vẫn lưu được.
 
