@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AppShell from './AppShell';
 import type { KhoDeps } from './storage/kho';
 import type { PrefsStore } from './profile/settings';
@@ -58,7 +58,7 @@ function fakePrefs(seed: Record<string, string> = {}): PrefsStore {
 describe('AppShell', () => {
   it('asks for a kho folder before anything else', async () => {
     const { deps } = fakeKho();
-    render(<AppShell deps={deps} prefs={fakePrefs()} now={NOW} />);
+    render(<AppShell deps={deps} prefs={fakePrefs()} clock={() => NOW} />);
     expect(await screen.findByRole('button', { name: /chọn folder kho/i })).toBeInTheDocument();
   });
 
@@ -69,7 +69,7 @@ describe('AppShell', () => {
       'judexp.device': 'dgen1',
     });
 
-    render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
+    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
 
     fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H1-234.56' } });
@@ -88,6 +88,60 @@ describe('AppShell', () => {
   });
 });
 
+describe('AppShell, when the app stays open across midnight', () => {
+  function seededKho() {
+    const kho = fakeKho();
+    kho.files.set(
+      '20261016T100000Z_dgen1_a3f9c21.json',
+      JSON.stringify({
+        schemaVersion: 1,
+        eventId: 'a3f9c21d-7b44-4c2e-9f10-2c7a51d9e001',
+        type: 'encounter',
+        author: 'hieu',
+        device: 'dgen1',
+        createdAt: '2026-10-16T10:00:00Z',
+        visibility: 'private',
+        entityRef: { kind: 'driver', key: '59H123456', label: '59H1-234.56' },
+        verdict: 'good',
+        tags: [],
+      }),
+    );
+    const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }) });
+    return { ...kho, prefs };
+  }
+
+  it('reads the clock again when the app comes back to the foreground', async () => {
+    const { deps, prefs } = seededKho();
+    let current = NOW;
+    render(<AppShell deps={deps} prefs={prefs} clock={() => current} />);
+    expect(await screen.findByTestId('entity-59H123456')).toHaveTextContent('hôm nay');
+
+    current = new Date('2026-10-17T12:00:00Z');
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(await screen.findByTestId('entity-59H123456')).toHaveTextContent('hôm qua');
+  });
+
+  it('reads the clock again every minute while it stays in the foreground', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { deps, prefs } = seededKho();
+      let current = NOW;
+      render(<AppShell deps={deps} prefs={prefs} clock={() => current} />);
+      expect(await screen.findByTestId('entity-59H123456')).toHaveTextContent('hôm nay');
+
+      current = new Date('2026-10-17T12:00:00Z');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+      expect(screen.getByTestId('entity-59H123456')).toHaveTextContent('hôm qua');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('AppShell, when the kho cannot be opened', () => {
   it('still reaches a screen huynh can act on instead of hanging on the splash', async () => {
     const { deps } = fakeKho();
@@ -96,7 +150,7 @@ describe('AppShell, when the kho cannot be opened', () => {
     };
     const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://gone', label: 'Hieu' }) });
 
-    render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
+    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
 
     expect(await screen.findByText(/không mở được kho/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /chọn folder kho/i })).toBeInTheDocument();
@@ -109,7 +163,7 @@ describe('AppShell, when the kho cannot be opened', () => {
       'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }),
       'judexp.snapshot': '{broken',
     });
-    render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
+    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
     expect(await screen.findByRole('searchbox')).toBeInTheDocument();
   });
 });
@@ -125,7 +179,7 @@ describe('AppShell, when a rating cannot be written', () => {
       'judexp.device': 'dgen1',
     });
 
-    render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
+    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
     fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H123456' } });
     fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));

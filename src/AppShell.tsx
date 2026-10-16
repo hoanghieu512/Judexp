@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import LookupPage from './ui/LookupPage';
 import QuickRateSheet from './ui/QuickRateSheet';
 import EntityPage from './ui/EntityPage';
@@ -31,6 +31,37 @@ import './ui/ui.css';
 
 const SNAPSHOT_KEY = 'judexp.snapshot';
 
+/** Re-read at most this often while the app stays on screen. */
+const CLOCK_TICK_MS = 60_000;
+
+/**
+ * "Today" as of now, not as of when the app was opened. A phone keeps the
+ * app alive in the background for days, so the clock is read again when it
+ * comes back to the foreground and once a minute while it stays there.
+ */
+function useNow(clock: () => Date): Date {
+  const [now, setNow] = useState(clock);
+  // Held in a ref so a new clock function on each render does not restart
+  // the timer, which would keep a busy screen from ever ticking.
+  const latest = useRef(clock);
+  useEffect(() => {
+    latest.current = clock;
+  });
+  useEffect(() => {
+    const tick = () => setNow(latest.current());
+    const onVisible = () => {
+      if (document.visibilityState !== 'hidden') tick();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    const timer = setInterval(tick, CLOCK_TICK_MS);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      clearInterval(timer);
+    };
+  }, []);
+  return now;
+}
+
 type View = { name: 'lookup' } | { name: 'rate' } | { name: 'entity'; key: string } | { name: 'settings' };
 
 /**
@@ -42,12 +73,14 @@ type View = { name: 'lookup' } | { name: 'rate' } | { name: 'entity'; key: strin
 export default function AppShell({
   deps: rawDeps,
   prefs,
-  now,
+  clock = () => new Date(),
 }: {
   deps: KhoDeps;
   prefs: PrefsStore;
-  now: Date;
+  /** Injectable so tests can move time; the app reads the real clock. */
+  clock?: () => Date;
 }) {
+  const now = useNow(clock);
   const [kho, setKhoChoice] = useState<KhoChoice | null>(null);
   const [dirs, setDirs] = useState<KhoDirs | null>(null);
   const [state, setState] = useState<State>(emptyState());

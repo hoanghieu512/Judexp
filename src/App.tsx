@@ -15,7 +15,7 @@ const deps: KhoDeps = {
 export default function App() {
   return (
     <IonApp>
-      <AppShell deps={deps} prefs={capacitorStore} now={new Date()} />
+      <AppShell deps={deps} prefs={capacitorStore} />
     </IonApp>
   );
 }
