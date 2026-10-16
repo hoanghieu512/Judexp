@@ -9,7 +9,7 @@ function show(over: Record<string, unknown> = {}) {
     deviceId: 'zflip4',
     skipped: [] as string[],
     workerLog: '',
-    syncConfig: { baseUrl: 'http://127.0.0.1:8384', apiKey: 'k', folderId: 'judexp-hieu-qa', atommanDeviceId: 'A' },
+    syncConfig: { baseUrl: 'https://127.0.0.1:8384', apiKey: 'k', folderId: 'judexp-hieu-qa', atommanDeviceId: 'A' },
     onSyncConfig: vi.fn(),
     onPickKho: vi.fn(),
     onRebuild: vi.fn(),
@@ -26,10 +26,20 @@ describe('SettingsPage', () => {
     expect(screen.getByTestId('kho-label')).toHaveTextContent('Prod huynh');
   });
 
-  it('shows the three-state sync light', () => {
-    show({ status: 'unreachable' });
-    expect(screen.getByTestId('sync-light')).toHaveAttribute('data-status', 'unreachable');
+  it('says Atomman is the one missing when that is the fault', () => {
+    show({ status: 'atomman-offline' });
     expect(screen.getByTestId('sync-light')).toHaveTextContent(/chưa thấy atomman/i);
+  });
+
+  it('blames Syncthing on this phone when that is the fault instead', () => {
+    show({ status: 'no-syncthing' });
+    expect(screen.getByTestId('sync-light')).toHaveTextContent(/syncthing trên máy này/i);
+  });
+
+  it('lets huynh fix the Syncthing address when it is not the default', () => {
+    const props = show();
+    fireEvent.blur(screen.getByLabelText(/địa chỉ syncthing/i), { target: { value: 'https://127.0.0.1:9999' } });
+    expect(props.onSyncConfig).toHaveBeenCalledWith(expect.objectContaining({ baseUrl: 'https://127.0.0.1:9999' }));
   });
 
   it('asks before rebuilding the index and only then calls back', () => {

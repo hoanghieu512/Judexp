@@ -72,3 +72,32 @@ describe('mergeCandidates', () => {
     expect(candidateKeys(st, 'bun bo hue 14')).toEqual([]);
   });
 });
+
+describe('mergeCandidates, kinds other than restaurant', () => {
+  function driver(key: string, label: string): JudexpEvent {
+    seq += 1;
+    return {
+      schemaVersion: 1,
+      eventId: `d${seq}`,
+      type: 'encounter',
+      author: 'huynh',
+      device: 'zflip4',
+      createdAt: '2026-10-16T12:00:00Z',
+      visibility: 'private',
+      entityRef: { kind: 'driver', key, label },
+      verdict: 'good',
+    };
+  }
+
+  // A plate is an identity, not a name: two plates one character apart are two
+  // different vehicles, and merging them tangles two people's histories.
+  it('never suggests merging two drivers, however close the plates look', () => {
+    const st = stateWith(driver('59H123456', '59H1-234.56'), driver('59H123457', '59H1-234.57'));
+    expect(mergeCandidates(st, st.entities.get('59H123456')!)).toEqual([]);
+  });
+
+  it('never suggests merging two drivers who happen to share a name label', () => {
+    const st = stateWith(driver('51A11111', 'Anh Tuấn'), driver('77B99999', 'Anh Tuấn'));
+    expect(mergeCandidates(st, st.entities.get('51A11111')!)).toEqual([]);
+  });
+});

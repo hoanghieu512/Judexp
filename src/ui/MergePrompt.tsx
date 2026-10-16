@@ -18,7 +18,7 @@ export default function MergePrompt({
 
   return (
     <div className="jx-prompt" data-testid="merge-prompt">
-      <p className="jx-name">Có phải quán này không: {label}?</p>
+      <p className="jx-name">Có phải cùng một quán không: {label}?</p>
       <p className="jx-sub">
         {candidate.basis === 'nearby'
           ? 'Tên gần giống và cách đây dưới 150m.'

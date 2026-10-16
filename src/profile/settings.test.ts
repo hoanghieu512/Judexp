@@ -119,7 +119,9 @@ describe('khoLabelFromUri', () => {
 describe('syncthing config', () => {
   it('starts empty, with the local Syncthing address already filled in', async () => {
     const cfg = await getSyncConfig(fakeStore());
-    expect(cfg.baseUrl).toBe('http://127.0.0.1:8384');
+    // https, because cleartext to localhost is blocked from targetSdk 28 up,
+    // and the lifted SyncthingPlugin already trusts the localhost certificate.
+    expect(cfg.baseUrl).toBe('https://127.0.0.1:8384');
     expect(cfg.apiKey).toBe('');
     expect(cfg.atommanDeviceId).toBe('');
   });
@@ -127,7 +129,7 @@ describe('syncthing config', () => {
   it('round-trips what huynh typed', async () => {
     const store = fakeStore();
     await setSyncConfig(
-      { baseUrl: 'http://127.0.0.1:8384', apiKey: 'k', folderId: 'judexp-hieu-qa', atommanDeviceId: 'ATOM' },
+      { baseUrl: 'https://127.0.0.1:8384', apiKey: 'k', folderId: 'judexp-hieu-qa', atommanDeviceId: 'ATOM' },
       store,
     );
     expect((await getSyncConfig(store)).folderId).toBe('judexp-hieu-qa');

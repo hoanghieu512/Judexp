@@ -53,10 +53,21 @@
   font-weight: var(--jx-weight-bold);
 }
 
+/* Two vocabularies land on the same badge: an entity carries a COLOUR rolled
+   up from its history (green/yellow/red/grey), a single encounter carries its
+   own VERDICT (good/ok/bad). Both are styled here, because a badge with an
+   unstyled value is invisible and jsdom would never notice. */
+.jx-mark[data-color='green'],
 .jx-mark[data-color='good'] { background: var(--jx-good-soft); color: var(--jx-good); }
+
+.jx-mark[data-color='yellow'],
 .jx-mark[data-color='ok'] { background: var(--jx-ok-soft); color: var(--jx-ok); }
+
+.jx-mark[data-color='red'],
 .jx-mark[data-color='bad'] { background: var(--jx-bad-soft); color: var(--jx-bad); }
-.jx-mark[data-color='grey'] { background: var(--jx-unrated-soft); color: var(--jx-unrated); }
+
+.jx-mark[data-color='grey'],
+.jx-mark[data-color='unrated'] { background: var(--jx-unrated-soft); color: var(--jx-unrated); }
 
 /* Plates in mono: 0 against O and 1 against l decide who this driver is. */
 .jx-plate {
@@ -124,4 +135,14 @@
   gap: var(--jx-space-2);
   padding: var(--jx-space-3) var(--jx-space-4) 0;
   background: var(--jx-bg);
+}
+
+.jx-problem {
+  margin: 0 var(--jx-space-4);
+  padding: var(--jx-space-3) var(--jx-space-4);
+  background: var(--jx-bad-soft);
+  border-left: 4px solid var(--jx-bad);
+  border-radius: var(--jx-radius-sm);
+  color: var(--jx-text);
+  font-size: var(--jx-text-sm);
 }

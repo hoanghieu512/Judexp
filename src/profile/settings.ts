@@ -125,7 +125,7 @@ export function khoLabelFromUri(uri: string): string {
 }
 
 const DEFAULT_SYNC: SyncConfig = {
-  baseUrl: 'http://127.0.0.1:8384',
+  baseUrl: 'https://127.0.0.1:8384',
   apiKey: '',
   folderId: '',
   atommanDeviceId: '',

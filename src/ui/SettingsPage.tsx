@@ -7,21 +7,24 @@ import './ui.css';
 const LIGHT: Record<SyncState, string> = {
   synced: 'Đã đẩy hết sang Atomman',
   pending: 'Đang đẩy sang Atomman',
-  unreachable: 'Chưa thấy Atomman',
+  'atomman-offline': 'Chưa thấy Atomman',
+  'no-syncthing': 'Không đọc được Syncthing trên máy này',
   unconfigured: 'Chưa cấu hình Syncthing',
 };
 
 const LIGHT_COLOR: Record<SyncState, string> = {
   synced: 'good',
   pending: 'ok',
-  unreachable: 'bad',
+  'atomman-offline': 'bad',
+  'no-syncthing': 'bad',
   unconfigured: 'grey',
 };
 
 const LIGHT_MARK: Record<SyncState, string> = {
   synced: '\u2714',
   pending: '\u2013',
-  unreachable: '\u2715',
+  'atomman-offline': '\u2715',
+  'no-syncthing': '\u2715',
   unconfigured: '?',
 };
 
@@ -75,6 +78,16 @@ export default function SettingsPage({
           {skipped.length} file event đọc không được, đã bỏ qua: {skipped.join(', ')}
         </p>
       )}
+
+      <label className="jx-sub" htmlFor="jx-st-url">
+        Địa chỉ Syncthing trên máy này
+      </label>
+      <input
+        id="jx-st-url"
+        className="jx-search"
+        defaultValue={syncConfig.baseUrl}
+        onBlur={(e) => onSyncConfig({ ...syncConfig, baseUrl: e.target.value.trim() })}
+      />
 
       <label className="jx-sub" htmlFor="jx-st-key">
         API key Syncthing của MÁY NÀY

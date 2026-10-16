@@ -9,10 +9,18 @@
  * silent app looks broken when the real problem is that the mini PC is off.
  */
 
-export type SyncState = 'synced' | 'pending' | 'unreachable' | 'unconfigured';
+/**
+ * Four faults, four words. Lumping them together made the app blame Atomman
+ * for a request that never left this phone.
+ */
+export type SyncState = 'synced' | 'pending' | 'atomman-offline' | 'no-syncthing' | 'unconfigured';
 
 export interface SyncConfig {
-  /** Local Syncthing GUI, normally http://127.0.0.1:8384 */
+  /**
+   * Local Syncthing GUI. https, not http: from targetSdk 28 up Android blocks
+   * cleartext even to 127.0.0.1, and the native plugin trusts the localhost
+   * certificate for exactly this.
+   */
   baseUrl: string;
   /** API key of THIS device's Syncthing, not Atomman's. */
   apiKey: string;
@@ -41,14 +49,14 @@ export async function syncStatus(deps: SyncDeps, cfg: SyncConfig): Promise<SyncS
   const connections = (await getJson(deps, `${cfg.baseUrl}/rest/system/connections`, cfg.apiKey)) as
     | { connections?: Record<string, { connected?: boolean }> }
     | null;
-  if (!connections?.connections) return 'unreachable';
+  if (!connections?.connections) return 'no-syncthing';
 
   const atomman = connections.connections[cfg.atommanDeviceId];
-  if (!atomman?.connected) return 'unreachable';
+  if (!atomman?.connected) return 'atomman-offline';
 
   const url = `${cfg.baseUrl}/rest/db/completion?folder=${encodeURIComponent(cfg.folderId)}&device=${encodeURIComponent(cfg.atommanDeviceId)}`;
   const completion = (await getJson(deps, url, cfg.apiKey)) as { completion?: number } | null;
-  if (typeof completion?.completion !== 'number') return 'unreachable';
+  if (typeof completion?.completion !== 'number') return 'no-syncthing';
 
   return completion.completion >= 100 ? 'synced' : 'pending';
 }

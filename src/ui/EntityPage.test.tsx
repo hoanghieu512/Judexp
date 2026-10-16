@@ -68,7 +68,7 @@ describe('EntityPage', () => {
       met('bun bo 14', 'Bún Bò 14', 'good', { context: { geo: alsoNear } }),
     );
     const { onSave } = show(state, 'bun bo hue 14');
-    expect(screen.getByText(/có phải quán này/i)).toBeInTheDocument();
+    expect(screen.getByText(/có phải cùng một quán/i)).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });
 
@@ -98,6 +98,6 @@ describe('EntityPage', () => {
   it('says nothing about merging when there is no candidate', () => {
     const state = stateWith(met('bun bo hue 14', 'Bún Bò Huế 14', 'good'));
     show(state, 'bun bo hue 14');
-    expect(screen.queryByText(/có phải quán này/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/có phải cùng một quán/i)).not.toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { syncStatus, type SyncConfig, type SyncDeps } from './status';
 
 const cfg: SyncConfig = {
-  baseUrl: 'http://127.0.0.1:8384',
+  baseUrl: 'https://127.0.0.1:8384',
   apiKey: 'key',
   folderId: 'judexp-huynh-prod',
   atommanDeviceId: 'ATOMMAN-DEVICE-ID',
@@ -35,25 +35,27 @@ describe('syncStatus', () => {
     expect(await syncStatus(deps({}), { ...cfg, atommanDeviceId: '' })).toBe('unconfigured');
   });
 
-  it('is unreachable when the local Syncthing does not answer', async () => {
-    expect(await syncStatus(deps({}, true), cfg)).toBe('unreachable');
+  // Two different faults used to share one label, so the app blamed Atomman
+  // for a problem sitting on this phone.
+  it('blames the local Syncthing when it does not answer at all', async () => {
+    expect(await syncStatus(deps({}, true), cfg)).toBe('no-syncthing');
   });
 
-  it('is unreachable when Syncthing answers with an error status', async () => {
-    expect(await syncStatus(deps({ connections: { status: 403, data: 'nope' } }), cfg)).toBe('unreachable');
+  it('blames the local Syncthing when it answers with an error status', async () => {
+    expect(await syncStatus(deps({ connections: { status: 403, data: 'nope' } }), cfg)).toBe('no-syncthing');
   });
 
-  it('is unreachable when Atomman is not connected', async () => {
+  it('says Atomman is offline when Syncthing answers but the device is not connected', async () => {
     const d = deps({ connections: connected(false), completion: completion(100) });
-    expect(await syncStatus(d, cfg)).toBe('unreachable');
+    expect(await syncStatus(d, cfg)).toBe('atomman-offline');
   });
 
-  it('is unreachable when Atomman is absent from the connection list', async () => {
+  it('says Atomman is offline when it is absent from the connection list', async () => {
     const d = deps({
       connections: { status: 200, data: JSON.stringify({ connections: {} }) },
       completion: completion(100),
     });
-    expect(await syncStatus(d, cfg)).toBe('unreachable');
+    expect(await syncStatus(d, cfg)).toBe('atomman-offline');
   });
 
   it('is pending while completion is below 100', async () => {
@@ -66,8 +68,8 @@ describe('syncStatus', () => {
     expect(await syncStatus(d, cfg)).toBe('synced');
   });
 
-  it('is unreachable when the answer is not the json it expects', async () => {
+  it('blames the local Syncthing when the answer is not the json it expects', async () => {
     const d = deps({ connections: { status: 200, data: 'not json' } });
-    expect(await syncStatus(d, cfg)).toBe('unreachable');
+    expect(await syncStatus(d, cfg)).toBe('no-syncthing');
   });
 });

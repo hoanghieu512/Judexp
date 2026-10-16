@@ -87,3 +87,50 @@ describe('AppShell', () => {
     expect(await screen.findByTestId('entity-59H123456')).toHaveAttribute('data-color', 'red');
   });
 });
+
+describe('AppShell, when the kho cannot be opened', () => {
+  it('still reaches a screen huynh can act on instead of hanging on the splash', async () => {
+    const { deps } = fakeKho();
+    deps.saf.ensureDir = async () => {
+      throw new Error('bad parent');
+    };
+    const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://gone', label: 'Hieu' }) });
+
+    render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
+
+    expect(await screen.findByText(/không mở được kho/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /chọn folder kho/i })).toBeInTheDocument();
+    expect(screen.queryByText(/đang mở kho/i)).not.toBeInTheDocument();
+  });
+
+  it('survives a snapshot that cannot be parsed', async () => {
+    const { deps } = fakeKho();
+    const prefs = fakePrefs({
+      'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }),
+      'judexp.snapshot': '{broken',
+    });
+    render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
+    expect(await screen.findByRole('searchbox')).toBeInTheDocument();
+  });
+});
+
+describe('AppShell, when a rating cannot be written', () => {
+  it('says so instead of looking like nothing happened', async () => {
+    const { deps } = fakeKho();
+    deps.saf.writeFile = async () => {
+      throw new Error('permission revoked');
+    };
+    const prefs = fakePrefs({
+      'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }),
+      'judexp.device': 'dgen1',
+    });
+
+    render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
+    fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
+    fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H123456' } });
+    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
+
+    expect(await screen.findByText(/chưa ghi được/i)).toBeInTheDocument();
+  });
+});

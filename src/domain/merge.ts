@@ -60,6 +60,10 @@ function usablePosition(entity: Entity): Geo | null {
 
 export function mergeCandidates(state: State, entity: Entity): MergeCandidate[] {
   if (entity.mergedInto) return [];
+  // Only places get suggestions. A plate is an identity, not a name: two
+  // plates one character apart are two vehicles, and §6 asks this question
+  // for restaurants, whose names genuinely drift and duplicate.
+  if (entity.kind !== 'restaurant') return [];
 
   const myName = normalizeName(entity.labels[entity.labels.length - 1] ?? entity.key);
   const myPosition = usablePosition(entity);

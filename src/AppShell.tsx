@@ -55,13 +55,28 @@ export default function AppShell({
   const [pin, setPinValue] = useState<string | null>(null);
   const [view, setView] = useState<View>({ name: 'lookup' });
   const [ready, setReady] = useState(false);
-  const [sync, setSync] = useState<SyncConfig>({ baseUrl: 'http://127.0.0.1:8384', apiKey: '', folderId: '', atommanDeviceId: '' });
+  const [problem, setProblem] = useState<string | null>(null);
+  const [sync, setSync] = useState<SyncConfig>({
+    baseUrl: 'https://127.0.0.1:8384',
+    apiKey: '',
+    folderId: '',
+    atommanDeviceId: '',
+  });
   const [syncState, setSyncState] = useState<SyncState>('unconfigured');
 
   const refresh = useCallback(
     async (layout: KhoDirs, fromScratch = false) => {
       const stored = await prefs.get(SNAPSHOT_KEY);
-      const snapshot = !fromScratch && stored ? (JSON.parse(stored) as Snapshot) : null;
+      let snapshot: Snapshot | null = null;
+      if (!fromScratch && stored) {
+        try {
+          snapshot = JSON.parse(stored) as Snapshot;
+        } catch {
+          // A snapshot is derived data. If it is unreadable, rebuild from the
+          // kho rather than refusing to open.
+          snapshot = null;
+        }
+      }
       const result = fromScratch
         ? await rebuildIndex(deps, layout.events)
         : await loadIndex(deps, layout.events, snapshot);
@@ -74,18 +89,27 @@ export default function AppShell({
 
   useEffect(() => {
     (async () => {
-      setDevice(await getDeviceId(prefs));
-      setPinValue(await getPin(prefs));
-      setSync(await getSyncConfig(prefs));
-      const chosen = await getKho(prefs);
-      setKhoChoice(chosen);
-      setAuthorName(await getAuthor(prefs));
-      if (chosen) {
-        const layout = await ensureKhoLayout(deps, chosen.rootUri);
-        setDirs(layout);
-        await refresh(layout);
+      // Whatever happens here, the app must end up on a screen huynh can act
+      // on. A tree uri goes stale when the kho folder is renamed, moved or
+      // unplugged, and being stuck on the splash would leave no way back in.
+      try {
+        setDevice(await getDeviceId(prefs));
+        setPinValue(await getPin(prefs));
+        setSync(await getSyncConfig(prefs));
+        const chosen = await getKho(prefs);
+        setKhoChoice(chosen);
+        setAuthorName(await getAuthor(prefs));
+        if (chosen) {
+          const layout = await ensureKhoLayout(deps, chosen.rootUri);
+          setDirs(layout);
+          await refresh(layout);
+        }
+      } catch (err) {
+        setProblem(`Không mở được kho: ${(err as Error).message}. Chọn lại folder kho bên dưới.`);
+        setDirs(null);
+      } finally {
+        setReady(true);
       }
-      setReady(true);
     })();
   }, [deps, prefs, refresh]);
 
@@ -107,6 +131,15 @@ export default function AppShell({
   }, [ready, sync]);
 
   async function pickKho() {
+    try {
+      await pickKhoInner();
+      setProblem(null);
+    } catch (err) {
+      setProblem(`Không mở được kho: ${(err as Error).message}`);
+    }
+  }
+
+  async function pickKhoInner() {
     const { uri } = await Saf.pickFolder();
     const choice: KhoChoice = { rootUri: uri, label: khoLabelFromUri(uri) };
     await setKho(choice, prefs);
@@ -118,16 +151,34 @@ export default function AppShell({
   }
 
   async function save(event: JudexpEvent) {
-    if (!dirs) return;
-    await writeEvent(deps, dirs.events, event);
-    await refresh(dirs);
-    setView({ name: 'lookup' });
+    if (!dirs) {
+      setProblem('Chưa ghi được: chưa chọn kho.');
+      return;
+    }
+    try {
+      await writeEvent(deps, dirs.events, event);
+      await refresh(dirs);
+      setProblem(null);
+      setView({ name: 'lookup' });
+    } catch (err) {
+      // Staying on the sheet matters: a silent failure invites a second tap,
+      // and the second tap would write a second event for the same ride.
+      setProblem(`Chưa ghi được lần chấm này: ${(err as Error).message}. Thử lại khi kho đọc được.`);
+    }
   }
 
   if (!ready) return <p className="jx-empty">Đang mở kho...</p>;
 
-  if (!kho) {
+  const banner = problem ? (
+    <p className="jx-problem" role="alert">
+      {problem}
+    </p>
+  ) : null;
+
+  if (!kho || !dirs) {
     return (
+      <>
+        {banner}
       <SettingsPage
         kho={null}
         status={syncState}
@@ -142,7 +193,8 @@ export default function AppShell({
           await setSyncConfig(cfg, prefs);
           setSync(cfg);
         }}
-      />
+        />
+      </>
     );
   }
 
@@ -159,6 +211,7 @@ export default function AppShell({
           Cài đặt
         </button>
       </nav>
+      {banner}
 
       {view.name === 'lookup' && (
         <LookupPage state={state} now={now} onOpen={(key) => setView({ name: 'entity', key })} />
