@@ -63,6 +63,16 @@ describe('mergeCandidates', () => {
     expect(mergeCandidates(st, st.entities.get('bun bo hue 14')!)[0].basis).toBe('name-only');
   });
 
+  it('does not treat a short name as contained in every name that has its letters', () => {
+    const st = stateWith(place('an', 'Ăn'), place('banh mi hoa', 'Bánh Mì Hòa'), place('an ngon', 'Ăn Ngon'));
+    expect(candidateKeys(st, 'an')).toEqual([]);
+  });
+
+  it('still suggests a name that is a longer name with a suffix added', () => {
+    const st = stateWith(place('com tam ba ghi', 'Cơm Tấm Ba Ghi'), place('com tam ba ghi q7', 'Cơm Tấm Ba Ghi Q7'));
+    expect(candidateKeys(st, 'com tam ba ghi')).toEqual(['com tam ba ghi q7']);
+  });
+
   it('keeps an older accurate position when the newest one is too vague to use', () => {
     const accurateVisit = { ...place('bun bo hue 14', 'Bún Bò Huế 14', far), createdAt: '2026-10-16T10:00:00Z' };
     const vagueVisit = {

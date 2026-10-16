@@ -14,6 +14,8 @@ import { normalizeName } from './keys';
 const MAX_USEFUL_ACCURACY_M = 100;
 const SAME_PLACE_M = 150;
 const SIMILAR_NAME = 0.45;
+/** Shorter than this, a name is a word like "an", not something that identifies a place. */
+const MIN_CONTAINED_NAME = 4;
 
 export interface MergeCandidate {
   entity: Entity;
@@ -28,9 +30,20 @@ function trigrams(value: string): Set<string> {
   return out;
 }
 
+/**
+ * One name is the other plus words, like "com tam ba ghi" and "com tam ba ghi q7".
+ * Whole words only, and only for a name long enough to identify something:
+ * otherwise "an" sits inside "banh" and every name in the kho looks alike.
+ */
+function containsName(a: string, b: string): boolean {
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  if (short.length < MIN_CONTAINED_NAME) return false;
+  return ` ${long} `.includes(` ${short} `);
+}
+
 function nameSimilarity(a: string, b: string): number {
   if (a === '' || b === '') return 0;
-  if (a.includes(b) || b.includes(a)) return 1;
+  if (containsName(a, b)) return 1;
   const ta = trigrams(a);
   const tb = trigrams(b);
   let shared = 0;
