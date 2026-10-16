@@ -61,10 +61,26 @@ export default function SettingsPage({
   onAuthor: (author: string) => void;
   onPickKho: () => void;
   onSyncConfig: (cfg: SyncConfig) => void;
-  onRebuild: () => void;
+  onRebuild: () => Promise<void>;
   onDeviceId: (name: string) => void;
 }) {
   const [confirmingRebuild, setConfirmingRebuild] = useState(false);
+  const [rebuild, setRebuild] = useState<{ phase: 'idle' | 'running' | 'done' } | { phase: 'failed'; reason: string }>({
+    phase: 'idle',
+  });
+
+  // Reading a whole kho over SAF takes seconds on a real phone. Without a
+  // visible state the button looks dead and invites a second tap.
+  async function runRebuild() {
+    setConfirmingRebuild(false);
+    setRebuild({ phase: 'running' });
+    try {
+      await onRebuild();
+      setRebuild({ phase: 'done' });
+    } catch (err) {
+      setRebuild({ phase: 'failed', reason: (err as Error).message });
+    }
+  }
   // A draft, so nothing depends on a field losing focus: on a phone the
   // keyboard often covers everything and the last field never blurs.
   const [draft, setDraft] = useState<SyncConfig>(syncConfig);
@@ -206,18 +222,26 @@ export default function SettingsPage({
       <p className="jx-sub">PIN chỉ chặn người cầm máy, nó không mã hoá dữ liệu trong kho.</p>
 
       <h2 className="jx-section-title">Index</h2>
-      {confirmingRebuild ? (
+      {rebuild.phase === 'running' && (
+        <p className="jx-sub" role="status">
+          Đang dựng lại index, đang đọc toàn bộ kho...
+        </p>
+      )}
+      {rebuild.phase === 'done' && (
+        <p className="jx-sub" role="status">
+          Đã dựng lại xong.
+        </p>
+      )}
+      {rebuild.phase === 'failed' && (
+        <p className="jx-problem" role="alert">
+          Dựng lại không xong: {rebuild.reason}
+        </p>
+      )}
+      {rebuild.phase === 'running' ? null : confirmingRebuild ? (
         <div className="jx-prompt">
           <p className="jx-sub">Dựng lại index đọc toàn bộ kho, có thể mất một lúc. Dữ liệu không mất gì.</p>
           <div className="jx-prompt-actions">
-            <button
-              type="button"
-              className="jx-row"
-              onClick={() => {
-                setConfirmingRebuild(false);
-                onRebuild();
-              }}
-            >
+            <button type="button" className="jx-row" onClick={runRebuild}>
               Chắc chắn
             </button>
             <button type="button" className="jx-row" onClick={() => setConfirmingRebuild(false)}>

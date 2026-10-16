@@ -247,7 +247,7 @@ export default function AppShell({
           setAuthorName(await getAuthor(prefs));
         }}
         onPickKho={pickKho}
-        onRebuild={() => {}}
+        onRebuild={async () => {}}
         onDeviceId={() => {}}
         onSyncConfig={async (cfg) => {
           await setSyncConfig(cfg, prefs);
@@ -317,7 +317,7 @@ export default function AppShell({
             await setSyncConfig(cfg, prefs);
             setSync(cfg);
           }}
-          onRebuild={() => dirs && refresh(dirs, true)}
+          onRebuild={() => refresh(dirs, true)}
           onDeviceId={async (name) => {
             await setDeviceId(name, prefs);
             setDevice(await getDeviceId(prefs));

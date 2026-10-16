@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import SettingsPage from './SettingsPage';
 
 function show(over: Record<string, unknown> = {}) {
@@ -59,6 +59,30 @@ describe('SettingsPage', () => {
     expect(props.onRebuild).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /chắc chắn/i }));
     expect(props.onRebuild).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the rebuild running, allows no second one, and says when it is done', async () => {
+    let finish!: () => void;
+    const onRebuild = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+    show({ onRebuild });
+    fireEvent.click(screen.getByRole('button', { name: /dựng lại index/i }));
+    fireEvent.click(screen.getByRole('button', { name: /chắc chắn/i }));
+
+    expect(screen.getByRole('status')).toHaveTextContent(/đang dựng lại/i);
+    expect(screen.queryByRole('button', { name: /dựng lại index/i })).toBeNull();
+
+    await act(async () => finish());
+    expect(screen.getByRole('status')).toHaveTextContent(/đã dựng lại xong/i);
+    expect(screen.getByRole('button', { name: /dựng lại index/i })).toBeInTheDocument();
+    expect(onRebuild).toHaveBeenCalledTimes(1);
+  });
+
+  it('says what went wrong when the rebuild fails', async () => {
+    const onRebuild = vi.fn(() => Promise.reject(new Error('kho đã bị rút')));
+    show({ onRebuild });
+    fireEvent.click(screen.getByRole('button', { name: /dựng lại index/i }));
+    fireEvent.click(screen.getByRole('button', { name: /chắc chắn/i }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('kho đã bị rút');
   });
 
   it('says the light is unconfigured rather than blaming Atomman', () => {
