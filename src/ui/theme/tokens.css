@@ -1,0 +1,97 @@
+/*
+ * Judexp design tokens.
+ *
+ * Use context drives every value here: one hand, outdoors, possibly in hard
+ * sun or at night, in a hurry because a driver has already accepted. So:
+ * dark by default, high contrast, large text, large targets, and a verdict
+ * that is never signalled by colour alone.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --jx-bg: #0c0e11;
+  --jx-surface: #161a20;
+  --jx-surface-raised: #1f252d;
+  --jx-border: #2c343e;
+
+  /* Text */
+  --jx-text: #f3f6f9;
+  --jx-text-dim: #9fabb9;
+  --jx-text-on-accent: #0c0e11;
+
+  /* Verdict. Never the only signal: every verdict also carries a mark. */
+  --jx-good: #35c97a;
+  --jx-ok: #eab308;
+  --jx-bad: #f2545b;
+  --jx-unrated: #78889a;
+
+  --jx-good-soft: #35c97a26;
+  --jx-ok-soft: #eab30826;
+  --jx-bad-soft: #f2545b26;
+  --jx-unrated-soft: #78889a26;
+
+  /* Marks that ride along with the colour, for red-green colour blindness */
+  --jx-mark-good: '\2714'; /* check */
+  --jx-mark-ok: '\2013';   /* dash */
+  --jx-mark-bad: '\2715';  /* cross */
+  --jx-mark-unrated: '\003F'; /* question mark */
+
+  /* Type */
+  --jx-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Plates render in mono so 0/O and 1/l cannot be confused. */
+  --jx-font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
+
+  --jx-text-xl: 1.75rem;
+  --jx-text-lg: 1.375rem;
+  --jx-text-md: 1.0625rem;
+  --jx-text-sm: 0.9375rem;
+  --jx-text-xs: 0.8125rem;
+
+  --jx-weight-regular: 400;
+  --jx-weight-medium: 600;
+  --jx-weight-bold: 700;
+
+  /* Space */
+  --jx-space-1: 4px;
+  --jx-space-2: 8px;
+  --jx-space-3: 12px;
+  --jx-space-4: 16px;
+  --jx-space-5: 24px;
+  --jx-space-6: 32px;
+
+  /* Shape */
+  --jx-radius-sm: 8px;
+  --jx-radius-md: 14px;
+  --jx-radius-lg: 20px;
+
+  /* Targets: thumb-sized, because this gets used while walking. */
+  --jx-touch-min: 56px;
+  --jx-touch-verdict: 88px;
+
+  /* Motion: restrained, this runs in a webview on weak phones. */
+  --jx-motion-fast: 120ms;
+  --jx-motion-ease: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --jx-bg: #f7f9fb;
+  --jx-surface: #ffffff;
+  --jx-surface-raised: #eef2f6;
+  --jx-border: #d4dce5;
+  --jx-text: #11161c;
+  --jx-text-dim: #556070;
+  --jx-text-on-accent: #ffffff;
+  --jx-good: #16885a;
+  --jx-ok: #9a6f06;
+  --jx-bad: #c6303a;
+  --jx-unrated: #5c6b7c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --jx-motion-fast: 0ms;
+  }
+}

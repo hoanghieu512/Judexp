@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Judexp, ba màn hình mẫu</title>
+    <link rel="stylesheet" href="../../src/ui/theme/tokens.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: var(--jx-space-5);
+        background: #05070a;
+        color: var(--jx-text);
+        font-family: var(--jx-font);
+      }
+      h1 { font-size: var(--jx-text-lg); margin: 0 0 var(--jx-space-2); }
+      p.note { color: var(--jx-text-dim); font-size: var(--jx-text-sm); margin: 0 0 var(--jx-space-5); max-width: 60ch; }
+      .screens { display: flex; gap: var(--jx-space-5); flex-wrap: wrap; }
+      .phone {
+        width: 360px; min-height: 640px; background: var(--jx-bg);
+        border: 1px solid var(--jx-border); border-radius: var(--jx-radius-lg);
+        padding: var(--jx-space-4); display: flex; flex-direction: column; gap: var(--jx-space-4);
+      }
+      .phone h2 { font-size: var(--jx-text-xs); color: var(--jx-text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
+      .search {
+        display: flex; align-items: center; min-height: var(--jx-touch-min);
+        background: var(--jx-surface); border: 1px solid var(--jx-border);
+        border-radius: var(--jx-radius-md); padding: 0 var(--jx-space-4);
+        font-family: var(--jx-font-mono); font-size: var(--jx-text-lg); color: var(--jx-text);
+      }
+      .row {
+        display: flex; align-items: center; gap: var(--jx-space-3);
+        background: var(--jx-surface); border: 1px solid var(--jx-border);
+        border-radius: var(--jx-radius-md); padding: var(--jx-space-3) var(--jx-space-4);
+        min-height: var(--jx-touch-min);
+      }
+      .mark {
+        width: 36px; height: 36px; flex: none; border-radius: 50%;
+        display: grid; place-items: center; font-size: var(--jx-text-md); font-weight: var(--jx-weight-bold);
+      }
+      .mark.good { background: var(--jx-good-soft); color: var(--jx-good); }
+      .mark.ok { background: var(--jx-ok-soft); color: var(--jx-ok); }
+      .mark.bad { background: var(--jx-bad-soft); color: var(--jx-bad); }
+      .mark.unrated { background: var(--jx-unrated-soft); color: var(--jx-unrated); }
+      .mark.good::before { content: var(--jx-mark-good); }
+      .mark.ok::before { content: var(--jx-mark-ok); }
+      .mark.bad::before { content: var(--jx-mark-bad); }
+      .mark.unrated::before { content: var(--jx-mark-unrated); }
+      .plate { font-family: var(--jx-font-mono); font-size: var(--jx-text-md); font-weight: var(--jx-weight-medium); letter-spacing: 0.04em; }
+      .sub { color: var(--jx-text-dim); font-size: var(--jx-text-sm); }
+      .tags { display: flex; gap: var(--jx-space-2); flex-wrap: wrap; margin-top: var(--jx-space-1); }
+      .tag { background: var(--jx-surface-raised); border-radius: 999px; padding: 2px var(--jx-space-3); font-size: var(--jx-text-xs); color: var(--jx-text-dim); }
+      .verdicts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--jx-space-3); }
+      .verdict {
+        min-height: var(--jx-touch-verdict); border-radius: var(--jx-radius-md);
+        display: grid; place-items: center; gap: var(--jx-space-1);
+        font-size: var(--jx-text-md); font-weight: var(--jx-weight-medium); border: 2px solid transparent;
+      }
+      .verdict span { font-size: var(--jx-text-xl); }
+      .verdict.good { background: var(--jx-good-soft); color: var(--jx-good); border-color: var(--jx-good); }
+      .verdict.ok { background: var(--jx-ok-soft); color: var(--jx-ok); }
+      .verdict.bad { background: var(--jx-bad-soft); color: var(--jx-bad); }
+      .empty { color: var(--jx-text-dim); font-size: var(--jx-text-md); padding: var(--jx-space-4) 0; }
+      .banner { background: var(--jx-bad-soft); border-left: 4px solid var(--jx-bad); border-radius: var(--jx-radius-sm); padding: var(--jx-space-3) var(--jx-space-4); }
+      .banner strong { color: var(--jx-bad); }
+      .timeline { display: flex; flex-direction: column; gap: var(--jx-space-3); }
+    </style>
+  </head>
+  <body>
+    <h1>Judexp, ba màn hình mẫu</h1>
+    <p class="note">
+      Dựng bằng chính token trong <code>src/ui/theme/tokens.css</code>, nên sửa token là ba màn này đổi theo.
+      Mục đích là chốt tông màu, cỡ chữ và kích thước vùng chạm trước khi code UI, không phải chốt từng pixel.
+    </p>
+
+    <div class="screens">
+      <section class="phone">
+        <h2>1. Tra cứu</h2>
+        <div class="search">59h1</div>
+        <div class="row">
+          <div class="mark bad"></div>
+          <div>
+            <div class="plate">59H1-234.56</div>
+            <div class="sub">3 lần gặp, lần gần nhất 2 ngày trước</div>
+            <div class="tags"><span class="tag">chạy ẩu</span><span class="tag">nói nhiều</span></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="mark unrated"></div>
+          <div>
+            <div class="plate">59H1-999.00</div>
+            <div class="sub">đã đi 3 lần, chưa chấm lần nào</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="mark good"></div>
+          <div>
+            <div class="plate">51B-999.99</div>
+            <div class="sub">2 lần gặp, lần gần nhất 3 tuần trước</div>
+            <div class="tags"><span class="tag">chạy êm</span><span class="tag">xe sạch</span></div>
+          </div>
+        </div>
+        <div class="empty">Gõ một biển số chưa gặp thì màn hình nói thẳng: chưa gặp người này.</div>
+      </section>
+
+      <section class="phone">
+        <h2>2. Chấm nhanh</h2>
+        <div class="banner"><strong>Từng chấm xấu</strong><div class="sub">lần trước: chạy ẩu, 12/08</div></div>
+        <div class="row">
+          <div class="mark unrated"></div>
+          <div><div class="plate">59H1-234.56</div><div class="sub">Grab bike, Nguyễn Văn A</div></div>
+        </div>
+        <div class="verdicts">
+          <div class="verdict good"><span>&#10004;</span>Tốt</div>
+          <div class="verdict ok"><span>&#8211;</span>Ổn</div>
+          <div class="verdict bad"><span>&#10005;</span>Xấu</div>
+        </div>
+        <div class="tags">
+          <span class="tag">chạy ẩu</span><span class="tag">vượt đèn đỏ</span><span class="tag">đi lòng vòng</span>
+          <span class="tag">bắt chờ lâu</span><span class="tag">xe cũ bẩn</span><span class="tag">nói nhiều</span>
+        </div>
+        <div class="sub">Ghi chú (tùy chọn)</div>
+      </section>
+
+      <section class="phone">
+        <h2>3. Chi tiết thực thể</h2>
+        <div class="row">
+          <div class="mark bad"></div>
+          <div><div class="plate">59H1-234.56</div><div class="sub">Từng thấy tên: Nguyễn Văn A, Văn A</div></div>
+        </div>
+        <div class="timeline">
+          <div class="row"><div class="mark bad"></div><div><div class="sub">14/10, Grab bike</div><div class="tags"><span class="tag">chạy ẩu</span></div></div></div>
+          <div class="row"><div class="mark ok"></div><div><div class="sub">02/09, Grab bike</div></div></div>
+          <div class="row"><div class="mark unrated"></div><div><div class="sub">21/08, nạp từ lịch sử chuyến</div></div></div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
