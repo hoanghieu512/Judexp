@@ -43,7 +43,8 @@ describe('SettingsPage', () => {
 
   it('lets huynh fix the Syncthing address when it is not the default', () => {
     const props = show();
-    fireEvent.blur(screen.getByLabelText(/địa chỉ syncthing/i), { target: { value: 'https://127.0.0.1:9999' } });
+    fireEvent.change(screen.getByLabelText(/địa chỉ syncthing/i), { target: { value: 'https://127.0.0.1:9999' } });
+    fireEvent.click(screen.getByRole('button', { name: /lưu và kiểm tra/i }));
     expect(props.onSyncConfig).toHaveBeenCalledWith(expect.objectContaining({ baseUrl: 'https://127.0.0.1:9999' }));
   });
 
@@ -60,9 +61,10 @@ describe('SettingsPage', () => {
     expect(screen.getByTestId('sync-light')).toHaveTextContent(/chưa cấu hình syncthing/i);
   });
 
-  it('saves the Atomman device id huynh types', () => {
+  it('saves the Atomman device id huynh types, once the save button is tapped', () => {
     const props = show();
-    fireEvent.blur(screen.getByLabelText(/device id của atomman/i), { target: { value: 'ATOM-1' } });
+    fireEvent.change(screen.getByLabelText(/device id của atomman/i), { target: { value: 'ATOM-1' } });
+    fireEvent.click(screen.getByRole('button', { name: /lưu và kiểm tra/i }));
     expect(props.onSyncConfig).toHaveBeenCalledWith(expect.objectContaining({ atommanDeviceId: 'ATOM-1' }));
   });
 
@@ -106,5 +108,39 @@ describe('SettingsPage, author', () => {
     const props = show({ author: 'judexp-hieu' });
     fireEvent.blur(screen.getByLabelText(/người ghi/i), { target: { value: 'Hieu' } });
     expect(props.onAuthor).toHaveBeenCalledWith('Hieu');
+  });
+});
+
+describe('SettingsPage, saving and testing the connection', () => {
+  it('saves every field at once and tests, without needing each one to lose focus', () => {
+    const props = show({ syncConfig: { baseUrl: 'https://127.0.0.1:8384', apiKey: '', folderId: '', atommanDeviceId: '' } });
+    fireEvent.change(screen.getByLabelText(/api key/i), { target: { value: 'KEY-1' } });
+    fireEvent.change(screen.getByLabelText(/device id của atomman/i), { target: { value: 'ATOM-FULL' } });
+    fireEvent.change(screen.getByLabelText(/folder id/i), { target: { value: 'judexp-hieu-qa' } });
+    fireEvent.click(screen.getByRole('button', { name: /lưu và kiểm tra/i }));
+
+    expect(props.onSyncConfig).toHaveBeenCalledWith({
+      baseUrl: 'https://127.0.0.1:8384',
+      apiKey: 'KEY-1',
+      atommanDeviceId: 'ATOM-FULL',
+      folderId: 'judexp-hieu-qa',
+    });
+  });
+
+  it('warns when the Atomman id is only part of one', () => {
+    show({ syncConfig: { baseUrl: 'https://127.0.0.1:8384', apiKey: 'k', folderId: 'f', atommanDeviceId: 'KTW2JAW' } });
+    expect(screen.getByTestId('atomman-hint')).toHaveTextContent(/ngắn hơn/i);
+  });
+
+  it('says nothing about the id once it is complete', () => {
+    show({
+      syncConfig: {
+        baseUrl: 'https://127.0.0.1:8384',
+        apiKey: 'k',
+        folderId: 'f',
+        atommanDeviceId: 'P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2',
+      },
+    });
+    expect(screen.queryByTestId('atomman-hint')).not.toBeInTheDocument();
   });
 });

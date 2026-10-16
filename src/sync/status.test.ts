@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { syncStatus, type SyncConfig, type SyncDeps } from './status';
 
+/** Shaped like a real one: eight groups of seven characters. */
+const ATOMMAN = 'P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2';
+
 const cfg: SyncConfig = {
   baseUrl: 'https://127.0.0.1:8384',
   apiKey: 'key',
   folderId: 'judexp-huynh-prod',
-  atommanDeviceId: 'ATOMMAN-DEVICE-ID',
+  atommanDeviceId: ATOMMAN,
 };
 
 function deps(responses: Record<string, { status: number; data: string }>, fail = false): SyncDeps {
@@ -21,7 +24,7 @@ function deps(responses: Record<string, { status: number; data: string }>, fail 
 
 const connected = (value: boolean) => ({
   status: 200,
-  data: JSON.stringify({ connections: { 'ATOMMAN-DEVICE-ID': { connected: value } } }),
+  data: JSON.stringify({ connections: { [ATOMMAN]: { connected: value } } }),
 });
 const completion = (value: number) => ({ status: 200, data: JSON.stringify({ completion: value }) });
 
@@ -71,5 +74,23 @@ describe('syncStatus', () => {
   it('blames the local Syncthing when the answer is not the json it expects', async () => {
     const d = deps({ connections: { status: 200, data: 'not json' } });
     expect(await syncStatus(d, cfg)).toBe('no-syncthing');
+  });
+});
+
+describe('syncStatus, a device id that is only part of one', () => {
+  // A Syncthing device id is eight groups of seven characters. Pasting one
+  // group looks filled in, and the light would then blame Atomman forever.
+  it('counts a truncated Atomman id as not configured yet', async () => {
+    const d = deps({ connections: connected(true), completion: completion(100) });
+    expect(await syncStatus(d, { ...cfg, atommanDeviceId: 'KTW2JAW' })).toBe('unconfigured');
+  });
+
+  it('accepts a full device id, dashes or not', async () => {
+    const full = 'P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2';
+    const d = deps({
+      connections: { status: 200, data: JSON.stringify({ connections: { [full]: { connected: true } } }) },
+      completion: completion(100),
+    });
+    expect(await syncStatus(d, { ...cfg, atommanDeviceId: full })).toBe('synced');
   });
 });

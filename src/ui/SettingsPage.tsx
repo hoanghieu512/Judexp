@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SyncState } from '../sync/status';
 import type { KhoChoice } from '../profile/settings';
-import type { SyncConfig } from '../sync/status';
+import { isLikelyDeviceId, type SyncConfig } from '../sync/status';
 import './ui.css';
 
 const LIGHT: Record<SyncState, string> = {
@@ -62,6 +62,11 @@ export default function SettingsPage({
   onDeviceId: (name: string) => void;
 }) {
   const [confirmingRebuild, setConfirmingRebuild] = useState(false);
+  // A draft, so nothing depends on a field losing focus: on a phone the
+  // keyboard often covers everything and the last field never blurs.
+  const [draft, setDraft] = useState<SyncConfig>(syncConfig);
+  useEffect(() => setDraft(syncConfig), [syncConfig]);
+  const idLooksShort = draft.atommanDeviceId !== '' && !isLikelyDeviceId(draft.atommanDeviceId);
 
   return (
     <div className="jx-screen">
@@ -95,8 +100,8 @@ export default function SettingsPage({
       <input
         id="jx-st-url"
         className="jx-search"
-        defaultValue={syncConfig.baseUrl}
-        onBlur={(e) => onSyncConfig({ ...syncConfig, baseUrl: e.target.value.trim() })}
+        value={draft.baseUrl}
+        onChange={(e) => setDraft({ ...draft, baseUrl: e.target.value.trim() })}
       />
 
       <label className="jx-sub" htmlFor="jx-st-key">
@@ -105,8 +110,8 @@ export default function SettingsPage({
       <input
         id="jx-st-key"
         className="jx-search"
-        defaultValue={syncConfig.apiKey}
-        onBlur={(e) => onSyncConfig({ ...syncConfig, apiKey: e.target.value.trim() })}
+        value={draft.apiKey}
+        onChange={(e) => setDraft({ ...draft, apiKey: e.target.value.trim() })}
       />
 
       <label className="jx-sub" htmlFor="jx-st-atomman">
@@ -115,8 +120,8 @@ export default function SettingsPage({
       <input
         id="jx-st-atomman"
         className="jx-search"
-        defaultValue={syncConfig.atommanDeviceId}
-        onBlur={(e) => onSyncConfig({ ...syncConfig, atommanDeviceId: e.target.value.trim() })}
+        value={draft.atommanDeviceId}
+        onChange={(e) => setDraft({ ...draft, atommanDeviceId: e.target.value.trim() })}
       />
 
       <label className="jx-sub" htmlFor="jx-st-folder">
@@ -125,9 +130,20 @@ export default function SettingsPage({
       <input
         id="jx-st-folder"
         className="jx-search"
-        defaultValue={syncConfig.folderId}
-        onBlur={(e) => onSyncConfig({ ...syncConfig, folderId: e.target.value.trim() })}
+        value={draft.folderId}
+        onChange={(e) => setDraft({ ...draft, folderId: e.target.value.trim() })}
       />
+
+      {idLooksShort && (
+        <p className="jx-sub" data-testid="atomman-hint">
+          Device ID này ngắn hơn một Device ID của Syncthing, vốn gồm tám nhóm bảy ký tự. Chép lại đủ cả chuỗi
+          từ Atomman, Actions rồi Show ID.
+        </p>
+      )}
+
+      <button type="button" className="jx-row" onClick={() => onSyncConfig(draft)}>
+        Lưu và kiểm tra kết nối
+      </button>
 
       <h2 className="jx-section-title">Máy này</h2>
       <label className="jx-sub" htmlFor="jx-author">

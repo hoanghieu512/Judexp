@@ -42,9 +42,19 @@ async function getJson(deps: SyncDeps, url: string, apiKey: string): Promise<unk
   }
 }
 
+/**
+ * A Syncthing device id is eight groups of seven characters. One group pasted
+ * by mistake looks like a filled-in field, so it is treated as unconfigured
+ * rather than reported as Atomman being away.
+ */
+export function isLikelyDeviceId(id: string): boolean {
+  return id.replace(/-/g, '').length >= 50;
+}
+
 export async function syncStatus(deps: SyncDeps, cfg: SyncConfig): Promise<SyncState> {
   // A light that can never turn green is a lie. Say which of the two it is.
   if (cfg.apiKey === '' || cfg.atommanDeviceId === '' || cfg.folderId === '') return 'unconfigured';
+  if (!isLikelyDeviceId(cfg.atommanDeviceId)) return 'unconfigured';
 
   const connections = (await getJson(deps, `${cfg.baseUrl}/rest/system/connections`, cfg.apiKey)) as
     | { connections?: Record<string, { connected?: boolean }> }
