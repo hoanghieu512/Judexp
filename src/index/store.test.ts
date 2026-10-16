@@ -104,3 +104,20 @@ describe('rebuildIndex', () => {
     expect(a).toEqual(b);
   });
 });
+
+describe('skipped files', () => {
+  // A file that could not be read is recorded in the cursor so it is not
+  // retried forever; if the warning were not carried too, the next launch
+  // would look clean while an event stayed lost.
+  it('remembers files it had to skip across launches', async () => {
+    const { deps } = fakeKho([
+      { name: 'a.json', content: eventJson('id-a') },
+      { name: 'broken.json', content: '{oops' },
+    ]);
+    const first = await loadIndex(deps, EVENTS_URI, null);
+    expect(first.skipped).toEqual(['broken.json']);
+
+    const second = await loadIndex(deps, EVENTS_URI, first.snapshot);
+    expect(second.skipped).toEqual(['broken.json']);
+  });
+});

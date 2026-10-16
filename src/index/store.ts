@@ -21,6 +21,8 @@ export interface Snapshot {
   schemaVersion: typeof SNAPSHOT_VERSION;
   cursor: Cursor;
   events: JudexpEvent[];
+  /** Files that could not be used, carried so the warning outlives a restart. */
+  skipped?: string[];
 }
 
 export interface IndexResult {
@@ -41,11 +43,12 @@ export async function loadIndex(deps: KhoDeps, eventsUri: string, snapshot: Snap
 
   const { events, cursor, skipped } = await readNewEvents(deps, eventsUri, usable?.cursor ?? {});
   const state = applyEvents(base, events);
+  const allSkipped = [...new Set([...(usable?.skipped ?? []), ...skipped])];
 
   return {
     state,
-    snapshot: { schemaVersion: SNAPSHOT_VERSION, cursor, events: state.events },
-    skipped,
+    snapshot: { schemaVersion: SNAPSHOT_VERSION, cursor, events: state.events, skipped: allSkipped },
+    skipped: allSkipped,
   };
 }
 

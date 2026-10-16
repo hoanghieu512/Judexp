@@ -101,3 +101,38 @@ describe('EntityPage', () => {
     expect(screen.queryByText(/có phải cùng một quán/i)).not.toBeInTheDocument();
   });
 });
+
+describe('EntityPage, correcting what is already written', () => {
+  it('re-rates an encounter by writing an amend, never by editing the old file', () => {
+    const e = met('bun bo hue 14', 'Bún Bò Huế 14', 'good');
+    const { onSave } = show(stateWith(e), 'bun bo hue 14');
+    fireEvent.click(screen.getAllByTestId('encounter')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    const event = onSave.mock.calls[0][0];
+    expect(event.type).toBe('amend');
+    expect(event.targetEventId).toBe(e.eventId);
+    expect(event.verdict).toBe('bad');
+  });
+
+  it('offers to undo a merge and writes a tombstone on the merge event', () => {
+    const a = met('bun bo hue 14', 'Bún Bò Huế 14', 'good');
+    const b = met('bun bo 14', 'Bún Bò 14', 'good');
+    const merge: JudexpEvent = {
+      ...met('bun bo 14', 'Bún Bò 14', null),
+      type: 'merge',
+      fromKey: 'bun bo 14',
+      intoKey: 'bun bo hue 14',
+      createdAt: '2026-10-15T12:00:00Z',
+    };
+    const { onSave } = show(stateWith(a, b, merge), 'bun bo 14');
+    fireEvent.click(screen.getByRole('button', { name: /gỡ gộp/i }));
+    const event = onSave.mock.calls[0][0];
+    expect(event.type).toBe('tombstone');
+    expect(event.targetEventId).toBe(merge.eventId);
+  });
+
+  it('does not offer to undo a merge on an entity that was never merged', () => {
+    show(stateWith(met('bun bo hue 14', 'Bún Bò Huế 14', 'good')), 'bun bo hue 14');
+    expect(screen.queryByRole('button', { name: /gỡ gộp/i })).not.toBeInTheDocument();
+  });
+});

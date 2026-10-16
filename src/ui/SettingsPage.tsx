@@ -35,6 +35,9 @@ export default function SettingsPage({
   skipped,
   workerLog,
   syncConfig,
+  pin,
+  khoLog,
+  onPin,
   onPickKho,
   onRebuild,
   onDeviceId,
@@ -46,6 +49,9 @@ export default function SettingsPage({
   skipped: string[];
   workerLog: string;
   syncConfig: SyncConfig;
+  pin: string | null;
+  khoLog: string[];
+  onPin: (pin: string | null) => void;
   onPickKho: () => void;
   onSyncConfig: (cfg: SyncConfig) => void;
   onRebuild: () => void;
@@ -130,6 +136,19 @@ export default function SettingsPage({
         onBlur={(e) => onDeviceId(e.target.value)}
       />
 
+      <label className="jx-sub" htmlFor="jx-pin-set">
+        PIN mở app, để trống là không dùng
+      </label>
+      <input
+        id="jx-pin-set"
+        className="jx-search"
+        type="password"
+        inputMode="numeric"
+        defaultValue={pin ?? ''}
+        onBlur={(e) => onPin(e.target.value.trim() === '' ? null : e.target.value.trim())}
+      />
+      <p className="jx-sub">PIN chỉ chặn người cầm máy, nó không mã hoá dữ liệu trong kho.</p>
+
       <h2 className="jx-section-title">Index</h2>
       {confirmingRebuild ? (
         <div className="jx-prompt">
@@ -155,6 +174,11 @@ export default function SettingsPage({
           Dựng lại index
         </button>
       )}
+
+      <h2 className="jx-section-title">Log kho</h2>
+      <pre className="jx-sub" data-testid="kho-log">
+        {khoLog.length === 0 ? 'Chưa có gì đáng nói.' : khoLog.join('\n')}
+      </pre>
 
       <h2 className="jx-section-title">Log worker</h2>
       <pre className="jx-sub" data-testid="worker-log">

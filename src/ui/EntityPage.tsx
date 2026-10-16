@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { entityColor } from '../domain/color';
 import { COLOR_LABELS, COLOR_MARKS } from './EntityRow';
 import { mergeCandidates } from '../domain/merge';
-import { newEncounter, type JudexpEvent } from '../domain/events';
+import { newEncounter, type JudexpEvent, type Verdict } from '../domain/events';
 import type { State } from '../domain/reduce';
 import MergePrompt from './MergePrompt';
 import { relativeTime } from './relativeTime';
@@ -28,6 +28,7 @@ export default function EntityPage({
 }) {
   const entity = state.entities.get(entityKey);
   const [dismissed, setDismissed] = useState<string[]>([]);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const candidates = useMemo(
     () => (entity ? mergeCandidates(state, entity).filter((c) => !dismissed.includes(c.entity.key)) : []),
@@ -37,6 +38,33 @@ export default function EntityPage({
   if (!entity) return <p className="jx-empty">Không còn hồ sơ này.</p>;
 
   const encounters = [...entity.encounters].sort((a, b) => b.happenedAt.localeCompare(a.happenedAt));
+
+  /** Corrections are new events; the file already written is never touched. */
+  function amend(targetEventId: string, verdict: Verdict) {
+    onSave({
+      ...newEncounter({ author, device }),
+      type: 'amend',
+      targetEventId,
+      verdict,
+      entityRef: null,
+    });
+    setEditing(null);
+  }
+
+  /** Undoing a merge is tombstoning the merge event, exactly as §14 says. */
+  function undoMerge() {
+    const mergeEvent = [...state.events]
+      .reverse()
+      .find((e) => e.type === 'merge' && e.fromKey === entityKey);
+    if (!mergeEvent) return;
+    onSave({
+      ...newEncounter({ author, device }),
+      type: 'tombstone',
+      targetEventId: mergeEvent.eventId,
+      entityRef: null,
+      verdict: undefined,
+    });
+  }
 
   function confirmMerge(fromKey: string) {
     onSave({
@@ -73,9 +101,25 @@ export default function EntityPage({
         />
       ))}
 
+      {entity.mergedInto && (
+        <div className="jx-prompt">
+          <p className="jx-sub">Đã gộp vào {entity.mergedInto}.</p>
+          <button type="button" className="jx-row" onClick={undoMerge}>
+            Gỡ gộp
+          </button>
+        </div>
+      )}
+
       <h2 className="jx-section-title">Các lần gặp</h2>
       {encounters.map((enc) => (
-        <div className="jx-row" data-testid="encounter" data-verdict={enc.verdict ?? 'unrated'} key={enc.eventId}>
+        <div key={enc.eventId}>
+        <button
+          type="button"
+          className="jx-row"
+          data-testid="encounter"
+          data-verdict={enc.verdict ?? 'unrated'}
+          onClick={() => setEditing(editing === enc.eventId ? null : enc.eventId)}
+        >
           <span className="jx-mark" data-color={enc.verdict ?? 'grey'}>
             {VERDICT_MARKS[enc.verdict ?? 'grey']}
           </span>
@@ -92,6 +136,22 @@ export default function EntityPage({
             )}
             {enc.note && <span className="jx-sub"> {enc.note}</span>}
           </span>
+        </button>
+        {editing === enc.eventId && (
+          <div className="jx-verdicts">
+            {(['good', 'ok', 'bad'] as Verdict[]).map((v) => (
+              <button
+                key={v}
+                type="button"
+                className="jx-verdict"
+                data-color={v}
+                onClick={() => amend(enc.eventId, v)}
+              >
+                {v === 'good' ? 'Tốt' : v === 'ok' ? 'Ổn' : 'Xấu'}
+              </button>
+            ))}
+          </div>
+        )}
         </div>
       ))}
     </div>

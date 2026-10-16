@@ -11,6 +11,9 @@ function show(over: Record<string, unknown> = {}) {
     workerLog: '',
     syncConfig: { baseUrl: 'https://127.0.0.1:8384', apiKey: 'k', folderId: 'judexp-hieu-qa', atommanDeviceId: 'A' },
     onSyncConfig: vi.fn(),
+    pin: null as string | null,
+    khoLog: [] as string[],
+    onPin: vi.fn(),
     onPickKho: vi.fn(),
     onRebuild: vi.fn(),
     onDeviceId: vi.fn(),
@@ -69,5 +72,24 @@ describe('SettingsPage', () => {
   it('says nothing about skipped files when there are none', () => {
     show();
     expect(screen.queryByTestId('skipped')).not.toBeInTheDocument();
+  });
+});
+
+describe('SettingsPage, pin', () => {
+  it('saves a pin huynh types', () => {
+    const props = show();
+    fireEvent.blur(screen.getByLabelText(/^pin/i), { target: { value: '1234' } });
+    expect(props.onPin).toHaveBeenCalledWith('1234');
+  });
+
+  it('clears the pin when the field is emptied', () => {
+    const props = show({ pin: '1234' });
+    fireEvent.blur(screen.getByLabelText(/^pin/i), { target: { value: '' } });
+    expect(props.onPin).toHaveBeenCalledWith(null);
+  });
+
+  it('shows the kho log so a sync-conflict is not swallowed', () => {
+    show({ khoLog: ['skipping sync-conflict file: a.sync-conflict-x.json'] });
+    expect(screen.getByTestId('kho-log')).toHaveTextContent(/sync-conflict/i);
   });
 });

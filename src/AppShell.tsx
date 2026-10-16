@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import LookupPage from './ui/LookupPage';
 import QuickRateSheet from './ui/QuickRateSheet';
 import EntityPage from './ui/EntityPage';
@@ -17,6 +17,7 @@ import {
   setSyncConfig,
   setDeviceId,
   setKho,
+  setPin,
   type KhoChoice,
   type PrefsStore,
 } from './profile/settings';
@@ -38,7 +39,7 @@ type View = { name: 'lookup' } | { name: 'rate' } | { name: 'entity'; key: strin
  * deep links; the kho and the index are the only real moving parts.
  */
 export default function AppShell({
-  deps,
+  deps: rawDeps,
   prefs,
   now,
 }: {
@@ -56,6 +57,7 @@ export default function AppShell({
   const [view, setView] = useState<View>({ name: 'lookup' });
   const [ready, setReady] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [khoLog, setKhoLog] = useState<string[]>([]);
   const [sync, setSync] = useState<SyncConfig>({
     baseUrl: 'https://127.0.0.1:8384',
     apiKey: '',
@@ -63,6 +65,19 @@ export default function AppShell({
     atommanDeviceId: '',
   });
   const [syncState, setSyncState] = useState<SyncState>('unconfigured');
+
+  // Keep what the kho layer reports where huynh can see it, not only in a
+  // console nobody on a phone can open.
+  const deps = useMemo<KhoDeps>(
+    () => ({
+      saf: rawDeps.saf,
+      log: (msg) => {
+        rawDeps.log(msg);
+        setKhoLog((lines) => [...lines.slice(-49), msg]);
+      },
+    }),
+    [rawDeps],
+  );
 
   const refresh = useCallback(
     async (layout: KhoDirs, fromScratch = false) => {
@@ -186,6 +201,12 @@ export default function AppShell({
         skipped={[]}
         workerLog=""
         syncConfig={sync}
+        pin={pin}
+        khoLog={khoLog}
+        onPin={async (value) => {
+          await setPin(value, prefs);
+          setPinValue(value);
+        }}
         onPickKho={pickKho}
         onRebuild={() => {}}
         onDeviceId={() => {}}
@@ -240,6 +261,12 @@ export default function AppShell({
           skipped={skipped}
           workerLog=""
           syncConfig={sync}
+          pin={pin}
+          khoLog={khoLog}
+          onPin={async (value) => {
+            await setPin(value, prefs);
+            setPinValue(value);
+          }}
           onPickKho={pickKho}
           onSyncConfig={async (cfg) => {
             await setSyncConfig(cfg, prefs);
