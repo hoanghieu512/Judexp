@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { searchEntities } from '../search/fuzzy';
-import type { Entity, State } from '../domain/reduce';
+import { instant, type Entity, type State } from '../domain/reduce';
 import DecisionCard from './DecisionCard';
 import EntityRow from './EntityRow';
 import './ui.css';
@@ -11,7 +11,7 @@ const RECENT_LIMIT = 10;
 function recentlyMet(state: State, limit = RECENT_LIMIT): Entity[] {
   return [...state.entities.values()]
     .filter((e) => !e.mergedInto && e.encounters.length > 0)
-    .sort((a, b) => b.lastSeen.localeCompare(a.lastSeen))
+    .sort((a, b) => instant(b.lastSeen) - instant(a.lastSeen))
     .slice(0, limit);
 }
 

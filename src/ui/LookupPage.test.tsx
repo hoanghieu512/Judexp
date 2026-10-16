@@ -79,6 +79,17 @@ describe('LookupPage', () => {
     expect(screen.getByTestId('entity-key-59H123456')).toHaveClass('jx-plate');
   });
 
+  it('orders recent meetings by instant, not by the text of timestamps with different offsets', () => {
+    const state = stateWith(
+      // 10:00+07:00 is 03:00Z, two hours before the other one.
+      met('driver', '51A11111', 'good', { createdAt: '2026-10-14T10:00:00+07:00' }),
+      met('driver', '59H123456', 'good', { createdAt: '2026-10-14T05:00:00Z' }),
+    );
+    render(<LookupPage state={state} now={NOW} />);
+    const order = screen.getAllByTestId(/^entity-[0-9A-Z]+$/).map((el) => el.dataset.testid);
+    expect(order).toEqual(['entity-59H123456', 'entity-51A11111']);
+  });
+
   it('shows recent meetings before anything is typed', () => {
     const state = stateWith(met('driver', '59H123456', 'good'));
     render(<LookupPage state={state} now={NOW} />);
