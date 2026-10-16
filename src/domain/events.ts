@@ -78,6 +78,23 @@ export interface JudexpEvent {
 
 const SCHEMA_VERSION = 1;
 
+const EVENT_TYPES: EventType[] = ['encounter', 'attach', 'amend', 'merge', 'tombstone'];
+const VERDICTS: Verdict[] = ['good', 'ok', 'bad'];
+const ENTITY_KINDS: EntityKind[] = ['driver', 'restaurant', 'dish', 'place'];
+
+function isStringList(value: unknown): boolean {
+  return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
+
+function isEntityRef(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  if (typeof value !== 'object') return false;
+  const ref = value as Partial<EntityRef>;
+  if (typeof ref.key !== 'string' || ref.key === '') return false;
+  if (!ENTITY_KINDS.includes(ref.kind as EntityKind)) return false;
+  return ref.label === undefined || typeof ref.label === 'string';
+}
+
 /**
  * `20261016T120322Z_zflip4_a3f9c21.json`.
  *
@@ -107,8 +124,16 @@ export function parseEvent(raw: string): JudexpEvent | null {
   const e = value as Partial<JudexpEvent>;
   if (e.schemaVersion !== SCHEMA_VERSION) return null;
   if (typeof e.eventId !== 'string' || e.eventId === '') return null;
-  if (typeof e.type !== 'string') return null;
+  if (!EVENT_TYPES.includes(e.type as EventType)) return null;
   if (typeof e.createdAt !== 'string' || Number.isNaN(Date.parse(e.createdAt))) return null;
+
+  // Beyond this point the file is syntactically fine but could still carry the
+  // wrong shapes. A wrong shape that reaches the index crashes every search,
+  // not just the row it came from, so it is rejected here like a broken file.
+  if (!isEntityRef(e.entityRef)) return null;
+  if (e.verdict !== undefined && e.verdict !== null && !VERDICTS.includes(e.verdict)) return null;
+  if (e.tags !== undefined && !isStringList(e.tags)) return null;
+  if (e.note !== undefined && typeof e.note !== 'string') return null;
 
   return e as JudexpEvent;
 }

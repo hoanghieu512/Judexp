@@ -77,3 +77,30 @@ describe('newEncounter', () => {
     expect(e.verdict).toBeNull();
   });
 });
+
+describe('parseEvent, shapes that are valid JSON but not a valid event', () => {
+  it('rejects an event whose entity key is not a string', () => {
+    expect(parseEvent(JSON.stringify(makeEvent({ entityRef: { kind: 'driver', key: 59123 } as never })))).toBeNull();
+  });
+
+  it('rejects an event whose entity kind is not one this app knows', () => {
+    expect(parseEvent(JSON.stringify(makeEvent({ entityRef: { kind: 'spaceship', key: 'x' } as never })))).toBeNull();
+  });
+
+  it('rejects an event whose tags are a string instead of a list', () => {
+    expect(parseEvent(JSON.stringify(makeEvent({ tags: 'chạy ẩu' as never })))).toBeNull();
+  });
+
+  it('rejects a verdict outside the three the app understands', () => {
+    expect(parseEvent(JSON.stringify(makeEvent({ verdict: 'terrible' as never })))).toBeNull();
+  });
+
+  it('rejects an event type it does not know', () => {
+    expect(parseEvent(JSON.stringify(makeEvent({ type: 'explode' as never })))).toBeNull();
+  });
+
+  it('still accepts an event with no entityRef and no tags', () => {
+    const e = parseEvent(JSON.stringify(makeEvent({ entityRef: null, tags: undefined, verdict: null })));
+    expect(e).not.toBeNull();
+  });
+});

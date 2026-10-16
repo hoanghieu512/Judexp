@@ -134,3 +134,57 @@ describe('applyEvents', () => {
     expect(entity.lastSeen).toBe('2030-01-01T00:00:00Z');
   });
 });
+
+describe('applyEvents, findings from the branch review', () => {
+  // C2: a rating written under a key that was merged away must not vanish.
+  it('lands an encounter written under a merged-away key on the surviving entity', () => {
+    const a = ev({ entityRef: { kind: 'restaurant', key: 'bun bo hue 14' }, createdAt: '2026-10-16T10:00:00Z' });
+    const b = ev({ entityRef: { kind: 'restaurant', key: 'bun bo 14' }, createdAt: '2026-10-16T11:00:00Z' });
+    const m = ev({ type: 'merge', fromKey: 'bun bo 14', intoKey: 'bun bo hue 14', createdAt: '2026-10-16T12:00:00Z' });
+    const late = ev({
+      entityRef: { kind: 'restaurant', key: 'bun bo 14' },
+      verdict: 'bad',
+      createdAt: '2026-10-23T10:00:00Z',
+    });
+    const s = applyEvents(emptyState(), [a, b, m, late]);
+    expect(s.entities.get('bun bo hue 14')!.encounters).toHaveLength(3);
+    expect(s.entities.get('bun bo 14')!.encounters).toHaveLength(0);
+    expect(s.entities.get('bun bo 14')!.mergedInto).toBe('bun bo hue 14');
+  });
+
+  // I5: a correction that carries an earlier timestamp than the thing it corrects.
+  it('applies an amend that arrives dated before its target', () => {
+    const e = ev({ verdict: 'good', createdAt: '2026-10-16T12:00:00Z' });
+    const am = ev({
+      type: 'amend',
+      targetEventId: e.eventId,
+      verdict: 'bad',
+      createdAt: '2026-10-16T11:55:00Z',
+    });
+    const s = applyEvents(emptyState(), [e, am]);
+    expect(s.entities.get('59H123456')!.encounters[0].verdict).toBe('bad');
+  });
+
+  it('applies an attach that arrives dated before its encounter', () => {
+    const e = ev({ entityRef: null, verdict: 'ok', createdAt: '2026-10-16T12:00:00Z' });
+    const at = ev({
+      type: 'attach',
+      targetEventId: e.eventId,
+      entityRef: { kind: 'driver', key: '59H123456' },
+      createdAt: '2026-10-16T11:50:00Z',
+    });
+    const s = applyEvents(emptyState(), [e, at]);
+    expect(s.pending.size).toBe(0);
+    expect(s.entities.get('59H123456')!.encounters).toHaveLength(1);
+  });
+
+  // I4: two devices writing different UTC offsets must still order by real time.
+  it('orders by the instant, not by the text of createdAt', () => {
+    const earlier = ev({ verdict: 'bad', createdAt: '2026-10-16T19:03:22+07:00' }); // 12:03Z
+    const later = ev({ verdict: 'good', createdAt: '2026-10-16T13:00:00Z' });
+    const s = applyEvents(emptyState(), [earlier, later]);
+    const entity = s.entities.get('59H123456')!;
+    expect(entity.lastSeen).toBe('2026-10-16T13:00:00Z');
+    expect(entity.encounters.map((e) => e.verdict)).toEqual(['bad', 'good']);
+  });
+});
