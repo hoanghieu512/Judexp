@@ -453,7 +453,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | # | Spike | Vì sao chưa chắc |
 |---|---|---|
 | S1 | SAF ghi được event vào folder con tự tạo trong kho, trên Android 14 và 15 | Gú's Library đã ghi được `_inbox/`, nhưng doc của nó ghi rõ phần ghi vào folder khác **chưa có spike**. Làm ở M0. |
-| S2 | `ShareTargetPlugin` nhận được `image/*` share từ app đặt xe và app đồ ăn | Đã nhận file tài liệu, chưa xác nhận với ảnh từ các app đó. Làm ở M0. |
+| S2 | `ShareTargetPlugin` nhận được `image/*` share từ app đặt xe và app đồ ăn | **Đã đóng ở M0 (2026-10-16, UBS1).** Ba đường gửi đều nhận được URI và đọc ra đúng PNG qua `Saf.readFileBase64`: share từ Google Photos khi app đang mở, khi app đang tắt, và nút Chia sẻ trên khung xem trước ảnh chụp màn hình của hệ thống. Đường cuối chính là đường "chụp màn Grab rồi chia sẻ", chỉ khác nội dung ảnh. Chưa thử với ảnh chụp trên chính màn Grab hay ShopeeFood vì máy test không cài hai app đó. |
 | S3 | Thư viện SQLite cho Capacitor | Gú's Library ghi rõ "chưa chốt thư viện". Nếu plugin SQLite gây rắc rối cho build CLI thì **phương án lùi**: giữ index trong bộ nhớ và cache ra một file JSON, vẫn đủ nhanh ở mức vài nghìn event. |
 | S4 | iOS đọc folder Möbius Sync từ Capacitor | Möbius Pro sync được (đã chứng minh với Obsidian), nhưng app của mình đọc folder đó cần document picker và security-scoped bookmark, là việc native, chưa thử. Ngoài v1. |
 | S5 | Nút hành động trên thông báo để chấm không cần mở app | Tính năng M4, **không còn là tùy sức** vì nhãn verdict là thứ §19.1 sống nhờ. Nếu nút trên thông báo vướng thì lùi về: chạm thông báo mở thẳng hộp Chờ chấm. |
