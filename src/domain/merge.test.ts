@@ -63,6 +63,17 @@ describe('mergeCandidates', () => {
     expect(mergeCandidates(st, st.entities.get('bun bo hue 14')!)[0].basis).toBe('name-only');
   });
 
+  it('keeps an older accurate position when the newest one is too vague to use', () => {
+    const accurateVisit = { ...place('bun bo hue 14', 'Bún Bò Huế 14', far), createdAt: '2026-10-16T10:00:00Z' };
+    const vagueVisit = {
+      ...place('bun bo hue 14', 'Bún Bò Huế 14', { lat: 10.9, lng: 106.9, accuracy: 300 }),
+      createdAt: '2026-10-16T12:00:00Z',
+    };
+    const st = stateWith(accurateVisit, vagueVisit, place('bun bo 14', 'Bún Bò 14', near));
+    // The accurate visit puts this place 5km from the other one, so no question.
+    expect(candidateKeys(st, 'bun bo hue 14')).toEqual([]);
+  });
+
   it('never suggests an entity of another kind, itself, or one already merged away', () => {
     const st = stateWith(
       place('bun bo hue 14', 'Bún Bò Huế 14', near),

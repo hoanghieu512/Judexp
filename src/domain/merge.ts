@@ -47,12 +47,16 @@ export function distanceMeters(a: Geo, b: Geo): number {
   return Math.sqrt(dLat * dLat + dLng * dLng) * R;
 }
 
-/** The most recent position recorded for an entity, if it is accurate enough. */
+/**
+ * The most recent position recorded for an entity that is accurate enough.
+ * A vague reading is skipped rather than trusted or allowed to hide an older
+ * accurate one: a place does not move, so an old good fix still holds.
+ */
 function usablePosition(entity: Entity): Geo | null {
   for (let i = entity.encounters.length - 1; i >= 0; i -= 1) {
     const geo = entity.encounters[i].context?.geo;
     if (!geo) continue;
-    if (geo.accuracy !== undefined && geo.accuracy > MAX_USEFUL_ACCURACY_M) return null;
+    if (geo.accuracy !== undefined && geo.accuracy > MAX_USEFUL_ACCURACY_M) continue;
     return geo;
   }
   return null;
