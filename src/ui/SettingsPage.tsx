@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { SyncState } from '../sync/status';
 import type { KhoChoice } from '../profile/settings';
-import { isLikelyDeviceId, type SyncConfig } from '../sync/status';
+import { isLikelyDeviceId, looksLikeDeviceId, type SyncConfig } from '../sync/status';
 import './ui.css';
 
 const LIGHT: Record<SyncState, string> = {
@@ -67,6 +67,9 @@ export default function SettingsPage({
   const [draft, setDraft] = useState<SyncConfig>(syncConfig);
   useEffect(() => setDraft(syncConfig), [syncConfig]);
   const idLooksShort = draft.atommanDeviceId !== '' && !isLikelyDeviceId(draft.atommanDeviceId);
+  // The two values sit next to each other in Syncthing's own UI and are easy
+  // to swap; a device id in the api key field would just fail quietly.
+  const keyLooksLikeId = looksLikeDeviceId(draft.apiKey);
 
   return (
     <div className="jx-screen">
@@ -113,6 +116,13 @@ export default function SettingsPage({
         value={draft.apiKey}
         onChange={(e) => setDraft({ ...draft, apiKey: e.target.value.trim() })}
       />
+
+      {keyLooksLikeId && (
+        <p className="jx-sub" data-testid="apikey-hint">
+          Chuỗi này trông như một Device ID chứ không phải API key. API key nằm ở Syncthing trên chính máy này,
+          Settings rồi tab GUI, là một chuỗi liền không có dấu gạch.
+        </p>
+      )}
 
       <label className="jx-sub" htmlFor="jx-st-atomman">
         Device ID của Atomman

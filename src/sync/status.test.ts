@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { syncStatus, type SyncConfig, type SyncDeps } from './status';
+import { looksLikeDeviceId, syncStatus, type SyncConfig, type SyncDeps } from './status';
 
 /** Shaped like a real one: eight groups of seven characters. */
 const ATOMMAN = 'P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2';
@@ -92,5 +92,17 @@ describe('syncStatus, a device id that is only part of one', () => {
       completion: completion(100),
     });
     expect(await syncStatus(d, { ...cfg, atommanDeviceId: full })).toBe('synced');
+  });
+});
+
+describe('telling a device id apart from an api key', () => {
+  it('recognises the grouped shape of a device id', () => {
+    expect(looksLikeDeviceId('N2YBQN5-3SSVHJD-55UCV6F-QEKAOBD')).toBe(true);
+    expect(looksLikeDeviceId(ATOMMAN)).toBe(true);
+  });
+
+  it('does not mistake an api key for one', () => {
+    expect(looksLikeDeviceId('tP3mXq8ZfLb2Rw9KdNc5VhJy7Gs4Au6E')).toBe(false);
+    expect(looksLikeDeviceId('')).toBe(false);
   });
 });

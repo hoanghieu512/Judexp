@@ -144,3 +144,29 @@ describe('SettingsPage, saving and testing the connection', () => {
     expect(screen.queryByTestId('atomman-hint')).not.toBeInTheDocument();
   });
 });
+
+describe('SettingsPage, the api key field', () => {
+  it('warns when a device id was pasted into the api key', () => {
+    show({
+      syncConfig: {
+        baseUrl: 'https://127.0.0.1:8384',
+        apiKey: 'N2YBQN5-3SSVHJD-55UCV6F-QEKAOBD',
+        folderId: 'f',
+        atommanDeviceId: 'P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2',
+      },
+    });
+    expect(screen.getByTestId('apikey-hint')).toHaveTextContent(/device id/i);
+  });
+
+  it('says nothing for a real api key', () => {
+    show({
+      syncConfig: {
+        baseUrl: 'https://127.0.0.1:8384',
+        apiKey: 'tP3mXq8ZfLb2Rw9KdNc5VhJy7Gs4Au6E',
+        folderId: 'f',
+        atommanDeviceId: 'P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2',
+      },
+    });
+    expect(screen.queryByTestId('apikey-hint')).not.toBeInTheDocument();
+  });
+});

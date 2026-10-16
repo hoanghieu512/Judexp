@@ -47,6 +47,11 @@ async function getJson(deps: SyncDeps, url: string, apiKey: string): Promise<unk
  * by mistake looks like a filled-in field, so it is treated as unconfigured
  * rather than reported as Atomman being away.
  */
+export function looksLikeDeviceId(value: string): boolean {
+  const groups = value.split('-');
+  return groups.length >= 3 && groups.every((g) => /^[A-Z2-7]{7}$/.test(g));
+}
+
 export function isLikelyDeviceId(id: string): boolean {
   return id.replace(/-/g, '').length >= 50;
 }
