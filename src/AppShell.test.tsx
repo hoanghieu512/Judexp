@@ -65,8 +65,8 @@ describe('AppShell', () => {
   it('writes a rating into the kho and finds it again by plate', async () => {
     const { deps, files } = fakeKho();
     const prefs = fakePrefs({
-      'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'QA' }),
-      'judexp.device': 'zflip4',
+      'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }),
+      'judexp.device': 'dgen1',
     });
 
     render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
@@ -80,6 +80,8 @@ describe('AppShell', () => {
     await waitFor(() => expect(files.size).toBe(1));
     const written = JSON.parse([...files.values()][0]);
     expect(written.entityRef.key).toBe('59H123456');
+    expect(written.author).toBe('hieu');
+    expect(written.device).toBe('dgen1');
 
     fireEvent.change(await screen.findByRole('searchbox'), { target: { value: '23456' } });
     expect(await screen.findByTestId('entity-59H123456')).toHaveAttribute('data-color', 'red');

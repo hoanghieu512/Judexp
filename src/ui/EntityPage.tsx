@@ -34,7 +34,7 @@ export default function EntityPage({
     [state, entity, dismissed],
   );
 
-  if (!entity) return <p className="jx-empty">Không còn thực thể này.</p>;
+  if (!entity) return <p className="jx-empty">Không còn hồ sơ này.</p>;
 
   const encounters = [...entity.encounters].sort((a, b) => b.happenedAt.localeCompare(a.happenedAt));
 

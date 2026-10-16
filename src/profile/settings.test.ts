@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
+  getAuthor,
+  khoLabelFromUri,
   getDeviceId,
   getKho,
   getPin,
+  setAuthor,
   setDeviceId,
   setKho,
   setPin,
@@ -72,5 +75,41 @@ describe('pin', () => {
     expect(await getPin(store)).toBe('1234');
     await setPin(null, store);
     expect(await getPin(store)).toBeNull();
+  });
+});
+
+describe('author', () => {
+  it('falls back to the kho label so the first event is not written by nobody', async () => {
+    const store = fakeStore();
+    await setKho({ rootUri: 'content://kho/Hieu', label: 'Hieu' }, store);
+    expect(await getAuthor(store)).toBe('hieu');
+  });
+
+  it('is empty when no kho has been chosen yet', async () => {
+    expect(await getAuthor(fakeStore())).toBe('');
+  });
+
+  it('keeps an author huynh set explicitly, even if the kho label differs', async () => {
+    const store = fakeStore();
+    await setKho({ rootUri: 'content://kho/Hieu', label: 'Hieu' }, store);
+    await setAuthor('gu', store);
+    expect(await getAuthor(store)).toBe('gu');
+  });
+});
+
+describe('khoLabelFromUri', () => {
+  it('reads the profile folder out of a SAF tree uri', () => {
+    const uri = 'content://com.android.externalstorage.documents/tree/primary%3AJudexp%2FHieu%2Fkho';
+    expect(khoLabelFromUri(uri)).toBe('Hieu');
+  });
+
+  it('uses the last segment when the folder is not called kho', () => {
+    const uri = 'content://com.android.externalstorage.documents/tree/primary%3AJudexp%2FGu';
+    expect(khoLabelFromUri(uri)).toBe('Gu');
+  });
+
+  it('never returns an empty label, whatever the uri looks like', () => {
+    expect(khoLabelFromUri('content://whatever')).toBe('whatever');
+    expect(khoLabelFromUri('')).toBe('kho');
   });
 });

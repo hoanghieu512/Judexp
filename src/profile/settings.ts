@@ -8,6 +8,7 @@
  */
 
 import { Preferences } from '@capacitor/preferences';
+import { normalizeName } from '../domain/keys';
 
 export interface PrefsStore {
   get(key: string): Promise<string | null>;
@@ -31,6 +32,7 @@ export const capacitorStore: PrefsStore = {
 const KEY_KHO = 'judexp.kho';
 const KEY_DEVICE = 'judexp.device';
 const KEY_PIN = 'judexp.pin';
+const KEY_AUTHOR = 'judexp.author';
 
 export interface KhoChoice {
   /** SAF tree uri of the kho root, the folder Syncthing replicates. */
@@ -86,4 +88,36 @@ export async function getPin(store: PrefsStore = capacitorStore): Promise<string
 export async function setPin(pin: string | null, store: PrefsStore = capacitorStore): Promise<void> {
   if (pin === null) await store.remove(KEY_PIN);
   else await store.set(KEY_PIN, pin);
+}
+
+/**
+ * Who every event on this phone is written by. It defaults to the kho label
+ * rather than to a name baked into the code, so Gú's phone never writes
+ * events signed by huynh.
+ */
+export async function getAuthor(store: PrefsStore = capacitorStore): Promise<string> {
+  const explicit = await store.get(KEY_AUTHOR);
+  if (explicit) return explicit;
+  const kho = await getKho(store);
+  return kho ? normalizeName(kho.label) : '';
+}
+
+export async function setAuthor(author: string, store: PrefsStore = capacitorStore): Promise<void> {
+  const clean = normalizeName(author);
+  if (clean === '') return;
+  await store.set(KEY_AUTHOR, clean);
+}
+
+/**
+ * A readable name for a kho picked through SAF. The uri looks like
+ * `.../tree/primary%3AJudexp%2FHieu%2Fkho`, so the useful name is the
+ * folder holding `kho`, which is the profile: Hieu, Gu.
+ */
+export function khoLabelFromUri(uri: string): string {
+  const tail = decodeURIComponent(uri.split('/').pop() ?? '');
+  const parts = tail.split(/[:/]/).filter((p) => p !== '');
+  const last = parts[parts.length - 1];
+  if (last === undefined) return 'kho';
+  if (last.toLowerCase() === 'kho') return parts[parts.length - 2] ?? 'kho';
+  return last;
 }

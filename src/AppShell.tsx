@@ -7,7 +7,17 @@ import PinGate from './ui/PinGate';
 import { ensureKhoLayout, writeEvent, type KhoDeps, type KhoDirs } from './storage/kho';
 import { loadIndex, rebuildIndex, type Snapshot } from './index/store';
 import { emptyState, type State } from './domain/reduce';
-import { getDeviceId, getKho, getPin, setDeviceId, setKho, type KhoChoice, type PrefsStore } from './profile/settings';
+import {
+  getAuthor,
+  getDeviceId,
+  getKho,
+  getPin,
+  khoLabelFromUri,
+  setDeviceId,
+  setKho,
+  type KhoChoice,
+  type PrefsStore,
+} from './profile/settings';
 import { Saf } from './plugins/saf';
 import type { JudexpEvent } from './domain/events';
 import './ui/theme/tokens.css';
@@ -37,6 +47,7 @@ export default function AppShell({
   const [state, setState] = useState<State>(emptyState());
   const [skipped, setSkipped] = useState<string[]>([]);
   const [device, setDevice] = useState('');
+  const [author, setAuthorName] = useState('');
   const [pin, setPinValue] = useState<string | null>(null);
   const [view, setView] = useState<View>({ name: 'lookup' });
   const [ready, setReady] = useState(false);
@@ -61,6 +72,7 @@ export default function AppShell({
       setPinValue(await getPin(prefs));
       const chosen = await getKho(prefs);
       setKhoChoice(chosen);
+      setAuthorName(await getAuthor(prefs));
       if (chosen) {
         const layout = await ensureKhoLayout(deps, chosen.rootUri);
         setDirs(layout);
@@ -72,9 +84,10 @@ export default function AppShell({
 
   async function pickKho() {
     const { uri } = await Saf.pickFolder();
-    const choice: KhoChoice = { rootUri: uri, label: uri.split('/').pop() ?? 'kho' };
+    const choice: KhoChoice = { rootUri: uri, label: khoLabelFromUri(uri) };
     await setKho(choice, prefs);
     setKhoChoice(choice);
+    setAuthorName(await getAuthor(prefs));
     const layout = await ensureKhoLayout(deps, uri);
     setDirs(layout);
     await refresh(layout);
@@ -123,7 +136,7 @@ export default function AppShell({
       )}
 
       {view.name === 'rate' && (
-        <QuickRateSheet kind="driver" author="huynh" device={device} onSave={save} />
+        <QuickRateSheet kind="driver" author={author} device={device} onSave={save} />
       )}
 
       {view.name === 'entity' && (
@@ -131,7 +144,7 @@ export default function AppShell({
           state={state}
           entityKey={view.key}
           now={now}
-          author="huynh"
+          author={author}
           device={device}
           onSave={save}
         />
