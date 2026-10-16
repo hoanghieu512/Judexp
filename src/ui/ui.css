@@ -1,0 +1,86 @@
+.jx-screen {
+  background: var(--jx-bg);
+  color: var(--jx-text);
+  font-family: var(--jx-font);
+  min-height: 100%;
+  padding: var(--jx-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--jx-space-4);
+}
+
+.jx-search {
+  width: 100%;
+  min-height: var(--jx-touch-min);
+  background: var(--jx-surface);
+  border: 1px solid var(--jx-border);
+  border-radius: var(--jx-radius-md);
+  padding: 0 var(--jx-space-4);
+  color: var(--jx-text);
+  font-family: var(--jx-font-mono);
+  font-size: var(--jx-text-lg);
+}
+
+.jx-section-title {
+  font-size: var(--jx-text-xs);
+  color: var(--jx-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.jx-row {
+  display: flex;
+  align-items: center;
+  gap: var(--jx-space-3);
+  width: 100%;
+  text-align: left;
+  background: var(--jx-surface);
+  border: 1px solid var(--jx-border);
+  border-radius: var(--jx-radius-md);
+  padding: var(--jx-space-3) var(--jx-space-4);
+  min-height: var(--jx-touch-min);
+  color: inherit;
+}
+
+.jx-mark {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: var(--jx-weight-bold);
+}
+
+.jx-mark[data-color='good'] { background: var(--jx-good-soft); color: var(--jx-good); }
+.jx-mark[data-color='ok'] { background: var(--jx-ok-soft); color: var(--jx-ok); }
+.jx-mark[data-color='bad'] { background: var(--jx-bad-soft); color: var(--jx-bad); }
+.jx-mark[data-color='grey'] { background: var(--jx-unrated-soft); color: var(--jx-unrated); }
+
+/* Plates in mono: 0 against O and 1 against l decide who this driver is. */
+.jx-plate {
+  font-family: var(--jx-font-mono);
+  font-size: var(--jx-text-md);
+  font-weight: var(--jx-weight-medium);
+  letter-spacing: 0.04em;
+}
+
+.jx-name {
+  font-size: var(--jx-text-md);
+  font-weight: var(--jx-weight-medium);
+}
+
+.jx-sub { color: var(--jx-text-dim); font-size: var(--jx-text-sm); }
+
+.jx-tags { display: flex; gap: var(--jx-space-2); flex-wrap: wrap; margin-top: var(--jx-space-1); }
+
+.jx-tag {
+  background: var(--jx-surface-raised);
+  border-radius: 999px;
+  padding: 2px var(--jx-space-3);
+  font-size: var(--jx-text-xs);
+  color: var(--jx-text-dim);
+}
+
+.jx-empty { color: var(--jx-text-dim); font-size: var(--jx-text-md); padding: var(--jx-space-4) 0; }
