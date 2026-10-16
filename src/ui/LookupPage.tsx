@@ -51,7 +51,7 @@ export default function LookupPage({
       />
 
       {typing ? (
-        <DecisionCard results={results} now={now} onOpen={onOpen} />
+        <DecisionCard query={query} results={results} now={now} onOpen={onOpen} />
       ) : (
         <>
           <h2 className="jx-section-title">Gặp gần đây</h2>

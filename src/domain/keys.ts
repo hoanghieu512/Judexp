@@ -18,6 +18,20 @@ export function normalizePlate(raw: string): string {
 }
 
 /**
+ * Whether typed text reads as (part of) a plate rather than a name: plate
+ * characters and separators only, at least two digits, and at most two
+ * letters, since a Vietnamese plate carries one or two (`59H1`, `29LD`).
+ * Only wording depends on this; search treats every query both ways.
+ */
+export function looksLikePlate(raw: string): boolean {
+  if (!/^[0-9a-zA-Z\s.\-]+$/.test(raw.trim())) return false;
+  const compact = normalizePlate(raw);
+  const digits = compact.replace(/[^0-9]/g, '').length;
+  const letters = compact.length - digits;
+  return digits >= 2 && letters <= 2;
+}
+
+/**
  * Name key: drop diacritics, lower case, turn punctuation into word breaks,
  * collapse whitespace, then strip one leading generic prefix. `đ` needs its
  * own rule: it is not a composed character, so NFD leaves it untouched.

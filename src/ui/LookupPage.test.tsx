@@ -73,6 +73,12 @@ describe('LookupPage', () => {
     expect(screen.getByText(/chưa gặp/i)).toBeInTheDocument();
   });
 
+  it('does not call a place a person when a name finds nothing', () => {
+    typeQuery(emptyState(), 'Bún Bò Huế 14');
+    expect(screen.getByTestId('no-match')).toHaveTextContent(/chưa ghé chỗ này/i);
+    expect(screen.getByTestId('no-match')).not.toHaveTextContent(/người/i);
+  });
+
   it('renders a plate in the mono class so 0 and O cannot be confused', () => {
     const state = stateWith(met('driver', '59H123456', 'good'));
     typeQuery(state, '59h1');

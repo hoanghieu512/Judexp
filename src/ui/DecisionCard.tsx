@@ -1,4 +1,5 @@
 import type { Entity } from '../domain/reduce';
+import { looksLikePlate } from '../domain/keys';
 import EntityRow from './EntityRow';
 
 /**
@@ -9,18 +10,22 @@ import EntityRow from './EntityRow';
  * person reading it has a driver waiting and ten seconds to decide.
  */
 export default function DecisionCard({
+  query,
   results,
   now,
   onOpen,
 }: {
+  query: string;
   results: Entity[];
   now: Date;
   onOpen?: (key: string) => void;
 }) {
   if (results.length === 0) {
+    // A plate is a driver, anything else is somewhere to eat or go.
+    const never = looksLikePlate(query) ? 'Chưa gặp người này.' : 'Chưa ghé chỗ này.';
     return (
       <p className="jx-empty" data-testid="no-match">
-        Chưa gặp người này. Không có gì để nhớ lại.
+        {never} Không có gì để nhớ lại.
       </p>
     );
   }
