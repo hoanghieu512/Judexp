@@ -175,3 +175,28 @@ describe('SettingsPage, the api key field', () => {
     expect(screen.queryByTestId('apikey-hint')).not.toBeInTheDocument();
   });
 });
+
+describe('SettingsPage, a draft that is not in use yet', () => {
+  const saved = {
+    baseUrl: 'https://127.0.0.1:8384',
+    apiKey: 'old-key',
+    folderId: 'judexp-hieu-qa',
+    atommanDeviceId: 'P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2',
+  };
+
+  // Typing a correct value and seeing the light still red is the exact
+  // confusion this avoids: the screen must say the typed value is not live.
+  it('says the typed values are not saved yet', () => {
+    show({ syncConfig: saved });
+    expect(screen.queryByTestId('unsaved')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/api key/i), { target: { value: 'new-key' } });
+    expect(screen.getByTestId('unsaved')).toHaveTextContent(/chưa lưu/i);
+  });
+
+  it('stops saying it once the values are saved', () => {
+    const props = show({ syncConfig: saved });
+    fireEvent.change(screen.getByLabelText(/api key/i), { target: { value: 'new-key' } });
+    fireEvent.click(screen.getByRole('button', { name: /lưu và kiểm tra/i }));
+    expect(props.onSyncConfig).toHaveBeenCalledWith({ ...saved, apiKey: 'new-key' });
+  });
+});

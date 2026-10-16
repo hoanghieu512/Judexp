@@ -73,6 +73,13 @@ export default function SettingsPage({
   // The two values sit next to each other in Syncthing's own UI and are easy
   // to swap; a device id in the api key field would just fail quietly.
   const keyLooksLikeId = looksLikeDeviceId(draft.apiKey);
+  // Typed is not the same as in use: without this, a correct value typed into
+  // a field reads as broken because the light still reflects the saved one.
+  const unsaved =
+    draft.baseUrl !== syncConfig.baseUrl ||
+    draft.apiKey !== syncConfig.apiKey ||
+    draft.folderId !== syncConfig.folderId ||
+    draft.atommanDeviceId !== syncConfig.atommanDeviceId;
 
   return (
     <div className="jx-screen">
@@ -154,7 +161,13 @@ export default function SettingsPage({
         </p>
       )}
 
-      <button type="button" className="jx-row" onClick={() => onSyncConfig(draft)}>
+      {unsaved && (
+        <p className="jx-sub" data-testid="unsaved">
+          Chưa lưu. Đèn ở trên vẫn đang theo giá trị cũ cho tới khi bấm nút bên dưới.
+        </p>
+      )}
+
+      <button type="button" className="jx-row" data-selected={unsaved} onClick={() => onSyncConfig(draft)}>
         Lưu và kiểm tra kết nối
       </button>
 

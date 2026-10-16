@@ -179,3 +179,9 @@ html, body, #root { height: 100%; }
   color: var(--jx-text);
   font-size: var(--jx-text-sm);
 }
+
+/* The save button stands out only while there is something to save. */
+.jx-row[data-selected='true'] {
+  border-color: var(--jx-ok);
+  color: var(--jx-ok);
+}
