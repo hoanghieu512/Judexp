@@ -174,6 +174,8 @@ describe('AppShell, when Android hides what is in the kho', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/khởi động lại máy/i);
     expect(screen.queryByRole('button', { name: /chấm nhanh/i })).toBeNull();
     expect(files.size).toBe(0);
+    // The kho is still the chosen one, it just cannot be read right now.
+    expect(screen.getByTestId('kho-label')).toHaveTextContent('Hieu');
   });
 
   it('keeps the index instead of rebuilding it from a folder that lists nothing', async () => {

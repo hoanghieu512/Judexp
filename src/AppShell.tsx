@@ -255,7 +255,7 @@ export default function AppShell({
       <div className="jx-app">
         {banner}
       <SettingsPage
-        kho={null}
+        kho={kho}
         status={syncState}
         deviceId={device}
         skipped={[]}

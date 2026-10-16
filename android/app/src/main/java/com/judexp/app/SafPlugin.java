@@ -268,6 +268,13 @@ public class SafPlugin extends Plugin {
             if (!name.equals(child.getName())) {
                 String real = findChildDirByName(parentTree, name);
                 if (real != null) { child.delete(); ret.put("uri", real); call.resolve(ret); return; }
+                // The rename proves `name` exists, yet the parent's listing cannot see it:
+                // the provider is hiding the parent's children (seen on dGen1 after a bad
+                // boot). Handing back the renamed folder would split the kho, so undo the
+                // empty copy and refuse. JS maps KHO_HIDDEN to KhoUnreadableError.
+                child.delete();
+                call.reject("'" + name + "' exists but the provider does not list it", "KHO_HIDDEN");
+                return;
             }
             ret.put("uri", child.getUri().toString());
             call.resolve(ret);
