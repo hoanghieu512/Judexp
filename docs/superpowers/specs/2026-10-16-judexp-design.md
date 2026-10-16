@@ -52,6 +52,7 @@ Ghi rõ để sau này không ai tưởng là bị bỏ quên:
 | D9 | Gộp thực thể phải hỏi, không bao giờ tự gộp | Gộp sai thì lịch sử hai quán lẫn vào nhau và gỡ ra rất mệt. |
 | D10 | Tách hẳn luồng Hỏi và luồng Ghi, `verdict` thành tùy chọn | Thời điểm quyết định và thời điểm đánh giá là hai thời điểm khác nhau. Chuyến cũ nạp từ lịch sử thì huynh không còn nhớ, nên vào app dưới dạng đã gặp chưa chấm. Góp ý của huynh ngày 2026-10-16. |
 | D11 | Nhắc chấm 90 phút sau mỗi lần tra cứu, bốn nút trên thông báo | Bắt nhãn lúc còn nóng mà không thêm bước nào cho huynh. Gom cuối ngày thì nhớ lơ mơ hơn; không nhắc thì hộp Chờ chấm sẽ đầy dần rồi bị bỏ qua. |
+| D12 | Điện thoại chỉ giữ ảnh biển hiệu **thu nhỏ**, bản đầy đủ nằm trên Atomman | Ý của huynh ngày 2026-10-16 về dung lượng. Bản 320px lấy được 92% lợi ích dung lượng mà không mất khả năng nhận ra quán lúc đứng ngoài đường không mạng. Luồng xin ảnh gốc đẩy sang §19.2. |
 
 ### Hai hướng đã xét và loại
 
@@ -99,7 +100,7 @@ Mỗi `kho\` có:
 events\        chỉ thêm, 1 file = 1 việc đã xảy ra, không bao giờ sửa
 inbox\         ảnh share từ điện thoại, chờ worker đọc
 parsed\        worker trả kết quả bóc trường
-attachments\   ảnh biển hiệu chụp tại chỗ, giữ lại và vẫn sync (§9.5)
+attachments\   ảnh biển hiệu **thu nhỏ**, giữ lại và vẫn sync (§9.5)
 _worker.log    log worker, đọc được từ điện thoại
 ```
 
@@ -300,12 +301,12 @@ Quán vỉa hè không có đơn, không có lịch sử, nên hai đường sha
 
 Camera trong app giải chỗ đó, và **giá trị chính nằm ở toạ độ chứ không ở chữ trên biển hiệu**: lúc huynh đứng tại quán, toạ độ chính là nửa khóa định danh theo §6, và nó không sai kiểu OCR sai.
 
-- Chụp, **nén ngay trên máy** về cạnh dài 1600px, JPEG chất lượng 80 (khoảng 200 tới 400KB thay vì 3 tới 10MB), rồi mới ghi vào kho. Không nén thì Syncthing đẩy nặng và điện thoại đầy dần.
+- Chụp, **nén ngay trên máy thành hai bản**: bản đầy đủ cạnh dài 1600px JPEG chất lượng 80 (khoảng 200 tới 400KB thay vì 3 tới 10MB) ghi vào `inbox/`, và bản **thu nhỏ** cạnh dài 320px chất lượng 70 (khoảng 25KB) ghi vào `attachments/`. Không nén thì Syncthing đẩy nặng và điện thoại đầy dần.
 - Lưu kèm toạ độ và **`accuracy`** của phép định vị.
 - Chấm ngay tại chỗ, không chờ parse.
 - Worker đọc biển hiệu chỉ để **gợi ý nhãn**. Sai thì huynh sửa một chữ, vì khóa thật là toạ độ. Đây là khác biệt rủi ro so với biển số: biển số sai là tra nhầm sang người khác, tên quán sai chỉ là phiền nhẹ.
 - **Ảnh nhòe không phải ca lỗi.** Toạ độ vẫn đúng và ảnh vẫn giúp huynh nhận ra quán. App có nút chụp lại nhưng **không bắt** chụp lại, chỉ nói "không đọc được tên, huynh gõ giúp" rồi đi tiếp.
-- **Ảnh biển hiệu giữ lại** trong `attachments/`, ngược chính sách với ảnh đơn hàng (§10), vì chính tấm ảnh là thứ giúp huynh nhận ra quán sau này.
+- **Điện thoại chỉ giữ bản thu nhỏ.** Bản đầy đủ đi theo đường của ảnh đơn hàng, ra archive trên Atomman sau khi worker xử lý (§10). Bản 320px thừa sức nhận ra quán trên thẻ kết quả, nơi ảnh chỉ hiện rộng chừng 120px, mà 200 quán tốn khoảng 5MB thay vì 60MB. Muốn xem bản đầy đủ để đọc chữ trên biển thì đó là ca hiếm, xem §19.2.
 
 ### 9.6 Offline
 
@@ -329,9 +330,22 @@ Bên trong là **một cổng `parser` với hai bản cài**, chọn bằng con
 | Loại ảnh | Sau khi parse | Vì sao |
 |---|---|---|
 | `booking`, `history_list`, `order_detail` | Chuyển sang archive sibling **ngoài cây sync**, không xóa thẳng | Chứa địa chỉ nhà và số điện thoại. Vẫn còn bằng chứng để đối chiếu khi parse sai, mà không chiếm chỗ điện thoại. |
-| `signboard` (chụp tại chỗ, §9.5) | **Giữ trong `attachments/`**, vẫn sync | Chính tấm ảnh là thứ giúp huynh nhận ra quán sau này, và nó không chứa gì nhạy cảm. |
+| `signboard` (chụp tại chỗ, §9.5) | Bản đầy đủ ra archive **ngoài cây sync**; bản **thu nhỏ 320px** do app sinh thì ở lại `attachments/` và vẫn sync | Điện thoại cần nhận ra quán lúc đang ngoài đường không mạng, nhưng không cần ảnh nét. Ảnh biển hiệu không chứa gì nhạy cảm, nên đây thuần là chuyện dung lượng chứ không phải chuyện riêng tư. |
 
 Khác biệt này cho phép đặt **chính sách parser theo loại ảnh**: ảnh đơn hàng xử lý tại nhà, còn ảnh biển hiệu gửi vision model thoải mái vì không có gì để lộ.
+
+**Dung lượng trên điện thoại sau một năm, để biết rõ đang tối ưu cái gì:**
+
+| Thứ | Cỡ một cái | Một năm |
+|---|---|---|
+| Event JSON | ~1KB | ~2MB |
+| Index SQLite | | vài MB |
+| Ảnh màn hình trong `inbox/` | ~300KB | gần bằng 0, vì chỉ sống 1 tới 3 phút |
+| Ảnh biển hiệu thu nhỏ | ~25KB | ~5MB cho 200 quán |
+
+Tổng chừng 15 tới 30MB. Bỏ hẳn ảnh thu nhỏ chỉ tiết kiệm thêm khoảng 5MB, không đáng đổi lấy việc mất khả năng nhận ra quán khi Atomman tắt.
+
+**Ảnh gốc trên Atomman cũng cần chính sách dọn**, nếu không thì vài năm nữa không ai còn biết đống đó là gì: ảnh đơn hàng và ảnh lịch sử giữ **12 tháng** rồi xóa, ảnh biển hiệu giữ **vô thời hạn** vì nó là thứ duy nhất còn lại của một quán (200 quán cũng chỉ 60MB trên ổ D). Mỗi lần dọn ghi vào `_worker.log`.
 
 ### Phase test parser đối đầu (M2)
 
@@ -418,6 +432,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | Đồng hồ hai máy lệch | Index sắp theo `createdAt` trong nội dung, không theo tên file. `amend` trỏ `eventId` nên không phụ thuộc thứ tự tới. |
 | File `.sync-conflict-*` vẫn lọt | Index bỏ qua và ghi log. |
 | Gộp thực thể sai | `tombstone` lên chính event `merge` đó. Không cần loại event mới. |
+| Atomman tắt nhiều ngày | Ảnh trong `inbox/` nằm lại trên máy tới khi Atomman nhận được, vì Syncthing là đồng bộ hai chiều chứ không phải đẩy rồi quên. Ở mức 300KB một ảnh thì chấp nhận được, và badge "N ảnh chờ đọc" cho huynh biết đang tồn bao nhiêu. |
 | Tra cứu nhưng không đi | Nút "không đi" trên thông báo: không ghi gì vào kho, chỉ tắt nhắc. |
 | Nhắc bị bỏ qua | Quá 48 giờ thì tự bỏ. Hộp Chờ chấm vẫn giữ ảnh và dòng chưa chấm. |
 | Ảnh lịch sử bóc thiếu dòng | Ngưỡng số dòng là 100% ở §10, và app hiện số dòng bóc được để huynh đối chiếu bằng mắt với ảnh. |
@@ -449,7 +464,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | **M0.5** | Hệ thiết kế: file token cộng ba màn hình mẫu (§13) | Có token trước khi code UI, đúng D6, khỏi sơn lại sau. |
 | **M1** | `domain` + `search` + `index` + luồng Hỏi đường gõ + nhập tay | Tra biển số gõ sai một ký tự vẫn ra. Thẻ quyết định hiện đúng cả ba tình huống §9.1. App dùng được thật dù chưa có ảnh. |
 | **M2** | Phase test parser đối đầu, ba nhóm ảnh | Có bảng số đo, chốt parser theo quy tắc §10. |
-| **M3** | Worker, share ảnh lịch sử (một ảnh nhiều dòng), nạp nền §9.4, share ảnh màn ghép tài xế, **camera chụp tại chỗ §9.5** | Chụp một ảnh lịch sử ra đúng số dòng, chấm được từng dòng. Chụp một quán ngoài đường, lưu được kèm toạ độ. |
+| **M3** | Worker, share ảnh lịch sử (một ảnh nhiều dòng), nạp nền §9.4, share ảnh màn ghép tài xế, **camera chụp tại chỗ §9.5** | Chụp một ảnh lịch sử ra đúng số dòng, chấm được từng dòng. Chụp một quán ngoài đường, lưu được kèm toạ độ, và sau khi worker xử lý thì trên máy chỉ còn bản thu nhỏ. |
 | **M4** | Nhắc chấm 90 phút, bốn nút trên thông báo (§9.3) | Tra một biển số, 90 phút sau nhận thông báo, chạm một nút là event vào kho. |
 | **M5** | Bộ icon app và icon bốn loại | Khớp với hệ thiết kế M0.5. |
 
@@ -486,7 +501,9 @@ M0 cố tình đứng đầu vì nó là **rủi ro cao nhất**, không phải 
 
 ### 19.2 Những cái khác đã nhắc tới
 
-Chia sẻ cảnh báo chéo với Gú (đã chừa `visibility`), iOS (S4), nối dữ liệu với Ăn Khéo, và thống kê dạng "tháng này huynh đi 23 chuyến, 3 chuyến tệ".
+**Xin ảnh gốc từ Atomman.** App không có kênh hỏi Atomman vì nó không gọi API nào. Muốn xem bản đầy đủ của một ảnh thì phải dựng một luồng hỏi đáp giả lập qua file: app ghi `requests/<uuid>.json` vào kho, worker thấy thì chép ảnh từ archive ngược vào `attachments/`, Syncthing đẩy về, app hiện, rồi worker dọn sau vài ngày. Mất một tới ba phút và chỉ chạy khi Atomman đang bật. Để ngoài v1 vì bản thu nhỏ đã phủ gần hết nhu cầu nhận diện; nó chỉ cần khi muốn đọc chữ trên biển hoặc đối chiếu một ca parse sai. **Không phải đổi gì ở v1 để sau này làm được**, vì ảnh gốc vẫn luôn nằm trên Atomman theo đúng `imageRef`.
+
+Ngoài ra: chia sẻ cảnh báo chéo với Gú (đã chừa `visibility`), iOS (S4), nối dữ liệu với Ăn Khéo, và thống kê dạng "tháng này huynh đi 23 chuyến, 3 chuyến tệ".
 
 ## 20. Phụ lục: bộ tag v1
 
