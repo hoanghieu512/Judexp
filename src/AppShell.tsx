@@ -12,13 +12,17 @@ import {
   getDeviceId,
   getKho,
   getPin,
+  getSyncConfig,
   khoLabelFromUri,
+  setSyncConfig,
   setDeviceId,
   setKho,
   type KhoChoice,
   type PrefsStore,
 } from './profile/settings';
 import { Saf } from './plugins/saf';
+import { Syncthing } from './plugins/syncthing';
+import { syncStatus, type SyncConfig, type SyncState } from './sync/status';
 import type { JudexpEvent } from './domain/events';
 import './ui/theme/tokens.css';
 import './ui/ui.css';
@@ -51,6 +55,8 @@ export default function AppShell({
   const [pin, setPinValue] = useState<string | null>(null);
   const [view, setView] = useState<View>({ name: 'lookup' });
   const [ready, setReady] = useState(false);
+  const [sync, setSync] = useState<SyncConfig>({ baseUrl: 'http://127.0.0.1:8384', apiKey: '', folderId: '', atommanDeviceId: '' });
+  const [syncState, setSyncState] = useState<SyncState>('unconfigured');
 
   const refresh = useCallback(
     async (layout: KhoDirs, fromScratch = false) => {
@@ -70,6 +76,7 @@ export default function AppShell({
     (async () => {
       setDevice(await getDeviceId(prefs));
       setPinValue(await getPin(prefs));
+      setSync(await getSyncConfig(prefs));
       const chosen = await getKho(prefs);
       setKhoChoice(chosen);
       setAuthorName(await getAuthor(prefs));
@@ -81,6 +88,23 @@ export default function AppShell({
       setReady(true);
     })();
   }, [deps, prefs, refresh]);
+
+  // Poll rather than subscribe: ten seconds is plenty for a light that
+  // answers "is what I just wrote already on Atomman?".
+  useEffect(() => {
+    if (!ready) return;
+    let alive = true;
+    const read = async () => {
+      const state = await syncStatus({ request: (o) => Syncthing.request(o) }, sync);
+      if (alive) setSyncState(state);
+    };
+    read();
+    const timer = setInterval(read, 10_000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [ready, sync]);
 
   async function pickKho() {
     const { uri } = await Saf.pickFolder();
@@ -106,13 +130,18 @@ export default function AppShell({
     return (
       <SettingsPage
         kho={null}
-        status="unreachable"
+        status={syncState}
         deviceId={device}
         skipped={[]}
         workerLog=""
+        syncConfig={sync}
         onPickKho={pickKho}
         onRebuild={() => {}}
         onDeviceId={() => {}}
+        onSyncConfig={async (cfg) => {
+          await setSyncConfig(cfg, prefs);
+          setSync(cfg);
+        }}
       />
     );
   }
@@ -153,11 +182,16 @@ export default function AppShell({
       {view.name === 'settings' && (
         <SettingsPage
           kho={kho}
-          status="unreachable"
+          status={syncState}
           deviceId={device}
           skipped={skipped}
           workerLog=""
+          syncConfig={sync}
           onPickKho={pickKho}
+          onSyncConfig={async (cfg) => {
+            await setSyncConfig(cfg, prefs);
+            setSync(cfg);
+          }}
           onRebuild={() => dirs && refresh(dirs, true)}
           onDeviceId={async (name) => {
             await setDeviceId(name, prefs);

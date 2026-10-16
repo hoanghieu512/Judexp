@@ -9,7 +9,7 @@
  * silent app looks broken when the real problem is that the mini PC is off.
  */
 
-export type SyncState = 'synced' | 'pending' | 'unreachable';
+export type SyncState = 'synced' | 'pending' | 'unreachable' | 'unconfigured';
 
 export interface SyncConfig {
   /** Local Syncthing GUI, normally http://127.0.0.1:8384 */
@@ -35,6 +35,9 @@ async function getJson(deps: SyncDeps, url: string, apiKey: string): Promise<unk
 }
 
 export async function syncStatus(deps: SyncDeps, cfg: SyncConfig): Promise<SyncState> {
+  // A light that can never turn green is a lie. Say which of the two it is.
+  if (cfg.apiKey === '' || cfg.atommanDeviceId === '' || cfg.folderId === '') return 'unconfigured';
+
   const connections = (await getJson(deps, `${cfg.baseUrl}/rest/system/connections`, cfg.apiKey)) as
     | { connections?: Record<string, { connected?: boolean }> }
     | null;

@@ -1,12 +1,28 @@
 import { useState } from 'react';
 import type { SyncState } from '../sync/status';
 import type { KhoChoice } from '../profile/settings';
+import type { SyncConfig } from '../sync/status';
 import './ui.css';
 
 const LIGHT: Record<SyncState, string> = {
   synced: 'Đã đẩy hết sang Atomman',
   pending: 'Đang đẩy sang Atomman',
   unreachable: 'Chưa thấy Atomman',
+  unconfigured: 'Chưa cấu hình Syncthing',
+};
+
+const LIGHT_COLOR: Record<SyncState, string> = {
+  synced: 'good',
+  pending: 'ok',
+  unreachable: 'bad',
+  unconfigured: 'grey',
+};
+
+const LIGHT_MARK: Record<SyncState, string> = {
+  synced: '\u2714',
+  pending: '\u2013',
+  unreachable: '\u2715',
+  unconfigured: '?',
 };
 
 export default function SettingsPage({
@@ -15,16 +31,20 @@ export default function SettingsPage({
   deviceId,
   skipped,
   workerLog,
+  syncConfig,
   onPickKho,
   onRebuild,
   onDeviceId,
+  onSyncConfig,
 }: {
   kho: KhoChoice | null;
   status: SyncState;
   deviceId: string;
   skipped: string[];
   workerLog: string;
+  syncConfig: SyncConfig;
   onPickKho: () => void;
+  onSyncConfig: (cfg: SyncConfig) => void;
   onRebuild: () => void;
   onDeviceId: (name: string) => void;
 }) {
@@ -44,8 +64,8 @@ export default function SettingsPage({
 
       <h2 className="jx-section-title">Đồng bộ</h2>
       <div className="jx-row" data-testid="sync-light" data-status={status}>
-        <span className="jx-mark" data-color={status === 'synced' ? 'good' : status === 'pending' ? 'ok' : 'bad'}>
-          {status === 'synced' ? '✔' : status === 'pending' ? '–' : '✕'}
+        <span className="jx-mark" data-color={LIGHT_COLOR[status]}>
+          {LIGHT_MARK[status]}
         </span>
         <span className="jx-name">{LIGHT[status]}</span>
       </div>
@@ -55,6 +75,36 @@ export default function SettingsPage({
           {skipped.length} file event đọc không được, đã bỏ qua: {skipped.join(', ')}
         </p>
       )}
+
+      <label className="jx-sub" htmlFor="jx-st-key">
+        API key Syncthing của MÁY NÀY
+      </label>
+      <input
+        id="jx-st-key"
+        className="jx-search"
+        defaultValue={syncConfig.apiKey}
+        onBlur={(e) => onSyncConfig({ ...syncConfig, apiKey: e.target.value.trim() })}
+      />
+
+      <label className="jx-sub" htmlFor="jx-st-atomman">
+        Device ID của Atomman
+      </label>
+      <input
+        id="jx-st-atomman"
+        className="jx-search"
+        defaultValue={syncConfig.atommanDeviceId}
+        onBlur={(e) => onSyncConfig({ ...syncConfig, atommanDeviceId: e.target.value.trim() })}
+      />
+
+      <label className="jx-sub" htmlFor="jx-st-folder">
+        Folder ID của kho
+      </label>
+      <input
+        id="jx-st-folder"
+        className="jx-search"
+        defaultValue={syncConfig.folderId}
+        onBlur={(e) => onSyncConfig({ ...syncConfig, folderId: e.target.value.trim() })}
+      />
 
       <h2 className="jx-section-title">Máy này</h2>
       <label className="jx-sub" htmlFor="jx-device">

@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   getAuthor,
   khoLabelFromUri,
+  getSyncConfig,
+  setSyncConfig,
   getDeviceId,
   getKho,
   getPin,
@@ -111,5 +113,23 @@ describe('khoLabelFromUri', () => {
   it('never returns an empty label, whatever the uri looks like', () => {
     expect(khoLabelFromUri('content://whatever')).toBe('whatever');
     expect(khoLabelFromUri('')).toBe('kho');
+  });
+});
+
+describe('syncthing config', () => {
+  it('starts empty, with the local Syncthing address already filled in', async () => {
+    const cfg = await getSyncConfig(fakeStore());
+    expect(cfg.baseUrl).toBe('http://127.0.0.1:8384');
+    expect(cfg.apiKey).toBe('');
+    expect(cfg.atommanDeviceId).toBe('');
+  });
+
+  it('round-trips what huynh typed', async () => {
+    const store = fakeStore();
+    await setSyncConfig(
+      { baseUrl: 'http://127.0.0.1:8384', apiKey: 'k', folderId: 'judexp-hieu-qa', atommanDeviceId: 'ATOM' },
+      store,
+    );
+    expect((await getSyncConfig(store)).folderId).toBe('judexp-hieu-qa');
   });
 });

@@ -9,6 +9,8 @@ function show(over: Record<string, unknown> = {}) {
     deviceId: 'zflip4',
     skipped: [] as string[],
     workerLog: '',
+    syncConfig: { baseUrl: 'http://127.0.0.1:8384', apiKey: 'k', folderId: 'judexp-hieu-qa', atommanDeviceId: 'A' },
+    onSyncConfig: vi.fn(),
     onPickKho: vi.fn(),
     onRebuild: vi.fn(),
     onDeviceId: vi.fn(),
@@ -36,6 +38,17 @@ describe('SettingsPage', () => {
     expect(props.onRebuild).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /chắc chắn/i }));
     expect(props.onRebuild).toHaveBeenCalledTimes(1);
+  });
+
+  it('says the light is unconfigured rather than blaming Atomman', () => {
+    show({ status: 'unconfigured' });
+    expect(screen.getByTestId('sync-light')).toHaveTextContent(/chưa cấu hình syncthing/i);
+  });
+
+  it('saves the Atomman device id huynh types', () => {
+    const props = show();
+    fireEvent.blur(screen.getByLabelText(/device id của atomman/i), { target: { value: 'ATOM-1' } });
+    expect(props.onSyncConfig).toHaveBeenCalledWith(expect.objectContaining({ atommanDeviceId: 'ATOM-1' }));
   });
 
   it('surfaces event files that could not be read instead of swallowing them', () => {

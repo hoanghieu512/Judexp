@@ -9,6 +9,7 @@
 
 import { Preferences } from '@capacitor/preferences';
 import { normalizeName } from '../domain/keys';
+import type { SyncConfig } from '../sync/status';
 
 export interface PrefsStore {
   get(key: string): Promise<string | null>;
@@ -33,6 +34,7 @@ const KEY_KHO = 'judexp.kho';
 const KEY_DEVICE = 'judexp.device';
 const KEY_PIN = 'judexp.pin';
 const KEY_AUTHOR = 'judexp.author';
+const KEY_SYNC = 'judexp.syncthing';
 
 export interface KhoChoice {
   /** SAF tree uri of the kho root, the folder Syncthing replicates. */
@@ -120,4 +122,26 @@ export function khoLabelFromUri(uri: string): string {
   if (last === undefined) return 'kho';
   if (last.toLowerCase() === 'kho') return parts[parts.length - 2] ?? 'kho';
   return last;
+}
+
+const DEFAULT_SYNC: SyncConfig = {
+  baseUrl: 'http://127.0.0.1:8384',
+  apiKey: '',
+  folderId: '',
+  atommanDeviceId: '',
+};
+
+/** Syncthing settings are per device: the api key belongs to THIS phone. */
+export async function getSyncConfig(store: PrefsStore = capacitorStore): Promise<SyncConfig> {
+  const raw = await store.get(KEY_SYNC);
+  if (!raw) return { ...DEFAULT_SYNC };
+  try {
+    return { ...DEFAULT_SYNC, ...(JSON.parse(raw) as Partial<SyncConfig>) };
+  } catch {
+    return { ...DEFAULT_SYNC };
+  }
+}
+
+export async function setSyncConfig(cfg: SyncConfig, store: PrefsStore = capacitorStore): Promise<void> {
+  await store.set(KEY_SYNC, JSON.stringify(cfg));
 }

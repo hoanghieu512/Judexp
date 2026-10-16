@@ -39,9 +39,11 @@
   --jx-mark-unrated: '\003F'; /* question mark */
 
   /* Type */
-  --jx-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Bundled, not system-ui: the AOSP WebView on the cheap test phone resolves
+     system-ui to a monospace face, which turns the whole app into a terminal. */
+  --jx-font: 'Inter', system-ui, -apple-system, sans-serif;
   /* Plates render in mono so 0/O and 1/l cannot be confused. */
-  --jx-font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
+  --jx-font-mono: 'Roboto Mono', ui-monospace, Menlo, monospace;
 
   --jx-text-xl: 1.75rem;
   --jx-text-lg: 1.375rem;

@@ -26,6 +26,15 @@ const connected = (value: boolean) => ({
 const completion = (value: number) => ({ status: 200, data: JSON.stringify({ completion: value }) });
 
 describe('syncStatus', () => {
+  it('is unconfigured before the Syncthing api key and Atomman id are filled in', async () => {
+    const empty = { ...cfg, apiKey: '', atommanDeviceId: '' };
+    expect(await syncStatus(deps({}), empty)).toBe('unconfigured');
+  });
+
+  it('is unconfigured when only part of the config is filled in', async () => {
+    expect(await syncStatus(deps({}), { ...cfg, atommanDeviceId: '' })).toBe('unconfigured');
+  });
+
   it('is unreachable when the local Syncthing does not answer', async () => {
     expect(await syncStatus(deps({}, true), cfg)).toBe('unreachable');
   });
