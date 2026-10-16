@@ -3,7 +3,7 @@ import { entityColor } from '../domain/color';
 import { COLOR_LABELS, COLOR_MARKS } from './EntityRow';
 import { mergeCandidates } from '../domain/merge';
 import { newEncounter, type JudexpEvent, type Verdict } from '../domain/events';
-import type { State } from '../domain/reduce';
+import { instant, type State } from '../domain/reduce';
 import MergePrompt from './MergePrompt';
 import { relativeTime } from './relativeTime';
 import './ui.css';
@@ -37,7 +37,7 @@ export default function EntityPage({
 
   if (!entity) return <p className="jx-empty">Không còn hồ sơ này.</p>;
 
-  const encounters = [...entity.encounters].sort((a, b) => b.happenedAt.localeCompare(a.happenedAt));
+  const encounters = [...entity.encounters].sort((a, b) => instant(b.happenedAt) - instant(a.happenedAt));
 
   /** Corrections are new events; the file already written is never touched. */
   function amend(targetEventId: string, verdict: Verdict) {

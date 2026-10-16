@@ -51,6 +51,17 @@ describe('EntityPage', () => {
     expect(rows[1]).toHaveAttribute('data-verdict', 'good');
   });
 
+  it('lists encounters newest first by instant, even when offsets differ', () => {
+    const state = stateWith(
+      // 10:00+07:00 is 03:00Z, two hours before the good visit.
+      met('bun bo hue 14', 'Bún Bò Huế 14', 'bad', { createdAt: '2026-10-14T10:00:00+07:00' }),
+      met('bun bo hue 14', 'Bún Bò Huế 14', 'good', { createdAt: '2026-10-14T05:00:00Z' }),
+    );
+    show(state, 'bun bo hue 14');
+    const rows = screen.getAllByTestId('encounter');
+    expect(rows.map((r) => r.dataset.verdict)).toEqual(['good', 'bad']);
+  });
+
   it('lists every label the entity has ever had', () => {
     const state = stateWith(
       met('bun bo hue 14', 'Bún Bò Cô Ba', 'good'),
