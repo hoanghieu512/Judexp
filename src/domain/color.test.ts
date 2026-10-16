@@ -33,6 +33,14 @@ describe('entityColor', () => {
     expect(entityColor(entityWith([enc('good'), enc('good'), enc('bad')]))).toBe('red');
   });
 
+  it('orders ratings by instant, not by the text of timestamps written with different offsets', () => {
+    // 10:00+07:00 is 03:00Z, two hours BEFORE the good ride, though it sorts after it as text.
+    const earlierBad: Encounter = { eventId: 'x1', verdict: 'bad', tags: [], happenedAt: '2026-10-16T10:00:00+07:00' };
+    const laterGood: Encounter = { eventId: 'x2', verdict: 'good', tags: [], happenedAt: '2026-10-16T05:00:00Z' };
+    // The latest ride was good and only one of the window was bad, so not red.
+    expect(entityColor(entityWith([earlierBad, laterGood]))).toBe('yellow');
+  });
+
   it('is red when two of the last five rated encounters are bad', () => {
     expect(entityColor(entityWith([enc('bad'), enc('bad'), enc('ok'), enc('ok'), enc('good')]))).toBe('red');
   });

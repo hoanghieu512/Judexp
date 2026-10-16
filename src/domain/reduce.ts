@@ -40,7 +40,7 @@ export interface State {
 }
 
 /** An instant, not the text of a timestamp: two devices write different offsets. */
-function instant(iso: string): number {
+export function instant(iso: string): number {
   const t = Date.parse(iso);
   return Number.isNaN(t) ? 0 : t;
 }

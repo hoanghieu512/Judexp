@@ -7,7 +7,7 @@
  * instead of pretending to be good.
  */
 
-import type { Entity } from './reduce';
+import { instant, type Entity } from './reduce';
 
 export type EntityColor = 'grey' | 'red' | 'yellow' | 'green';
 
@@ -19,7 +19,7 @@ export function meetingCount(entity: Entity): number {
 export function entityColor(entity: Entity): EntityColor {
   const rated = entity.encounters
     .filter((e) => e.verdict !== null)
-    .sort((a, b) => a.happenedAt.localeCompare(b.happenedAt));
+    .sort((a, b) => instant(a.happenedAt) - instant(b.happenedAt));
 
   if (rated.length === 0) return 'grey';
 
