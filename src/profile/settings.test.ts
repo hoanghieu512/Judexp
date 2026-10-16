@@ -1,0 +1,76 @@
+import { describe, it, expect } from 'vitest';
+import {
+  getDeviceId,
+  getKho,
+  getPin,
+  setDeviceId,
+  setKho,
+  setPin,
+  type PrefsStore,
+} from './settings';
+
+function fakeStore(seed: Record<string, string> = {}): PrefsStore {
+  const data = new Map(Object.entries(seed));
+  return {
+    async get(key) {
+      return data.get(key) ?? null;
+    },
+    async set(key, value) {
+      data.set(key, value);
+    },
+    async remove(key) {
+      data.delete(key);
+    },
+  };
+}
+
+describe('kho choice', () => {
+  it('returns null before any kho is chosen', async () => {
+    expect(await getKho(fakeStore())).toBeNull();
+  });
+
+  it('round-trips the chosen kho', async () => {
+    const store = fakeStore();
+    await setKho({ rootUri: 'content://kho/huynh', label: 'Prod huynh' }, store);
+    expect(await getKho(store)).toEqual({ rootUri: 'content://kho/huynh', label: 'Prod huynh' });
+  });
+
+  it('returns null when the stored value is not readable', async () => {
+    expect(await getKho(fakeStore({ 'judexp.kho': '{broken' }))).toBeNull();
+  });
+});
+
+describe('device id', () => {
+  it('generates one on first use and keeps it', async () => {
+    const store = fakeStore();
+    const first = await getDeviceId(store);
+    expect(first).toMatch(/^[a-z0-9]{6}$/);
+    expect(await getDeviceId(store)).toBe(first);
+  });
+
+  it('accepts a name huynh typed, so event file names stay readable', async () => {
+    const store = fakeStore();
+    await setDeviceId('zflip4', store);
+    expect(await getDeviceId(store)).toBe('zflip4');
+  });
+
+  it('strips characters that would break an event file name', async () => {
+    const store = fakeStore();
+    await setDeviceId('Z Flip 4 / huynh', store);
+    expect(await getDeviceId(store)).toBe('zflip4huynh');
+  });
+});
+
+describe('pin', () => {
+  it('has no pin by default', async () => {
+    expect(await getPin(fakeStore())).toBeNull();
+  });
+
+  it('round-trips a pin and clears it with null', async () => {
+    const store = fakeStore();
+    await setPin('1234', store);
+    expect(await getPin(store)).toBe('1234');
+    await setPin(null, store);
+    expect(await getPin(store)).toBeNull();
+  });
+});
