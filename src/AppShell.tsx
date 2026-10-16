@@ -4,7 +4,7 @@ import QuickRateSheet from './ui/QuickRateSheet';
 import EntityPage from './ui/EntityPage';
 import SettingsPage from './ui/SettingsPage';
 import PinGate from './ui/PinGate';
-import { ensureKhoLayout, writeEvent, type KhoDeps, type KhoDirs } from './storage/kho';
+import { ensureKhoLayout, readWorkerLog, writeEvent, type KhoDeps, type KhoDirs } from './storage/kho';
 import { loadIndex, rebuildIndex, type Snapshot } from './index/store';
 import { emptyState, type State } from './domain/reduce';
 import {
@@ -92,6 +92,7 @@ export default function AppShell({
   const [ready, setReady] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [khoLog, setKhoLog] = useState<string[]>([]);
+  const [workerLog, setWorkerLog] = useState('');
   const [sync, setSync] = useState<SyncConfig>({
     baseUrl: 'https://127.0.0.1:8384',
     apiKey: '',
@@ -178,6 +179,20 @@ export default function AppShell({
       clearInterval(timer);
     };
   }, [ready, sync]);
+
+  // Read on every visit to Settings: the worker on Atomman appends to the
+  // log while the app is open, and Settings is the only place it is shown.
+  const rootUri = kho?.rootUri;
+  useEffect(() => {
+    if (view.name !== 'settings' || !rootUri) return;
+    let alive = true;
+    readWorkerLog(deps, rootUri).then((log) => {
+      if (alive) setWorkerLog(log);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [view.name, rootUri, deps]);
 
   async function pickKho() {
     try {
@@ -299,7 +314,7 @@ export default function AppShell({
           status={syncState}
           deviceId={device}
           skipped={skipped}
-          workerLog=""
+          workerLog={workerLog}
           syncConfig={sync}
           pin={pin}
           author={author}

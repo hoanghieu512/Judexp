@@ -88,6 +88,18 @@ describe('AppShell', () => {
   });
 });
 
+describe('AppShell, worker log', () => {
+  it('shows what the worker wrote in _worker.log when Settings opens', async () => {
+    const { deps, files } = fakeKho();
+    files.set('_worker.log', '2026-10-16 22:00 parsed 3 images\n');
+    const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }) });
+    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /cài đặt/i }));
+    await waitFor(() => expect(screen.getByTestId('worker-log')).toHaveTextContent('parsed 3 images'));
+  });
+});
+
 describe('AppShell, when the app stays open across midnight', () => {
   function seededKho() {
     const kho = fakeKho();

@@ -106,3 +106,24 @@ export async function readNewEvents(
 
   return { events, cursor: nextCursor, skipped };
 }
+
+const WORKER_LOG = '_worker.log';
+
+/**
+ * The tail of `_worker.log` at the kho root, so what the worker on Atomman
+ * did can be read from the phone (§4). An empty string means there is no log
+ * to show: the worker has not run yet, or the file could not be read, which
+ * goes to the kho log instead of failing the screen.
+ */
+export async function readWorkerLog(deps: KhoDeps, rootUri: string, maxLines = 40): Promise<string> {
+  try {
+    const { entries } = await deps.saf.listFolder({ uri: rootUri });
+    const entry = entries.find((e) => !e.isDirectory && e.name === WORKER_LOG);
+    if (!entry) return '';
+    const { data } = await deps.saf.readFile({ uri: entry.uri });
+    return data.trimEnd().split('\n').slice(-maxLines).join('\n');
+  } catch (err) {
+    deps.log(`could not read ${WORKER_LOG}: ${(err as Error).message}`);
+    return '';
+  }
+}

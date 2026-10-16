@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ensureKhoLayout, readNewEvents, writeEvent, type Cursor, type KhoDeps } from './kho';
+import { ensureKhoLayout, readNewEvents, readWorkerLog, writeEvent, type Cursor, type KhoDeps } from './kho';
 import type { SafEntry } from '../plugins/saf';
 import type { JudexpEvent } from '../domain/events';
 
@@ -158,5 +158,42 @@ describe('readNewEvents', () => {
     const r = await readNewEvents(deps, EVENTS_URI, {});
     expect(r.events).toHaveLength(0);
     expect(r.skipped).toEqual(['a.json']);
+  });
+});
+
+describe('readWorkerLog', () => {
+  const ROOT = 'content://kho';
+
+  function rootWith(files: FakeFile[]) {
+    const kho = fakeKho(files);
+    const listed: string[] = [];
+    const list = kho.deps.saf.listFolder;
+    kho.deps.saf.listFolder = async (opts) => {
+      listed.push(opts.uri);
+      return list(opts);
+    };
+    return { ...kho, listed };
+  }
+
+  it('reads _worker.log from the kho root, last lines only', async () => {
+    const lines = Array.from({ length: 60 }, (_, i) => `line ${i + 1}`);
+    const { deps, listed } = rootWith([{ name: '_worker.log', content: lines.join('\n') + '\n' }]);
+    const log = await readWorkerLog(deps, ROOT, 40);
+    expect(listed).toEqual([ROOT]);
+    expect(log.split('\n')).toEqual(lines.slice(20));
+  });
+
+  it('returns nothing when the worker has never written a log', async () => {
+    const { deps } = rootWith([]);
+    expect(await readWorkerLog(deps, ROOT)).toBe('');
+  });
+
+  it('returns nothing and says so in the kho log when the file cannot be read', async () => {
+    const { deps, logged } = rootWith([{ name: '_worker.log', content: 'x' }]);
+    deps.saf.readFile = async () => {
+      throw new Error('gone');
+    };
+    expect(await readWorkerLog(deps, ROOT)).toBe('');
+    expect(logged.join(' ')).toContain('_worker.log');
   });
 });
