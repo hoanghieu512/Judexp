@@ -44,8 +44,8 @@ describe('syncStatus', () => {
     expect(await syncStatus(deps({}, true), cfg)).toBe('no-syncthing');
   });
 
-  it('blames the local Syncthing when it answers with an error status', async () => {
-    expect(await syncStatus(deps({ connections: { status: 403, data: 'nope' } }), cfg)).toBe('no-syncthing');
+  it('blames the local Syncthing when it answers with a server error', async () => {
+    expect(await syncStatus(deps({ connections: { status: 500, data: 'nope' } }), cfg)).toBe('no-syncthing');
   });
 
   it('says Atomman is offline when Syncthing answers but the device is not connected', async () => {
@@ -104,5 +104,19 @@ describe('telling a device id apart from an api key', () => {
   it('does not mistake an api key for one', () => {
     expect(looksLikeDeviceId('tP3mXq8ZfLb2Rw9KdNc5VhJy7Gs4Au6E')).toBe(false);
     expect(looksLikeDeviceId('')).toBe(false);
+  });
+});
+
+describe('syncStatus, a wrong api key', () => {
+  // Syncthing answers 403 when the key is missing or wrong. Reporting that as
+  // "cannot read Syncthing" sends huynh looking in the wrong place.
+  it('says the api key is wrong rather than blaming the whole of Syncthing', async () => {
+    const d = deps({ connections: { status: 403, data: 'CSRF Error' } });
+    expect(await syncStatus(d, cfg)).toBe('bad-api-key');
+  });
+
+  it('treats 401 the same way', async () => {
+    const d = deps({ connections: { status: 401, data: '' } });
+    expect(await syncStatus(d, cfg)).toBe('bad-api-key');
   });
 });

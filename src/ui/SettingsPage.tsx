@@ -8,6 +8,7 @@ const LIGHT: Record<SyncState, string> = {
   synced: 'Đã đẩy hết sang Atomman',
   pending: 'Đang đẩy sang Atomman',
   'atomman-offline': 'Chưa thấy Atomman',
+  'bad-api-key': 'API key sai, Syncthing từ chối',
   'no-syncthing': 'Không đọc được Syncthing trên máy này',
   unconfigured: 'Chưa cấu hình Syncthing',
 };
@@ -16,6 +17,7 @@ const LIGHT_COLOR: Record<SyncState, string> = {
   synced: 'good',
   pending: 'ok',
   'atomman-offline': 'bad',
+  'bad-api-key': 'bad',
   'no-syncthing': 'bad',
   unconfigured: 'grey',
 };
@@ -24,6 +26,7 @@ const LIGHT_MARK: Record<SyncState, string> = {
   synced: '\u2714',
   pending: '\u2013',
   'atomman-offline': '\u2715',
+  'bad-api-key': '\u2715',
   'no-syncthing': '\u2715',
   unconfigured: '?',
 };

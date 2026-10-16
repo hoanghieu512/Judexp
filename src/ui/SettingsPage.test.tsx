@@ -36,6 +36,11 @@ describe('SettingsPage', () => {
     expect(screen.getByTestId('sync-light')).toHaveTextContent(/chưa thấy atomman/i);
   });
 
+  it('names a wrong api key as the fault when that is what it is', () => {
+    show({ status: 'bad-api-key' });
+    expect(screen.getByTestId('sync-light')).toHaveTextContent(/api key/i);
+  });
+
   it('blames Syncthing on this phone when that is the fault instead', () => {
     show({ status: 'no-syncthing' });
     expect(screen.getByTestId('sync-light')).toHaveTextContent(/syncthing trên máy này/i);

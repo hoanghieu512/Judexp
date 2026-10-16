@@ -13,7 +13,13 @@
  * Four faults, four words. Lumping them together made the app blame Atomman
  * for a request that never left this phone.
  */
-export type SyncState = 'synced' | 'pending' | 'atomman-offline' | 'no-syncthing' | 'unconfigured';
+export type SyncState =
+  | 'synced'
+  | 'pending'
+  | 'atomman-offline'
+  | 'bad-api-key'
+  | 'no-syncthing'
+  | 'unconfigured';
 
 export interface SyncConfig {
   /**
@@ -32,13 +38,18 @@ export interface SyncDeps {
   request: (options: { url: string; apiKey: string }) => Promise<{ status: number; data: string }>;
 }
 
-async function getJson(deps: SyncDeps, url: string, apiKey: string): Promise<unknown | null> {
+type Fetched = { ok: true; value: unknown } | { ok: false; reason: 'bad-api-key' | 'no-syncthing' };
+
+async function getJson(deps: SyncDeps, url: string, apiKey: string): Promise<Fetched> {
   try {
     const { status, data } = await deps.request({ url, apiKey });
-    if (status !== 200) return null;
-    return JSON.parse(data);
+    // Syncthing answers 403 when the key is missing or wrong, which is a
+    // different thing to fix than Syncthing not answering at all.
+    if (status === 401 || status === 403) return { ok: false, reason: 'bad-api-key' };
+    if (status !== 200) return { ok: false, reason: 'no-syncthing' };
+    return { ok: true, value: JSON.parse(data) };
   } catch {
-    return null;
+    return { ok: false, reason: 'no-syncthing' };
   }
 }
 
@@ -61,16 +72,20 @@ export async function syncStatus(deps: SyncDeps, cfg: SyncConfig): Promise<SyncS
   if (cfg.apiKey === '' || cfg.atommanDeviceId === '' || cfg.folderId === '') return 'unconfigured';
   if (!isLikelyDeviceId(cfg.atommanDeviceId)) return 'unconfigured';
 
-  const connections = (await getJson(deps, `${cfg.baseUrl}/rest/system/connections`, cfg.apiKey)) as
-    | { connections?: Record<string, { connected?: boolean }> }
-    | null;
+  const fetched = await getJson(deps, `${cfg.baseUrl}/rest/system/connections`, cfg.apiKey);
+  if (!fetched.ok) return fetched.reason;
+
+  const connections = fetched.value as { connections?: Record<string, { connected?: boolean }> } | null;
   if (!connections?.connections) return 'no-syncthing';
 
   const atomman = connections.connections[cfg.atommanDeviceId];
   if (!atomman?.connected) return 'atomman-offline';
 
   const url = `${cfg.baseUrl}/rest/db/completion?folder=${encodeURIComponent(cfg.folderId)}&device=${encodeURIComponent(cfg.atommanDeviceId)}`;
-  const completion = (await getJson(deps, url, cfg.apiKey)) as { completion?: number } | null;
+  const done = await getJson(deps, url, cfg.apiKey);
+  if (!done.ok) return done.reason;
+
+  const completion = done.value as { completion?: number } | null;
   if (typeof completion?.completion !== 'number') return 'no-syncthing';
 
   return completion.completion >= 100 ? 'synced' : 'pending';
