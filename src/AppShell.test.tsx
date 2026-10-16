@@ -1,0 +1,87 @@
+import { describe, it, expect } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import AppShell from './AppShell';
+import type { KhoDeps } from './storage/kho';
+import type { PrefsStore } from './profile/settings';
+import type { SafEntry } from './plugins/saf';
+
+const NOW = new Date('2026-10-16T12:00:00Z');
+
+/** A kho that remembers what the app writes into it. */
+function fakeKho() {
+  const files = new Map<string, string>();
+  const entries = () =>
+    [...files.keys()].map<SafEntry>((name) => ({
+      name,
+      isDirectory: false,
+      uri: `content://kho/events/${name}`,
+      size: files.get(name)!.length,
+      lastModified: 1,
+    }));
+
+  const deps: KhoDeps = {
+    saf: {
+      async ensureDir({ parentUri, name }) {
+        return { uri: `${parentUri}/${name}` };
+      },
+      async listFolder() {
+        return { entries: entries() };
+      },
+      async readFile({ uri }) {
+        return { data: files.get(uri.split('/').pop()!)! };
+      },
+      async writeFile({ dirUri, name, content }) {
+        files.set(name, content);
+        return { uri: `${dirUri}/${name}` };
+      },
+    },
+    log: () => {},
+  };
+  return { deps, files };
+}
+
+function fakePrefs(seed: Record<string, string> = {}): PrefsStore {
+  const data = new Map(Object.entries(seed));
+  return {
+    async get(key) {
+      return data.get(key) ?? null;
+    },
+    async set(key, value) {
+      data.set(key, value);
+    },
+    async remove(key) {
+      data.delete(key);
+    },
+  };
+}
+
+describe('AppShell', () => {
+  it('asks for a kho folder before anything else', async () => {
+    const { deps } = fakeKho();
+    render(<AppShell deps={deps} prefs={fakePrefs()} now={NOW} />);
+    expect(await screen.findByRole('button', { name: /chọn folder kho/i })).toBeInTheDocument();
+  });
+
+  it('writes a rating into the kho and finds it again by plate', async () => {
+    const { deps, files } = fakeKho();
+    const prefs = fakePrefs({
+      'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'QA' }),
+      'judexp.device': 'zflip4',
+    });
+
+    render(<AppShell deps={deps} prefs={prefs} now={NOW} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
+    fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H1-234.56' } });
+    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'chạy ẩu' }));
+    fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
+
+    await waitFor(() => expect(files.size).toBe(1));
+    const written = JSON.parse([...files.values()][0]);
+    expect(written.entityRef.key).toBe('59H123456');
+
+    fireEvent.change(await screen.findByRole('searchbox'), { target: { value: '23456' } });
+    expect(await screen.findByTestId('entity-59H123456')).toHaveAttribute('data-color', 'red');
+  });
+});

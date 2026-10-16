@@ -118,3 +118,10 @@
 }
 
 .jx-prompt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--jx-space-3); }
+
+.jx-nav {
+  display: flex;
+  gap: var(--jx-space-2);
+  padding: var(--jx-space-3) var(--jx-space-4) 0;
+  background: var(--jx-bg);
+}

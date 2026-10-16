@@ -2,17 +2,18 @@ import { entityColor, meetingCount, type EntityColor } from '../domain/color';
 import type { Entity } from '../domain/reduce';
 import { relativeTime } from './relativeTime';
 
-const MARKS: Record<EntityColor, string> = {
-  good: '✔',
-  ok: '–',
-  bad: '✕',
+/** Colour is never the only signal: every state carries a mark too. */
+export const COLOR_MARKS: Record<EntityColor, string> = {
+  green: '\u2714',
+  yellow: '\u2013',
+  red: '\u2715',
   grey: '?',
 };
 
-const MARK_LABELS: Record<EntityColor, string> = {
-  good: 'tốt',
-  ok: 'ổn',
-  bad: 'xấu',
+export const COLOR_LABELS: Record<EntityColor, string> = {
+  green: 'tốt',
+  yellow: 'tạm',
+  red: 'xấu',
   grey: 'chưa chấm',
 };
 
@@ -51,8 +52,8 @@ export default function EntityRow({
       data-color={color}
       onClick={() => onOpen?.(entity.key)}
     >
-      <span className="jx-mark" data-color={color} aria-label={MARK_LABELS[color]}>
-        {MARKS[color]}
+      <span className="jx-mark" data-color={color} aria-label={COLOR_LABELS[color]}>
+        {COLOR_MARKS[color]}
       </span>
       <span>
         <span

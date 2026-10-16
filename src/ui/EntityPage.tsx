@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { entityColor } from '../domain/color';
+import { COLOR_LABELS, COLOR_MARKS } from './EntityRow';
 import { mergeCandidates } from '../domain/merge';
 import { newEncounter, type JudexpEvent } from '../domain/events';
 import type { State } from '../domain/reduce';
@@ -7,7 +8,7 @@ import MergePrompt from './MergePrompt';
 import { relativeTime } from './relativeTime';
 import './ui.css';
 
-const MARKS: Record<string, string> = { good: '✔', ok: '–', bad: '✕', grey: '?' };
+const VERDICT_MARKS: Record<string, string> = { good: '✔', ok: '–', bad: '✕', grey: '?' };
 
 /** Everything known about one entity, newest first. */
 export default function EntityPage({
@@ -51,8 +52,8 @@ export default function EntityPage({
   return (
     <div className="jx-screen">
       <div className="jx-row">
-        <span className="jx-mark" data-color={entityColor(entity)}>
-          {MARKS[entityColor(entity)]}
+        <span className="jx-mark" data-color={entityColor(entity)} aria-label={COLOR_LABELS[entityColor(entity)]}>
+          {COLOR_MARKS[entityColor(entity)]}
         </span>
         <span>
           <span className={entity.kind === 'driver' ? 'jx-plate' : 'jx-name'}>{entityKey}</span>
@@ -76,7 +77,7 @@ export default function EntityPage({
       {encounters.map((enc) => (
         <div className="jx-row" data-testid="encounter" data-verdict={enc.verdict ?? 'unrated'} key={enc.eventId}>
           <span className="jx-mark" data-color={enc.verdict ?? 'grey'}>
-            {MARKS[enc.verdict ?? 'grey']}
+            {VERDICT_MARKS[enc.verdict ?? 'grey']}
           </span>
           <span>
             <span className="jx-sub">{relativeTime(enc.happenedAt, now)}</span>
