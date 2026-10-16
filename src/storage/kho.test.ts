@@ -126,6 +126,19 @@ describe('readNewEvents', () => {
     expect(r.cursor['broken.json']).toBeDefined();
   });
 
+  // Review Focus 1, the truly empty case: zero bytes, not merely bad JSON.
+  it('skips a zero-byte file, then reads it once it has content, even with the same mtime', async () => {
+    const empty = fakeKho([{ name: 'a.json', content: '', size: 0, lastModified: 5 }]);
+    const first = await readNewEvents(empty.deps, EVENTS_URI, {});
+    expect(first.events).toHaveLength(0);
+    expect(first.skipped).toEqual(['a.json']);
+
+    // Syncthing keeps the source's mtime, so only the size says it changed.
+    const full = fakeKho([{ name: 'a.json', content: eventJson(), lastModified: 5 }]);
+    const second = await readNewEvents(full.deps, EVENTS_URI, first.cursor);
+    expect(second.events).toHaveLength(1);
+  });
+
   // Review Focus 2
   it('ignores .sync-conflict files and logs them', async () => {
     const { deps, logged } = fakeKho([
