@@ -106,3 +106,15 @@
 .jx-verdict[data-selected='true'] { border-color: currentColor; }
 
 .jx-tag[data-selected='true'] { background: var(--jx-text); color: var(--jx-text-on-accent); }
+
+.jx-prompt {
+  background: var(--jx-surface-raised);
+  border: 1px solid var(--jx-border);
+  border-radius: var(--jx-radius-md);
+  padding: var(--jx-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--jx-space-2);
+}
+
+.jx-prompt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--jx-space-3); }
