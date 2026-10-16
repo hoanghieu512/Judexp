@@ -28,12 +28,40 @@ export interface KhoDirs {
 
 const SUBFOLDERS = ['events', 'inbox', 'parsed', 'attachments'] as const;
 
+/**
+ * The kho exists but Android will not list what is in it. Seen on dGen1 after
+ * a bad boot: the storage provider hid the kho's children while still letting
+ * it create folders, so "events" came back as a new, empty "events (1)" and
+ * every write would have gone where nothing ever reads.
+ */
+export class KhoUnreadableError extends Error {
+  constructor(detail: string) {
+    super(`kho cannot be listed: ${detail}`);
+    this.name = 'KhoUnreadableError';
+  }
+}
+
+/** The code SafPlugin.ensureDir rejects with when the folder exists but is hidden. */
+const HIDDEN_CODE = 'KHO_HIDDEN';
+
 export async function ensureKhoLayout(deps: KhoDeps, rootUri: string): Promise<KhoDirs> {
   const dirs = {} as KhoDirs;
   for (const name of SUBFOLDERS) {
-    const { uri } = await deps.saf.ensureDir({ parentUri: rootUri, name });
-    dirs[name] = uri;
+    try {
+      const { uri } = await deps.saf.ensureDir({ parentUri: rootUri, name });
+      dirs[name] = uri;
+    } catch (err) {
+      if ((err as { code?: string }).code === HIDDEN_CODE) throw new KhoUnreadableError((err as Error).message);
+      throw err;
+    }
   }
+
+  // Trust nothing the root cannot show: a folder ensured but not listed is a
+  // folder some other part of the kho does not see either.
+  const { entries } = await deps.saf.listFolder({ uri: rootUri });
+  const listed = new Set(entries.filter((e) => e.isDirectory).map((e) => e.name));
+  const missing = SUBFOLDERS.filter((name) => !listed.has(name));
+  if (missing.length > 0) throw new KhoUnreadableError(`root does not list ${missing.join(', ')}`);
   return dirs;
 }
 

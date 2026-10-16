@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { ensureKhoLayout, readNewEvents, readWorkerLog, writeEvent, type Cursor, type KhoDeps } from './kho';
+import { ensureKhoLayout, KhoUnreadableError, readNewEvents, readWorkerLog, writeEvent, type Cursor, type KhoDeps } from './kho';
+
+const ROOT_URI = 'content://kho';
 import type { SafEntry } from '../plugins/saf';
 import type { JudexpEvent } from '../domain/events';
 
@@ -10,7 +12,7 @@ interface FakeFile {
   lastModified?: number;
 }
 
-function fakeKho(files: FakeFile[] = []) {
+function fakeKho(files: FakeFile[] = [], options: { hideRoot?: boolean } = {}) {
   const logged: string[] = [];
   const written: { dirUri: string; name: string; content: string }[] = [];
   const dirs: string[] = [];
@@ -33,8 +35,14 @@ function fakeKho(files: FakeFile[] = []) {
         dirs.push(name);
         return { uri: `${parentUri}/${name}` };
       },
-      async listFolder() {
-        return { entries };
+      // The root lists the folders ensured so far plus loose files (like
+      // _worker.log); any other folder lists the files. `hideRoot` mimics the
+      // provider bug seen on dGen1, where the root lists nothing at all.
+      async listFolder({ uri }) {
+        if (uri !== ROOT_URI) return { entries };
+        if (options.hideRoot) return { entries: [] };
+        const folders = dirs.map<SafEntry>((name) => ({ name, isDirectory: true, uri: `${ROOT_URI}/${name}` }));
+        return { entries: [...folders, ...entries] };
       },
       async readFile({ uri }) {
         const data = byUri.get(uri);
@@ -76,6 +84,30 @@ describe('ensureKhoLayout', () => {
     expect(dirs).toEqual(['events', 'inbox', 'parsed', 'attachments']);
     expect(layout.events).toBe('content://kho/events');
     expect(layout.attachments).toBe('content://kho/attachments');
+  });
+
+  // Seen on dGen1: Android hid the kho's children but still created folders,
+  // so "events" became "events (1)" and writes went where nothing reads.
+  it('refuses a kho whose root does not list the folders it just ensured', async () => {
+    const { deps } = fakeKho([], { hideRoot: true });
+    await expect(ensureKhoLayout(deps, ROOT_URI)).rejects.toBeInstanceOf(KhoUnreadableError);
+  });
+
+  it('refuses a kho when the plugin reports a folder it cannot see', async () => {
+    const { deps } = fakeKho();
+    deps.saf.ensureDir = async () => {
+      throw Object.assign(new Error('events exists but is hidden'), { code: 'KHO_HIDDEN' });
+    };
+    await expect(ensureKhoLayout(deps, ROOT_URI)).rejects.toBeInstanceOf(KhoUnreadableError);
+  });
+
+  it('passes any other failure through unchanged', async () => {
+    const { deps } = fakeKho();
+    const boom = new Error('bad parent');
+    deps.saf.ensureDir = async () => {
+      throw boom;
+    };
+    await expect(ensureKhoLayout(deps, ROOT_URI)).rejects.toBe(boom);
   });
 });
 

@@ -4,7 +4,7 @@ import QuickRateSheet from './ui/QuickRateSheet';
 import EntityPage from './ui/EntityPage';
 import SettingsPage from './ui/SettingsPage';
 import PinGate from './ui/PinGate';
-import { ensureKhoLayout, readWorkerLog, writeEvent, type KhoDeps, type KhoDirs } from './storage/kho';
+import { ensureKhoLayout, KhoUnreadableError, readWorkerLog, writeEvent, type KhoDeps, type KhoDirs } from './storage/kho';
 import { loadIndex, rebuildIndex, type Snapshot } from './index/store';
 import { emptyState, type State } from './domain/reduce';
 import {
@@ -60,6 +60,17 @@ function useNow(clock: () => Date): Date {
     };
   }, []);
   return now;
+}
+
+/**
+ * What to tell huynh when the kho will not open. A hidden kho is the phone's
+ * fault, not the folder's, so picking the folder again would not help.
+ */
+function khoProblem(err: unknown, fallback: string): string {
+  if (err instanceof KhoUnreadableError) {
+    return 'Android đang không cho app đọc folder kho, thường do máy khởi động lỗi. Khởi động lại máy rồi mở lại app. Trong lúc này app không ghi gì vào kho.';
+  }
+  return `Không mở được kho: ${(err as Error).message}.${fallback}`;
 }
 
 type View = { name: 'lookup' } | { name: 'rate' } | { name: 'entity'; key: string } | { name: 'settings' };
@@ -155,7 +166,7 @@ export default function AppShell({
           await refresh(layout);
         }
       } catch (err) {
-        setProblem(`Không mở được kho: ${(err as Error).message}. Chọn lại folder kho bên dưới.`);
+        setProblem(khoProblem(err, ' Chọn lại folder kho bên dưới.'));
         setDirs(null);
       } finally {
         setReady(true);
@@ -199,7 +210,7 @@ export default function AppShell({
       await pickKhoInner();
       setProblem(null);
     } catch (err) {
-      setProblem(`Không mở được kho: ${(err as Error).message}`);
+      setProblem(khoProblem(err, ''));
     }
   }
 
@@ -332,7 +343,16 @@ export default function AppShell({
             await setSyncConfig(cfg, prefs);
             setSync(cfg);
           }}
-          onRebuild={() => refresh(dirs, true)}
+          onRebuild={async () => {
+            // Check the kho still lists before throwing the index away: a
+            // hidden kho reads as empty, and rebuilding from it wipes the index.
+            try {
+              await ensureKhoLayout(deps, kho.rootUri);
+            } catch (err) {
+              throw new Error(khoProblem(err, ''));
+            }
+            await refresh(dirs, true);
+          }}
           onDeviceId={async (name) => {
             await setDeviceId(name, prefs);
             setDevice(await getDeviceId(prefs));

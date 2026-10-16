@@ -7,9 +7,14 @@ import type { SafEntry } from './plugins/saf';
 
 const NOW = new Date('2026-10-16T12:00:00Z');
 
+const ROOT_URI = 'content://kho';
+
 /** A kho that remembers what the app writes into it. */
 function fakeKho() {
   const files = new Map<string, string>();
+  const folders: string[] = [];
+  /** Set to mimic Android hiding the kho's children, as seen on dGen1. */
+  const view = { hidden: false };
   const entries = () =>
     [...files.keys()].map<SafEntry>((name) => ({
       name,
@@ -22,10 +27,15 @@ function fakeKho() {
   const deps: KhoDeps = {
     saf: {
       async ensureDir({ parentUri, name }) {
+        if (!folders.includes(name)) folders.push(name);
         return { uri: `${parentUri}/${name}` };
       },
-      async listFolder() {
-        return { entries: entries() };
+      // Like a real kho, the root lists its folders as well as loose files.
+      async listFolder({ uri }) {
+        if (view.hidden) return { entries: [] };
+        if (uri !== ROOT_URI) return { entries: entries() };
+        const dirs = folders.map<SafEntry>((name) => ({ name, isDirectory: true, uri: `${ROOT_URI}/${name}` }));
+        return { entries: [...dirs, ...entries()] };
       },
       async readFile({ uri }) {
         return { data: files.get(uri.split('/').pop()!)! };
@@ -37,7 +47,7 @@ function fakeKho() {
     },
     log: () => {},
   };
-  return { deps, files };
+  return { deps, files, view };
 }
 
 function fakePrefs(seed: Record<string, string> = {}): PrefsStore {
@@ -151,6 +161,49 @@ describe('AppShell, when the app stays open across midnight', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('AppShell, when Android hides what is in the kho', () => {
+  const khoPrefs = () => fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: ROOT_URI, label: 'Hieu' }) });
+
+  it('says to restart the phone and offers no way to write', async () => {
+    const { deps, files, view } = fakeKho();
+    view.hidden = true;
+    render(<AppShell deps={deps} prefs={khoPrefs()} clock={() => NOW} />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/khởi động lại máy/i);
+    expect(screen.queryByRole('button', { name: /chấm nhanh/i })).toBeNull();
+    expect(files.size).toBe(0);
+  });
+
+  it('keeps the index instead of rebuilding it from a folder that lists nothing', async () => {
+    const { deps, files, view } = fakeKho();
+    files.set(
+      '20261016T100000Z_dgen1_a3f9c21.json',
+      JSON.stringify({
+        schemaVersion: 1,
+        eventId: 'a3f9c21d-7b44-4c2e-9f10-2c7a51d9e001',
+        type: 'encounter',
+        author: 'hieu',
+        device: 'dgen1',
+        createdAt: '2026-10-16T10:00:00Z',
+        visibility: 'private',
+        entityRef: { kind: 'driver', key: '59H123456', label: '59H1-234.56' },
+        verdict: 'bad',
+        tags: [],
+      }),
+    );
+    render(<AppShell deps={deps} prefs={khoPrefs()} clock={() => NOW} />);
+    expect(await screen.findByTestId('entity-59H123456')).toBeInTheDocument();
+
+    view.hidden = true;
+    fireEvent.click(screen.getByRole('button', { name: /cài đặt/i }));
+    fireEvent.click(screen.getByRole('button', { name: /dựng lại index/i }));
+    fireEvent.click(screen.getByRole('button', { name: /chắc chắn/i }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/khởi động lại máy/i);
+
+    fireEvent.click(screen.getByRole('button', { name: /tra cứu/i }));
+    expect(await screen.findByTestId('entity-59H123456')).toBeInTheDocument();
   });
 });
 
