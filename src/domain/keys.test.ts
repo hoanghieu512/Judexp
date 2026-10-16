@@ -18,6 +18,21 @@ describe('normalizeName', () => {
     expect(normalizeName('Đặc Biệt')).toBe('dac biet');
   });
 
+  it('treats punctuation as a word break, so the same place written two ways gets one key', () => {
+    expect(normalizeName('Cơm Tấm Ba Ghi - Q7')).toBe('com tam ba ghi q7');
+    expect(normalizeName('Com tam Ba Ghi Q7')).toBe('com tam ba ghi q7');
+    expect(normalizeName('Bánh mì Huỳnh-Hoa')).toBe('banh mi huynh hoa');
+    expect(normalizeName('Quán "Ngon", Q.1')).toBe('ngon q 1');
+  });
+
+  it('drops apostrophes without breaking the word', () => {
+    expect(normalizeName("McDonald's")).toBe('mcdonalds');
+  });
+
+  it('keeps letters from scripts other than Vietnamese', () => {
+    expect(normalizeName('Sushi 寿司')).toBe('sushi 寿司');
+  });
+
   it('strips only leading generic prefixes', () => {
     expect(normalizeName('Quán Bún Bò')).toBe('bun bo');
     expect(normalizeName('Tiệm Cơm Tấm')).toBe('com tam');

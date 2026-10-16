@@ -18,9 +18,13 @@ export function normalizePlate(raw: string): string {
 }
 
 /**
- * Name key: drop diacritics, lower case, collapse whitespace, then strip one
- * leading generic prefix. `đ` needs its own rule: it is not a composed
- * character, so NFD leaves it untouched.
+ * Name key: drop diacritics, lower case, turn punctuation into word breaks,
+ * collapse whitespace, then strip one leading generic prefix. `đ` needs its
+ * own rule: it is not a composed character, so NFD leaves it untouched.
+ *
+ * Punctuation is how the same sign gets typed differently ("Ba Ghi - Q7",
+ * "Ba Ghi Q7"), so it carries no identity. Apostrophes are dropped instead of
+ * breaking the word, so "McDonald's" stays one word.
  */
 export function normalizeName(raw: string): string {
   const flat = raw
@@ -29,6 +33,8 @@ export function normalizeName(raw: string): string {
     .replace(/đ/g, 'd')
     .replace(/Đ/g, 'D')
     .toLowerCase()
+    .replace(/['’‘]/g, '')
+    .replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
