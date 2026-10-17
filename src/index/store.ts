@@ -19,6 +19,12 @@ const SNAPSHOT_VERSION = 1;
 
 export interface Snapshot {
   schemaVersion: typeof SNAPSHOT_VERSION;
+  /**
+   * The events folder this snapshot was read from. There is one snapshot per
+   * device, so without this a switch of kho would replay one kho's events
+   * into another. Missing on snapshots written before it existed.
+   */
+  eventsUri?: string;
   cursor: Cursor;
   events: JudexpEvent[];
   /** Files that could not be used, carried so the warning outlives a restart. */
@@ -34,11 +40,12 @@ export interface IndexResult {
 
 /**
  * Load the index, reading only what the snapshot has not seen. A snapshot
- * from an unknown version is discarded rather than trusted: a full rebuild
- * costs seconds, a wrong replay costs correctness.
+ * from an unknown version, or from another kho, is discarded rather than
+ * trusted: a full rebuild costs seconds, a wrong replay costs correctness.
  */
 export async function loadIndex(deps: KhoDeps, eventsUri: string, snapshot: Snapshot | null): Promise<IndexResult> {
-  const usable = snapshot && snapshot.schemaVersion === SNAPSHOT_VERSION ? snapshot : null;
+  const usable =
+    snapshot && snapshot.schemaVersion === SNAPSHOT_VERSION && snapshot.eventsUri === eventsUri ? snapshot : null;
   const base = usable ? applyEvents(emptyState(), usable.events) : emptyState();
 
   const { events, cursor, skipped } = await readNewEvents(deps, eventsUri, usable?.cursor ?? {});
@@ -47,7 +54,7 @@ export async function loadIndex(deps: KhoDeps, eventsUri: string, snapshot: Snap
 
   return {
     state,
-    snapshot: { schemaVersion: SNAPSHOT_VERSION, cursor, events: state.events, skipped: allSkipped },
+    snapshot: { schemaVersion: SNAPSHOT_VERSION, eventsUri, cursor, events: state.events, skipped: allSkipped },
     skipped: allSkipped,
   };
 }

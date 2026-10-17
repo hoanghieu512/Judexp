@@ -75,6 +75,31 @@ describe('loadIndex', () => {
     expect(second.state.entities.get('59H123456')!.encounters).toHaveLength(2);
   });
 
+  // Picking another kho (QA to Prod, or another profile) must not carry the
+  // first kho's events into the second: they would show up there and could
+  // be merged or amended into a kho they never belonged to.
+  it('ignores a snapshot taken from another kho', async () => {
+    const qa = fakeKho([{ name: 'q.json', content: eventJson('id-q', '51A11111') }]);
+    const fromQa = (await loadIndex(qa.deps, 'content://qa/events', null)).snapshot;
+
+    const prod = fakeKho(twoFiles);
+    const { state, snapshot } = await loadIndex(prod.deps, EVENTS_URI, fromQa);
+    expect(state.entities.has('51A11111')).toBe(false);
+    expect(prod.reads()).toBe(2);
+    expect(snapshot.events.map((e) => e.entityRef?.key)).toEqual(['59H123456', '59H123456']);
+  });
+
+  it('ignores a snapshot that does not say which kho it came from', async () => {
+    const { deps } = fakeKho(twoFiles);
+    const unlabelled = {
+      schemaVersion: 1,
+      cursor: {},
+      events: [JSON.parse(eventJson('id-q', '51A11111'))],
+    } as unknown as Snapshot;
+    const { state } = await loadIndex(deps, EVENTS_URI, unlabelled);
+    expect(state.entities.has('51A11111')).toBe(false);
+  });
+
   it('ignores a snapshot written by a different schema version', async () => {
     const { deps, reads } = fakeKho(twoFiles);
     const stale = { schemaVersion: 99, cursor: { 'a.json': { size: 1, lastModified: 1 } }, events: [] } as unknown as Snapshot;
