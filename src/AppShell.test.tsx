@@ -4,6 +4,7 @@ import AppShell from './AppShell';
 import type { KhoDeps } from './storage/kho';
 import type { PrefsStore } from './profile/settings';
 import type { SafEntry } from './plugins/saf';
+import type { SnapshotStore } from './index/snapshotStore';
 
 const NOW = new Date('2026-10-16T12:00:00Z');
 
@@ -65,10 +66,24 @@ function fakePrefs(seed: Record<string, string> = {}): PrefsStore {
   };
 }
 
+/** The index snapshot store, kept in memory instead of a file. */
+function memorySnapshots(seed: string | null = null): SnapshotStore & { stored: () => string | null } {
+  let stored = seed;
+  return {
+    async read() {
+      return stored;
+    },
+    async write(json) {
+      stored = json;
+    },
+    stored: () => stored,
+  };
+}
+
 describe('AppShell', () => {
   it('asks for a kho folder before anything else', async () => {
     const { deps } = fakeKho();
-    render(<AppShell deps={deps} prefs={fakePrefs()} clock={() => NOW} />);
+    render(<AppShell deps={deps} prefs={fakePrefs()} snapshots={memorySnapshots()} clock={() => NOW} />);
     expect(await screen.findByRole('button', { name: /chọn folder kho/i })).toBeInTheDocument();
   });
 
@@ -79,7 +94,7 @@ describe('AppShell', () => {
       'judexp.device': 'dgen1',
     });
 
-    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
+    render(<AppShell deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => NOW} />);
 
     fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H1-234.56' } });
@@ -98,12 +113,40 @@ describe('AppShell', () => {
   });
 });
 
+describe('AppShell, index snapshot', () => {
+  it('keeps the index snapshot out of Preferences', async () => {
+    const { deps } = fakeKho();
+    const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }) });
+    const snapshots = memorySnapshots();
+    render(<AppShell deps={deps} prefs={prefs} snapshots={snapshots} clock={() => NOW} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
+    fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H1-234.56' } });
+    fireEvent.click(screen.getByRole('button', { name: /^tốt$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
+
+    await waitFor(() => expect(JSON.parse(snapshots.stored() ?? '{}').events).toHaveLength(1));
+    expect(await prefs.get('judexp.snapshot')).toBeNull();
+  });
+
+  it('drops the snapshot an older version left in Preferences', async () => {
+    const { deps } = fakeKho();
+    const prefs = fakePrefs({
+      'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }),
+      'judexp.snapshot': JSON.stringify({ schemaVersion: 1, cursor: {}, events: [] }),
+    });
+    render(<AppShell deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => NOW} />);
+    await screen.findByRole('searchbox');
+    await waitFor(async () => expect(await prefs.get('judexp.snapshot')).toBeNull());
+  });
+});
+
 describe('AppShell, worker log', () => {
   it('shows what the worker wrote in _worker.log when Settings opens', async () => {
     const { deps, files } = fakeKho();
     files.set('_worker.log', '2026-10-16 22:00 parsed 3 images\n');
     const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }) });
-    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
+    render(<AppShell deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => NOW} />);
 
     fireEvent.click(await screen.findByRole('button', { name: /cài đặt/i }));
     await waitFor(() => expect(screen.getByTestId('worker-log')).toHaveTextContent('parsed 3 images'));
@@ -135,7 +178,7 @@ describe('AppShell, when the app stays open across midnight', () => {
   it('reads the clock again when the app comes back to the foreground', async () => {
     const { deps, prefs } = seededKho();
     let current = NOW;
-    render(<AppShell deps={deps} prefs={prefs} clock={() => current} />);
+    render(<AppShell deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => current} />);
     expect(await screen.findByTestId('entity-59H123456')).toHaveTextContent('hôm nay');
 
     current = new Date('2026-10-17T12:00:00Z');
@@ -150,7 +193,7 @@ describe('AppShell, when the app stays open across midnight', () => {
     try {
       const { deps, prefs } = seededKho();
       let current = NOW;
-      render(<AppShell deps={deps} prefs={prefs} clock={() => current} />);
+      render(<AppShell deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => current} />);
       expect(await screen.findByTestId('entity-59H123456')).toHaveTextContent('hôm nay');
 
       current = new Date('2026-10-17T12:00:00Z');
@@ -170,7 +213,7 @@ describe('AppShell, when Android hides what is in the kho', () => {
   it('says to restart the phone and offers no way to write', async () => {
     const { deps, files, view } = fakeKho();
     view.hidden = true;
-    render(<AppShell deps={deps} prefs={khoPrefs()} clock={() => NOW} />);
+    render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} clock={() => NOW} />);
     expect(await screen.findByRole('alert')).toHaveTextContent(/khởi động lại máy/i);
     expect(screen.queryByRole('button', { name: /chấm nhanh/i })).toBeNull();
     expect(files.size).toBe(0);
@@ -195,7 +238,7 @@ describe('AppShell, when Android hides what is in the kho', () => {
         tags: [],
       }),
     );
-    render(<AppShell deps={deps} prefs={khoPrefs()} clock={() => NOW} />);
+    render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} clock={() => NOW} />);
     expect(await screen.findByTestId('entity-59H123456')).toBeInTheDocument();
 
     view.hidden = true;
@@ -217,7 +260,7 @@ describe('AppShell, when the kho cannot be opened', () => {
     };
     const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://gone', label: 'Hieu' }) });
 
-    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
+    render(<AppShell deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => NOW} />);
 
     expect(await screen.findByText(/không mở được kho/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /chọn folder kho/i })).toBeInTheDocument();
@@ -226,11 +269,8 @@ describe('AppShell, when the kho cannot be opened', () => {
 
   it('survives a snapshot that cannot be parsed', async () => {
     const { deps } = fakeKho();
-    const prefs = fakePrefs({
-      'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }),
-      'judexp.snapshot': '{broken',
-    });
-    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
+    const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }) });
+    render(<AppShell deps={deps} prefs={prefs} snapshots={memorySnapshots('{broken')} clock={() => NOW} />);
     expect(await screen.findByRole('searchbox')).toBeInTheDocument();
   });
 });
@@ -246,7 +286,7 @@ describe('AppShell, when a rating cannot be written', () => {
       'judexp.device': 'dgen1',
     });
 
-    render(<AppShell deps={deps} prefs={prefs} clock={() => NOW} />);
+    render(<AppShell deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => NOW} />);
     fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H123456' } });
     fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));

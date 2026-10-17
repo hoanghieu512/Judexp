@@ -6,6 +6,7 @@ import SettingsPage from './ui/SettingsPage';
 import PinGate from './ui/PinGate';
 import { ensureKhoLayout, KhoUnreadableError, readWorkerLog, writeEvent, type KhoDeps, type KhoDirs } from './storage/kho';
 import { loadIndex, rebuildIndex, type Snapshot } from './index/store';
+import type { SnapshotStore } from './index/snapshotStore';
 import { emptyState, type State } from './domain/reduce';
 import {
   getAuthor,
@@ -29,7 +30,8 @@ import type { JudexpEvent } from './domain/events';
 import './ui/theme/tokens.css';
 import './ui/ui.css';
 
-const SNAPSHOT_KEY = 'judexp.snapshot';
+/** Where v0.1.0 kept the snapshot; removed on start to shrink Preferences. */
+const LEGACY_SNAPSHOT_KEY = 'judexp.snapshot';
 
 /** Re-read at most this often while the app stays on screen. */
 const CLOCK_TICK_MS = 60_000;
@@ -84,10 +86,12 @@ type View = { name: 'lookup' } | { name: 'rate' } | { name: 'entity'; key: strin
 export default function AppShell({
   deps: rawDeps,
   prefs,
+  snapshots,
   clock = () => new Date(),
 }: {
   deps: KhoDeps;
   prefs: PrefsStore;
+  snapshots: SnapshotStore;
   /** Injectable so tests can move time; the app reads the real clock. */
   clock?: () => Date;
 }) {
@@ -127,7 +131,7 @@ export default function AppShell({
 
   const refresh = useCallback(
     async (layout: KhoDirs, fromScratch = false) => {
-      const stored = await prefs.get(SNAPSHOT_KEY);
+      const stored = await snapshots.read();
       let snapshot: Snapshot | null = null;
       if (!fromScratch && stored) {
         try {
@@ -143,9 +147,9 @@ export default function AppShell({
         : await loadIndex(deps, layout.events, snapshot);
       setState(result.state);
       setSkipped(result.skipped);
-      await prefs.set(SNAPSHOT_KEY, JSON.stringify(result.snapshot));
+      await snapshots.write(JSON.stringify(result.snapshot));
     },
-    [deps, prefs],
+    [deps, snapshots],
   );
 
   useEffect(() => {
@@ -154,6 +158,8 @@ export default function AppShell({
       // on. A tree uri goes stale when the kho folder is renamed, moved or
       // unplugged, and being stuck on the splash would leave no way back in.
       try {
+        // Derived data, so dropping it costs one read of the kho at most.
+        await prefs.remove(LEGACY_SNAPSHOT_KEY);
         setDevice(await getDeviceId(prefs));
         setPinValue(await getPin(prefs));
         setSync(await getSyncConfig(prefs));
