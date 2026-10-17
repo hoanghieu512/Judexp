@@ -295,3 +295,65 @@ describe('AppShell, when a rating cannot be written', () => {
     expect(await screen.findByText(/chưa ghi được/i)).toBeInTheDocument();
   });
 });
+
+describe('AppShell, when the index cannot be saved or re-read', () => {
+  const khoPrefs = () =>
+    fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: ROOT_URI, label: 'Hieu' }), 'judexp.device': 'dgen1' });
+
+  /** A snapshot store on a full disk: reading works, writing throws. */
+  function fullDisk(): SnapshotStore {
+    return {
+      async read() {
+        return null;
+      },
+      async write() {
+        throw new Error('ENOSPC');
+      },
+    };
+  }
+
+  async function rateOnce() {
+    fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
+    fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H123456' } });
+    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
+  }
+
+  it('still opens the kho when the snapshot cannot be saved', async () => {
+    const { deps } = fakeKho();
+    render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={fullDisk()} clock={() => NOW} />);
+    expect(await screen.findByRole('searchbox')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('does not call a written rating unwritten when only the snapshot failed', async () => {
+    const { deps, files } = fakeKho();
+    render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={fullDisk()} clock={() => NOW} />);
+    await rateOnce();
+    await waitFor(() => expect(files.size).toBe(1));
+    expect(await screen.findByRole('searchbox')).toBeInTheDocument();
+    expect(screen.queryByText(/chưa ghi được/i)).toBeNull();
+  });
+
+  // A second tap on "Lưu" would write a second event for the same ride, so a
+  // rating that is in the kho must never be reported as not written.
+  it('says the rating was written when only re-reading the kho failed afterwards', async () => {
+    const { deps, files } = fakeKho();
+    render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} clock={() => NOW} />);
+    await screen.findByRole('searchbox');
+    const write = deps.saf.writeFile;
+    deps.saf.writeFile = async (opts) => {
+      const result = await write(opts);
+      deps.saf.listFolder = async () => {
+        throw new Error('provider gone');
+      };
+      return result;
+    };
+
+    await rateOnce();
+    expect(await screen.findByRole('alert')).toHaveTextContent(/đã ghi/i);
+    expect(screen.queryByText(/chưa ghi được/i)).toBeNull();
+    expect(screen.queryByRole('button', { name: /lưu/i })).toBeNull();
+    expect(files.size).toBe(1);
+  });
+});

@@ -147,7 +147,13 @@ export default function AppShell({
         : await loadIndex(deps, layout.events, snapshot);
       setState(result.state);
       setSkipped(result.skipped);
-      await snapshots.write(JSON.stringify(result.snapshot));
+      try {
+        await snapshots.write(JSON.stringify(result.snapshot));
+      } catch (err) {
+        // The snapshot only makes the next launch faster. Failing to save it
+        // (a full disk, say) must neither lock the kho nor fail a rating.
+        deps.log(`could not save index snapshot: ${(err as Error).message}`);
+      }
     },
     [deps, snapshots],
   );
@@ -238,13 +244,23 @@ export default function AppShell({
     }
     try {
       await writeEvent(deps, dirs.events, event);
-      await refresh(dirs);
-      setProblem(null);
-      setView({ name: 'lookup' });
     } catch (err) {
       // Staying on the sheet matters: a silent failure invites a second tap,
       // and the second tap would write a second event for the same ride.
       setProblem(`Chưa ghi được lần chấm này: ${(err as Error).message}. Thử lại khi kho đọc được.`);
+      return;
+    }
+
+    // From here the rating is in the kho. Whatever fails next must not read
+    // as "not written", or the second tap writes the same ride twice.
+    setView({ name: 'lookup' });
+    try {
+      await refresh(dirs);
+      setProblem(null);
+    } catch (err) {
+      setProblem(
+        `Đã ghi lần chấm này vào kho, nhưng chưa đọc lại được kho: ${(err as Error).message}. Nó sẽ hiện khi mở lại app.`,
+      );
     }
   }
 
