@@ -47,6 +47,8 @@ export default function SettingsPage({
   onRebuild,
   onDeviceId,
   onSyncConfig,
+  notifications,
+  onAskNotifications,
 }: {
   kho: KhoChoice | null;
   status: SyncState;
@@ -63,6 +65,9 @@ export default function SettingsPage({
   onSyncConfig: (cfg: SyncConfig) => void;
   onRebuild: () => Promise<void>;
   onDeviceId: (name: string) => void;
+  /** Whether reminder notifications can be shown; 'unknown' until asked. */
+  notifications: 'on' | 'off' | 'unknown';
+  onAskNotifications: () => void;
 }) {
   const [confirmingRebuild, setConfirmingRebuild] = useState(false);
   const [rebuild, setRebuild] = useState<{ phase: 'idle' | 'running' | 'done' } | { phase: 'failed'; reason: string }>({
@@ -220,6 +225,23 @@ export default function SettingsPage({
         onBlur={(e) => onPin(e.target.value.trim() === '' ? null : e.target.value.trim())}
       />
       <p className="jx-sub">PIN chỉ chặn người cầm máy, nó không mã hoá dữ liệu trong kho.</p>
+
+      {notifications !== 'unknown' && (
+        <>
+          <h2 className="jx-section-title">Nhắc chấm</h2>
+          {notifications === 'on' ? (
+            <p className="jx-sub">Thông báo nhắc chấm đang bật: 90 phút sau mỗi lần tra sẽ hỏi chấm.</p>
+          ) : (
+            <>
+              <p className="jx-sub">Thông báo nhắc chấm đang tắt, chỉ còn hộp Chờ chấm.</p>
+              <button type="button" className="jx-row" onClick={onAskNotifications}>
+                Bật thông báo
+              </button>
+              <p className="jx-sub">Bấm mà không thấy hỏi thì bật trong Cài đặt Android, mục Ứng dụng, Judexp, Thông báo.</p>
+            </>
+          )}
+        </>
+      )}
 
       <h2 className="jx-section-title">Index</h2>
       {rebuild.phase === 'running' && (

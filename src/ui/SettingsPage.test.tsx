@@ -19,6 +19,8 @@ function show(over: Record<string, unknown> = {}) {
     onPickKho: vi.fn(),
     onRebuild: vi.fn(),
     onDeviceId: vi.fn(),
+    notifications: 'on' as const,
+    onAskNotifications: vi.fn(),
     ...over,
   };
   render(<SettingsPage {...props} />);
@@ -83,6 +85,13 @@ describe('SettingsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /dựng lại index/i }));
     fireEvent.click(screen.getByRole('button', { name: /chắc chắn/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent('kho đã bị rút');
+  });
+
+  it('says when reminder notifications are off and asks again on tap', () => {
+    const props = show({ notifications: 'off' });
+    expect(screen.getByText(/thông báo nhắc chấm đang tắt, chỉ còn hộp chờ chấm/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /bật thông báo/i }));
+    expect(props.onAskNotifications).toHaveBeenCalledTimes(1);
   });
 
   it('says the light is unconfigured rather than blaming Atomman', () => {

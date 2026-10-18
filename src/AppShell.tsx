@@ -7,6 +7,10 @@ import PinGate from './ui/PinGate';
 import { ensureKhoLayout, KhoUnreadableError, readWorkerLog, writeEvent, type KhoDeps, type KhoDirs } from './storage/kho';
 import { loadIndex, rebuildIndex, type Snapshot } from './index/store';
 import type { SnapshotStore } from './index/snapshotStore';
+import type { ReminderNativePlugin } from './plugins/reminders';
+import type { Answer, ReminderStore } from './reminders/reminderStore';
+import { eventFromAnswer, settleAnswers, type Identity } from './reminders/settle';
+import { remember, stillPending, type LookupTarget, type Reminder } from './domain/reminders';
 import { emptyState, type State } from './domain/reduce';
 import {
   getAuthor,
@@ -29,6 +33,9 @@ import { syncStatus, type SyncConfig, type SyncState } from './sync/status';
 import type { JudexpEvent } from './domain/events';
 import './ui/theme/tokens.css';
 import './ui/ui.css';
+
+/** Set once the app has asked for notifications, so it never nags on every launch. */
+const NOTIFICATIONS_ASKED_KEY = 'judexp.notificationsAsked';
 
 /** Where v0.1.0 kept the snapshot; removed on start to shrink Preferences. */
 const LEGACY_SNAPSHOT_KEY = 'judexp.snapshot';
@@ -87,15 +94,26 @@ export default function AppShell({
   deps: rawDeps,
   prefs,
   snapshots,
+  reminders,
   clock = () => new Date(),
 }: {
   deps: KhoDeps;
   prefs: PrefsStore;
   snapshots: SnapshotStore;
+  /** Native scheduling plus the app-private files reminders and answers live in (§9.3). */
+  reminders: { native: ReminderNativePlugin; store: ReminderStore };
   /** Injectable so tests can move time; the app reads the real clock. */
   clock?: () => Date;
 }) {
   const now = useNow(clock);
+  const latestClock = useRef(clock);
+  useEffect(() => {
+    latestClock.current = clock;
+  });
+  const [pending, setPending] = useState<Reminder[]>([]);
+  const [notifications, setNotifications] = useState<'on' | 'off' | 'unknown'>('unknown');
+  // One settle at a time: two at once could write the same answer twice.
+  const settling = useRef(false);
   const [kho, setKhoChoice] = useState<KhoChoice | null>(null);
   const [dirs, setDirs] = useState<KhoDirs | null>(null);
   const [state, setState] = useState<State>(emptyState());
@@ -158,6 +176,41 @@ export default function AppShell({
     [deps, snapshots],
   );
 
+  // Answers tapped on notifications become events here, the next time the app
+  // is open with a readable kho. A failure keeps the answer for the next try.
+  const settle = useCallback(
+    async (layout: KhoDirs, who: Identity) => {
+      if (settling.current) return;
+      settling.current = true;
+      try {
+        const { written } = await settleAnswers(reminders.store, (e) => writeEvent(deps, layout.events, e), who);
+        if (written > 0) await refresh(layout);
+        setPending(stillPending(await reminders.store.load(), latestClock.current()));
+      } catch (err) {
+        deps.log(`could not settle reminder answers: ${(err as Error).message}`);
+      } finally {
+        settling.current = false;
+      }
+    },
+    [deps, refresh, reminders],
+  );
+
+  // Asked once, right after the kho opens: never in the middle of a lookup,
+  // when huynh is on the street with a driver waiting.
+  const askNotificationsOnce = useCallback(async () => {
+    try {
+      const { granted } = await reminders.native.permission();
+      if (!granted && (await prefs.get(NOTIFICATIONS_ASKED_KEY)) === null) {
+        await prefs.set(NOTIFICATIONS_ASKED_KEY, '1');
+        setNotifications((await reminders.native.requestPermission()).granted ? 'on' : 'off');
+        return;
+      }
+      setNotifications(granted ? 'on' : 'off');
+    } catch (err) {
+      deps.log(`could not check notification permission: ${(err as Error).message}`);
+    }
+  }, [deps, prefs, reminders]);
+
   useEffect(() => {
     (async () => {
       // Whatever happens here, the app must end up on a screen huynh can act
@@ -166,16 +219,20 @@ export default function AppShell({
       try {
         // Derived data, so dropping it costs one read of the kho at most.
         await prefs.remove(LEGACY_SNAPSHOT_KEY);
-        setDevice(await getDeviceId(prefs));
+        const deviceId = await getDeviceId(prefs);
+        setDevice(deviceId);
         setPinValue(await getPin(prefs));
         setSync(await getSyncConfig(prefs));
         const chosen = await getKho(prefs);
         setKhoChoice(chosen);
-        setAuthorName(await getAuthor(prefs));
+        const authorName = await getAuthor(prefs);
+        setAuthorName(authorName);
         if (chosen) {
           const layout = await ensureKhoLayout(deps, chosen.rootUri);
           setDirs(layout);
           await refresh(layout);
+          await settle(layout, { author: authorName, device: deviceId });
+          await askNotificationsOnce();
         }
       } catch (err) {
         setProblem(khoProblem(err, ' Chọn lại folder kho bên dưới.'));
@@ -184,7 +241,14 @@ export default function AppShell({
         setReady(true);
       }
     })();
-  }, [deps, prefs, refresh]);
+  }, [deps, prefs, refresh, settle, askNotificationsOnce]);
+
+  // The app comes back to the foreground, or a minute passes: an answer may
+  // have been tapped on a notification meanwhile.
+  useEffect(() => {
+    if (!ready || !dirs) return;
+    settle(dirs, { author, device });
+  }, [now, ready, dirs, author, device, settle]);
 
   // Poll rather than subscribe: ten seconds is plenty for a light that
   // answers "is what I just wrote already on Atomman?".
@@ -237,6 +301,63 @@ export default function AppShell({
     await refresh(layout);
   }
 
+  async function onLookup(target: LookupTarget) {
+    try {
+      const list = remember(await reminders.store.load(), target, latestClock.current());
+      await reminders.store.save(list);
+      setPending(list);
+      const reminder = list[list.length - 1];
+      const { granted } = await reminders.native.permission();
+      setNotifications(granted ? 'on' : 'off');
+      // Without permission the reminder still waits in Chờ chấm.
+      if (granted) await reminders.native.schedule({ ...reminder, reminderId: reminder.id, at: Date.parse(reminder.dueAt) });
+    } catch (err) {
+      deps.log(`could not schedule a reminder: ${(err as Error).message}`);
+    }
+  }
+
+  async function answerReminder(reminder: Reminder, answer: Answer) {
+    if (!dirs) return;
+    const event = eventFromAnswer(
+      {
+        answerId: crypto.randomUUID(),
+        reminderId: reminder.id,
+        kind: reminder.kind,
+        key: reminder.key,
+        label: reminder.label,
+        lookedUpAt: reminder.lookedUpAt,
+        expiresAt: reminder.expiresAt,
+        answer,
+        answeredAt: latestClock.current().toISOString(),
+      },
+      { author, device },
+    );
+    if (event) {
+      try {
+        await writeEvent(deps, dirs.events, event);
+      } catch (err) {
+        // The reminder stays, so the same tap can be made again later.
+        setProblem(`Chưa ghi được lần chấm này: ${(err as Error).message}. Thử lại khi kho đọc được.`);
+        return;
+      }
+      try {
+        await refresh(dirs);
+        setProblem(null);
+      } catch (err) {
+        setProblem(`Đã ghi lần chấm này vào kho, nhưng chưa đọc lại được kho: ${(err as Error).message}. Nó sẽ hiện khi mở lại app.`);
+      }
+    }
+    const rest = (await reminders.store.load()).filter((r) => !(r.id === reminder.id && r.lookedUpAt === reminder.lookedUpAt));
+    await reminders.store.save(rest);
+    setPending(stillPending(rest, latestClock.current()));
+    await reminders.native.cancel({ notificationId: reminder.notificationId }).catch(() => {});
+  }
+
+  async function askNotifications() {
+    await prefs.set(NOTIFICATIONS_ASKED_KEY, '1');
+    setNotifications((await reminders.native.requestPermission()).granted ? 'on' : 'off');
+  }
+
   async function save(event: JudexpEvent) {
     if (!dirs) {
       setProblem('Chưa ghi được: chưa chọn kho.');
@@ -286,6 +407,8 @@ export default function AppShell({
         pin={pin}
         author={author}
         khoLog={khoLog}
+        notifications={notifications}
+        onAskNotifications={askNotifications}
         onPin={async (value) => {
           await setPin(value, prefs);
           setPinValue(value);
@@ -323,7 +446,14 @@ export default function AppShell({
       {banner}
 
       {view.name === 'lookup' && (
-        <LookupPage state={state} now={now} onOpen={(key) => setView({ name: 'entity', key })} />
+        <LookupPage
+          state={state}
+          now={now}
+          onOpen={(key) => setView({ name: 'entity', key })}
+          onLookup={onLookup}
+          reminders={pending}
+          onAnswer={answerReminder}
+        />
       )}
 
       {view.name === 'rate' && (
@@ -352,6 +482,8 @@ export default function AppShell({
           pin={pin}
           author={author}
           khoLog={khoLog}
+        notifications={notifications}
+        onAskNotifications={askNotifications}
           onPin={async (value) => {
             await setPin(value, prefs);
             setPinValue(value);
