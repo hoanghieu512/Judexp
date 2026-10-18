@@ -1,6 +1,9 @@
-// Pure readers for what adb hands back: device lists, the app's Preferences, pending.json, a
-// uiautomator dump of the notification shade, and the labels the app gives its rows. Kept free of
-// adb so `npm run unit` checks them without a phone.
+// Pure readers for what adb hands back: device lists, the app's Preferences, pending.json and the
+// answer files, where a notification's buttons sit, and the labels the app gives its rows. Kept
+// free of adb so `npm run unit` checks them without a phone.
+
+/** One argument for a device shell command, single-quoted so spaces and metacharacters stay inert. */
+export const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
 
 export interface AdbDevice { serial: string; model: string; state: string }
 
@@ -91,12 +94,16 @@ export function pathFromTreeUri(uri: string): string | null {
   return rest === '' ? base : `${base}/${rest}`;
 }
 
-/** A kho that belongs to the Prod environment: e2e writes for good, so it never runs there. */
-export function looksLikeProd(kho: KhoSetup): boolean {
-  return /prod/i.test(kho.path) || /prod/i.test(kho.folderId ?? '');
+/**
+ * Whether this is a QA kho e2e may write to. The path on the phone carries no environment
+ * ("judexp-gu" could be QA or Prod), so only the Syncthing folder id typed in Settings tells,
+ * and it must say QA: an unset one is refused rather than trusted.
+ */
+export function isQaKho(kho: KhoSetup): boolean {
+  return kho.folderId !== null && /-qa$/i.test(kho.folderId) && !/prod/i.test(kho.path);
 }
 
-export interface PendingReminder { id: string; key: string; label: string; notificationId: number }
+export interface PendingReminder { id: string; key: string; label: string; notificationId: number; lookedUpAt: string; khoUri: string }
 
 /** The app's `files/pending.json` → its reminders; anything unreadable reads as none. */
 export function parsePending(json: string): PendingReminder[] {
@@ -110,6 +117,29 @@ export function parsePending(json: string): PendingReminder[] {
   } catch {
     return [];
   }
+}
+
+/** One file of the app's `files/reminder-answers/`: a button tapped on a notification. */
+export interface QueuedAnswer { reminderId: string; key: string; answer: string; lookedUpAt: string; khoUri: string }
+
+export function parseAnswer(json: string): QueuedAnswer | null {
+  try {
+    const a = JSON.parse(json) as Partial<QueuedAnswer>;
+    return typeof a.reminderId === 'string' && typeof a.answer === 'string' ? (a as QueuedAnswer) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The `am broadcast` result code, or null when it printed none. */
+export function broadcastResult(out: string): number | null {
+  const m = /result=(-?\d+)/.exec(out);
+  return m ? Number(m[1]) : null;
+}
+
+/** The `dumpsys activity activities` top resumed activity's package, or null. */
+export function topResumedPackage(dumpsys: string): string | null {
+  return /topResumedActivity=ActivityRecord\{\S+ \S+ ([^/\s]+)\//.exec(dumpsys)?.[1] ?? null;
 }
 
 export interface Box { x: number; y: number; width: number; height: number }

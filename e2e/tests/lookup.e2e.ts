@@ -1,7 +1,9 @@
-import { test, expect } from 'e2e';
-import { KNOWN, NEAR, RATED, UNRATED, lookup, neverMet, readRow, skipE2eReminders } from './helpers.ts';
+import { test, expect, afterEach } from 'e2e';
+import { KNOWN, NEAR, RATED, UNRATED, cleanUp, lookup, neverMet, readRow, skipE2eReminders } from './helpers.ts';
 
 const NEVER_MET = /^Chưa gặp người này\./;
+
+afterEach(async ({ app, screen }) => cleanUp(app, screen));
 
 test('the decision card tells rated, never rated, never met, and keeps a near plate apart', async ({ app, screen }) => {
   await app.open();
@@ -30,6 +32,4 @@ test('the decision card tells rated, never rated, never met, and keeps a near pl
   await expect(near).toBeVisible();
   const [h, r] = [await heading.boundingBox(), await near.boundingBox()];
   expect(h !== null && r !== null && r.y > h.y).toBe(true);
-
-  await skipE2eReminders(screen);
 });

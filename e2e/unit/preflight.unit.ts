@@ -10,6 +10,7 @@ const ok = {
   versionName: '0.1.0',
   kho: QA,
   notifications: true,
+  plates: { unratedWasRated: false, nearWasMet: false },
 };
 
 test('a QA test phone with everything set passes', () => {
@@ -28,9 +29,15 @@ test('refuses dGen1, which the engine leaves with a black WebView', () => {
   assert.match(errors[0], /màn đen/);
 });
 
-test('never writes into a Prod kho', () => {
-  const errors = preflightErrors({ ...ok, kho: { ...QA, folderId: 'judexp-gu-prod' } });
-  assert.match(errors.join('\n'), /kho Prod/);
+test('writes only into a kho whose Syncthing folder says QA, refusing an unset one', () => {
+  assert.match(preflightErrors({ ...ok, kho: { ...QA, folderId: 'judexp-gu-prod' } }).join('\n'), /kho QA/);
+  assert.match(preflightErrors({ ...ok, kho: { ...QA, folderId: null } }).join('\n'), /chưa đặt/);
+  assert.match(preflightErrors({ ...ok, kho: { ...QA, path: '/sdcard/Judexp-Prod/gu' } }).join('\n'), /kho QA/);
+});
+
+test('says which constant to change when a test plate was rated or met by hand', () => {
+  assert.match(preflightErrors({ ...ok, plates: { unratedWasRated: true, nearWasMet: false } }).join('\n'), /UNRATED/);
+  assert.match(preflightErrors({ ...ok, plates: { unratedWasRated: false, nearWasMet: true } }).join('\n'), /NEAR/);
 });
 
 test('says why it cannot read the kho, a PIN, and notifications that are off', () => {

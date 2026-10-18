@@ -2,6 +2,7 @@
 // reasons or would write outside the QA kho; then put the fixture events into the kho.
 import { APP_ID, adb, Phone } from '../lib/adb.ts';
 import { notificationsGranted, parseAdbDevices, parseVersionName } from '../lib/parse.ts';
+import { NEAR, UNRATED } from '../lib/plates.ts';
 import { DEFAULT_MODEL, preflightErrors } from '../lib/preflight.ts';
 
 const deviceName = process.env.E2E_DEVICE ?? 'UBS1';
@@ -16,6 +17,13 @@ const phone = device ? new Phone(device.serial) : null;
 const dumpsys = phone ? phone.shell(`dumpsys package ${APP_ID}`) : '';
 const versionName = parseVersionName(dumpsys);
 const kho = phone && versionName ? phone.kho() : null;
+const plates = {
+  unratedWasRated: !!(phone && kho) && phone.eventFiles(kho, UNRATED).some((f) => {
+    const e = phone.readEvent(f);
+    return e.verdict !== undefined && e.verdict !== null;
+  }),
+  nearWasMet: !!(phone && kho) && phone.eventFiles(kho, NEAR).length > 0,
+};
 
 const errors = preflightErrors({
   env: process.env,
@@ -24,6 +32,7 @@ const errors = preflightErrors({
   versionName,
   kho,
   notifications: notificationsGranted(dumpsys),
+  plates,
 });
 if (errors.length > 0 || !phone || !kho) {
   for (const e of errors) console.error(`✗ ${e}`);

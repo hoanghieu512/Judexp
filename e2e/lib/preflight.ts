@@ -1,7 +1,8 @@
 // Pure checks behind scripts/preflight.ts: stop before the e2e run when it could only fail for
 // setup reasons, or would write where it must not, and say how to fix it.
 import type { AdbDevice, KhoSetup } from './parse.ts';
-import { looksLikeProd } from './parse.ts';
+import { isQaKho } from './parse.ts';
+import { NEAR, UNRATED } from './plates.ts';
 
 /** OpenRouter id used when E2E_MODEL is unset: pinned, never a "-latest" alias. */
 export const DEFAULT_MODEL = 'anthropic/claude-haiku-5.5';
@@ -30,6 +31,8 @@ export function preflightErrors(i: {
   /** null when the app's Preferences could not be read or name no kho. */
   kho: KhoSetup | null;
   notifications: boolean;
+  /** What the kho already says about the plates the lookup test relies on staying untouched. */
+  plates: { unratedWasRated: boolean; nearWasMet: boolean };
 }): string[] {
   const errors: string[] = [];
   if (!i.env.OPENROUTER_API_KEY) {
@@ -64,8 +67,17 @@ export function preflightErrors(i: {
     errors.push('Không đọc được kho app đang mở (chưa chọn kho, hoặc APK không phải bản debug nên run-as bị từ chối).');
     return errors;
   }
-  if (looksLikeProd(i.kho)) {
-    errors.push(`App đang mở kho Prod (${i.kho.path}, ${i.kho.folderId ?? 'không có folder Syncthing'}): e2e ghi vĩnh viễn, chỉ chạy trên kho QA.`);
+  if (!isQaKho(i.kho)) {
+    errors.push(
+      `Không chắc kho đang mở là kho QA (${i.kho.path}, folder Syncthing ${i.kho.folderId ?? 'chưa đặt'}): ` +
+        'e2e ghi vĩnh viễn, chỉ chạy khi folder Syncthing trong Cài đặt có đuôi -qa.',
+    );
+  }
+  if (i.plates.unratedWasRated) {
+    errors.push(`${UNRATED} đã bị chấm trong kho (kho chỉ-thêm, không gỡ được): đổi hằng UNRATED trong e2e/lib/plates.ts và event mẫu của nó sang biển 00E khác chưa dùng.`);
+  }
+  if (i.plates.nearWasMet) {
+    errors.push(`${NEAR} đã có event trong kho, không còn là biển chưa gặp: đổi hằng NEAR trong e2e/lib/plates.ts sang biển 00E khác lệch 1 ký tự với các biển mẫu.`);
   }
   if (i.kho.pin) errors.push('App đang đặt PIN: e2e không nhập PIN, tắt PIN trong Cài đặt của máy test.');
   if (!i.notifications) errors.push('App chưa được bật thông báo: bật trong Cài đặt Android, test nhắc chấm cần nó.');

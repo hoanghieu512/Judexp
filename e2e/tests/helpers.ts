@@ -14,17 +14,8 @@ const centreOf = (b: Box) => ({ x: Math.round(b.x + b.width / 2), y: Math.round(
 /** Exact, anchored match for a label (locator name matching is otherwise loose). */
 export const exact = (s: string): RegExp => new RegExp(`^${esc(s)}$`);
 
-// The plates kept for e2e. Province 00 does not exist, so they never meet a real plate and read
-// as test data in the QA kho. They gather history run after run, so checks hold whatever a run
-// before left behind: a colour that one rating decides, a count that grows by one.
-/** Seeded by preflight, never rated by any test. */
-export const UNRATED = '00E000001';
-/** Seeded rated; the rating test adds a bad rating each run. */
-export const RATED = '00E000002';
-/** Rated "Tốt" through a notification each run. */
-export const REMINDED = '00E000003';
-/** One character off the plates above, met by no one. */
-export const NEAR = '00E000009';
+export { NEAR, RATED, REMINDED, UNRATED } from '../lib/plates.ts';
+
 /** Any of the plates above, which a lookup of NEAR lists as near plates. */
 export const KNOWN = /^Mở 00E00000[1-8], /;
 
@@ -85,17 +76,18 @@ export async function tapNotificationButton(screen: Screen, phone: Phone, title:
     const titleBox = await heading.boundingBox();
     if (!titleBox) throw new Error(`không đọc được vị trí thông báo "${title}"`);
     for (let attempt = 0; attempt < 2; attempt++) {
-      // Tapped by position: a locator tap refuses, the shade being drawn over the app's window.
+      // Tapped by position through adb: a locator tap refuses because the shade is drawn over the
+      // app's window, and the engine's own tapAt refuses while the app is in the background.
       const buttons = await Promise.all((await screen.getByRole('button', { name: exact(button) }).all()).map((b) => b.boundingBox()));
       const i = nearestToTitle(titleBox, buttons);
       if (i >= 0) {
-        await screen.tapAt(centreOf(buttons[i]!));
+        phone.tap(centreOf(buttons[i]!));
         return;
       }
       const expands = await Promise.all((await screen.getByRole('button', { name: /^(Expand|Mở rộng)$/ }).all()).map((b) => b.boundingBox()));
       const e = nearestToTitle(titleBox, expands);
       if (e < 0) break;
-      await screen.tapAt(centreOf(expands[e]!));
+      phone.tap(centreOf(expands[e]!));
       await sleep(600);
     }
     throw new Error(`không thấy nút "${button}" trên thông báo "${title}"`);
@@ -103,6 +95,22 @@ export async function tapNotificationButton(screen: Screen, phone: Phone, title:
     await sleep(500);
     phone.closeShade();
   }
+}
+
+/**
+ * After every test, pass or fail: shade closed, app relaunched (a test may leave it in the
+ * background or mid-screen), every e2e reminder answered "Không đi". A failed run must not leave
+ * a reminder to ring on the phone 90 minutes later, nor one that a reboot or the next APK install
+ * would re-arm from pending.json.
+ */
+export async function cleanUp(app: { open(): Promise<void> }, screen: Screen): Promise<void> {
+  try {
+    Phone.of().closeShade();
+  } catch {
+    // No phone to reach: nothing more can be done from here.
+  }
+  await app.open();
+  await skipE2eReminders(screen);
 }
 
 /**

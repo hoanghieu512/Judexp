@@ -2,7 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   khoFromPrefs,
-  looksLikeProd,
+  isQaKho,
+  broadcastResult,
+  parseAnswer,
+  shellQuote,
+  topResumedPackage,
   notificationsGranted,
   parseAdbDevices,
   parsePending,
@@ -46,11 +50,28 @@ test('tree uri to a path adb can reach', () => {
   assert.equal(pathFromTreeUri('content://com.android.providers.downloads.documents/tree/raw%3A%2Fx'), null);
 });
 
-test('a Prod kho is recognised by its path or its Syncthing folder', () => {
+test('only a kho whose Syncthing folder ends in -qa counts as QA', () => {
   const qa = { rootUri: '', path: '/sdcard/Download/judexp-gu', folderId: 'judexp-gu-qa', pin: false };
-  assert.equal(looksLikeProd(qa), false);
-  assert.equal(looksLikeProd({ ...qa, folderId: 'judexp-gu-prod' }), true);
-  assert.equal(looksLikeProd({ ...qa, path: '/sdcard/Judexp-Prod/gu', folderId: null }), true);
+  assert.equal(isQaKho(qa), true);
+  assert.equal(isQaKho({ ...qa, folderId: 'judexp-gu-prod' }), false);
+  assert.equal(isQaKho({ ...qa, folderId: null }), false);
+  assert.equal(isQaKho({ ...qa, path: '/sdcard/Judexp-Prod/gu' }), false);
+});
+
+test('shell arguments keep spaces and quotes inert', () => {
+  assert.equal(shellQuote('/sdcard/Download/Judexp gu'), "'/sdcard/Download/Judexp gu'");
+  assert.equal(shellQuote(`a'b; rm -rf x`), `'a'\\''b; rm -rf x'`);
+});
+
+test('the debug receiver result, the answer files and the app on top', () => {
+  assert.equal(broadcastResult('Broadcasting: Intent { … }\nBroadcast completed: result=1'), 1);
+  assert.equal(broadcastResult('Error: nothing'), null);
+  const answer = parseAnswer('{"reminderId":"driver:00E000003","key":"00E000003","answer":"good","lookedUpAt":"t","khoUri":"content://k"}');
+  assert.equal(answer?.answer, 'good');
+  assert.equal(parseAnswer('{'), null);
+  const top = '  topResumedActivity=ActivityRecord{2b1f0c u0 com.judexp.app/.MainActivity t412}';
+  assert.equal(topResumedPackage(top), 'com.judexp.app');
+  assert.equal(topResumedPackage('  topResumedActivity=ActivityRecord{9a u0 com.android.launcher3/.Launcher t1}'), 'com.android.launcher3');
 });
 
 test('pending reminders, and nothing for an unreadable file', () => {
