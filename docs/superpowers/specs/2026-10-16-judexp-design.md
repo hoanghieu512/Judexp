@@ -235,11 +235,13 @@ Quy tắc này là hàm thuần, có test bảng ca.
 
 ## 8. Khớp mờ
 
-**Biển số:** chuẩn hóa, rồi so khớp theo thứ tự ưu tiên: khớp đúng, khớp tiền tố, khớp hậu tố (dùng `key_rev`), rồi khoảng cách Levenshtein tối đa 1, cộng bảng lẫn ký tự thường gặp hai chiều: `0`↔`O`, `1`↔`I`↔`L`, `2`↔`Z`, `5`↔`S`, `8`↔`B`, `6`↔`G`. Bảng này cần cho **cả hai phía**: OCR lẫn, mà huynh gõ nhanh cũng lẫn.
+**Biển số:** chuẩn hóa, rồi so khớp theo thứ tự ưu tiên: khớp đúng, khớp tiền tố, khớp hậu tố (dùng `key_rev`), rồi khoảng cách Levenshtein tối đa 1, rồi mảnh giữa biển từ 3 ký tự ("234" của "59H1-234.56", thêm ngày 2026-10-18), cộng bảng lẫn ký tự thường gặp hai chiều: `0`↔`O`, `1`↔`I`↔`L`, `2`↔`Z`, `5`↔`S`, `8`↔`B`, `6`↔`G`. Bảng này cần cho **cả hai phía**: OCR lẫn, mà huynh gõ nhanh cũng lẫn. Biển số của tài xế, kể cả nhãn viết theo hình biển, **chỉ** đi qua luật này, không qua luật tên: so theo trigram thì hai biển chung vài chữ số trông như nhau, và một biển chưa gặp sẽ ra nhầm tài xế cũ.
 
 *Tối ưu để sau, cần kiểm chứng trước khi hard-code:* nếu xác nhận được tập chữ cái thực sự dùng trong biển số Việt Nam thì loại bớt được ứng viên. Chưa kiểm chứng nên v1 không giả định.
 
-**Tên:** bỏ dấu, lowercase, so theo trigram qua FTS5.
+**Tên:** bỏ dấu, lowercase, dấu câu thành ngắt từ, rồi so **theo từ**, chữ cuối luôn được coi là đang gõ dở. Thứ tự ưu tiên: khớp đúng cả tên, nguyên từ ở đầu tên, nguyên từ ở giữa, phần đầu một từ ở đầu tên, phần đầu một từ ở giữa, mảnh giữa một từ (từ 4 ký tự), cuối cùng là trigram cho lỗi gõ. Nguyên từ xếp trên phần đầu từ, nên "pho" ra "Phở 24" trước "Phòng trà". Mỗi tên được so hai dạng, bỏ tiền tố chung chung và nguyên văn, nên gõ dở "quán b" vẫn ra "Quán Ba Ghi". Bằng điểm thì lần gặp gần nhất đứng trước.
+
+Phần gấp chữ của tìm kiếm **tách khỏi khóa**: khóa nằm vĩnh viễn trong kho nên không đổi được nếu không có migration, còn tìm kiếm thì đổi thoải mái. Ví dụ chữ `Ð` (eth) mà OCR viết thay cho `Đ` được tìm kiếm gấp thành `d`, nhưng khóa vẫn giữ nguyên. Tìm kiếm chạy trong bộ nhớ (§7), không qua FTS5; dạng tìm của mọi tên dựng một lần cho mỗi lần index đổi. (Cập nhật 2026-10-18.)
 
 Toàn bộ khớp mờ chạy trên index ở máy, nên **mất mạng, Atomman tắt, đi tỉnh, vẫn tra được**.
 
@@ -281,7 +283,10 @@ Nguyên tắc xuyên suốt: **chấm điểm và nhận dạng là hai việc r
 
 **Mỗi lần tra cứu là một tín hiệu huynh sắp đi chuyến đó.** App không cần huynh làm thêm gì: nó đã biết lúc 18h40 huynh tra `59H123456`.
 
-- Mỗi lần tra cứu sinh một **nhắc chờ**, hẹn **90 phút** sau.
+- Mỗi lần tra cứu **rõ đối tượng** sinh một **nhắc chờ**, hẹn **90 phút** sau. Một lần tra kết thúc khi ô tìm đứng yên 2,5 giây hoặc khi chạm vào một kết quả. Rõ đối tượng nghĩa là một trong ba ca sau (chốt ngày 2026-10-18); ngoài ra không nhắc, vì nhắc đoán mò sẽ hỏi nhầm chuyến:
+  - Đúng một kết quả khớp hoàn toàn (biển trùng sau chuẩn hóa và gấp ký tự dễ lẫn, hoặc tên trùng nguyên), và **không kết quả nào khác bắt đầu bằng nguyên câu tra**. Gõ đủ `59H123456` khi kho có cả `59H123457` vẫn là `59H123456`. Nhưng "pho" khi có "Phở 24" thì có thể đang gõ dở, nên không nhắc.
+  - Gõ đủ một biển số mà không khớp hoàn toàn biển nào và không là phần đầu của biển nào: đó là **tài xế mới**, kể cả khi kho có một biển lệch một ký tự. Lệch một ký tự là xe khác, ghi vào xe cũ là ghi nhầm vĩnh viễn.
+  - Ngoài hai ca trên, tìm ra đúng một thực thể.
 - Thông báo hiện ba nút **tốt, ổn, xấu**: Android chỉ vẽ ba nút đầu của một thông báo (đã thử trên UBS1 và dGen1 ngày 2026-10-18). Chạm một nút là xong, **không mở app**: câu trả lời vào hàng chờ trong vùng dữ liệu riêng của app, và thành event `encounter` (`source.kind: reminder`) trong kho ở lần mở app kế tiếp.
 - **Không đi** nằm trong hộp Chờ chấm. Vuốt bỏ hay kệ thông báo cũng chỉ ẩn nó, nhắc vẫn chờ trong hộp. Chọn không đi thì **không ghi gì vào kho**, chỉ tắt nhắc. Chuyến không xảy ra thì không có ký ức nào để lưu.
 - Nhắc chờ quá **48 giờ** không trả lời thì tự bỏ, vì sau đó huynh cũng không còn nhớ để chấm cho đúng.
