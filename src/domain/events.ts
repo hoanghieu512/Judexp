@@ -40,7 +40,7 @@ export interface EventContext {
   durationMin?: number;
 }
 
-export type SourceKind = 'share_booking' | 'share_history' | 'camera' | 'manual';
+export type SourceKind = 'share_booking' | 'share_history' | 'camera' | 'manual' | 'reminder';
 export type ImageKind = 'booking' | 'history_list' | 'order_detail' | 'signboard' | 'unknown';
 
 export interface EventSource {
