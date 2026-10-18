@@ -3,12 +3,13 @@
  *
  * The native receiver only records which button was pressed; the event is
  * built here, with the same newEncounter every other rating uses, so the
- * event schema lives in one place. The event id is the answer id: if the
- * phone dies between writing the event and clearing the answer, settling it
- * again writes the same event id, which the index already deduplicates.
+ * event schema lives in one place. The event id comes from the lookup, not
+ * from the tap: every answer to one lookup, by whatever path, names the same
+ * event, which the index already keeps once.
  */
 
 import { newEncounter, type JudexpEvent } from '../domain/events';
+import { eventIdForLookup } from '../domain/reminders';
 import type { ReminderAnswer, ReminderStore } from './reminderStore';
 
 export interface Identity {
@@ -30,7 +31,7 @@ export function eventFromAnswer(answer: ReminderAnswer, who: Identity): JudexpEv
     context: { happenedAt: answer.lookedUpAt },
     source: { kind: 'reminder' },
     now: new Date(answer.answeredAt),
-    eventId: answer.answerId,
+    eventId: eventIdForLookup(answer.reminderId, answer.lookedUpAt),
   });
 }
 
@@ -42,12 +43,16 @@ export async function settleAnswers(
 ): Promise<{ written: number; kept: number }> {
   let written = 0;
   let kept = 0;
+  // Oldest first, so the first tap for a lookup wins and later ones are only cleared.
+  const answered = new Set<string>();
   for (const answer of await store.answers()) {
-    const event = eventFromAnswer(answer, who);
+    const lookup = `${answer.reminderId}|${answer.lookedUpAt}`;
+    const event = answered.has(lookup) ? null : eventFromAnswer(answer, who);
     if (event) {
       try {
         await write(event);
         written += 1;
+        answered.add(lookup);
       } catch {
         // The kho is not writable right now (hidden, not chosen, full): try next time.
         kept += 1;

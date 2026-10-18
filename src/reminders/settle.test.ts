@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { eventFromAnswer, settleAnswers } from './settle';
 import type { ReminderAnswer, ReminderStore } from './reminderStore';
-import { reminderFor, type Reminder } from '../domain/reminders';
+import { eventIdForLookup, reminderFor, type Reminder } from '../domain/reminders';
 import type { JudexpEvent } from '../domain/events';
 
 const who = { author: 'hieu', device: 'dgen1' };
@@ -47,7 +47,7 @@ describe('eventFromAnswer', () => {
     const e = eventFromAnswer(answer(), who)!;
     expect(e.type).toBe('encounter');
     expect(e.schemaVersion).toBe(1);
-    expect(e.eventId).toBe('a3f9c21d-7b44-4c2e-9f10-2c7a51d9e001');
+    expect(e.eventId).toBe(eventIdForLookup('driver:59H123456', '2026-10-18T11:40:00.000Z'));
     expect(e.createdAt).toBe('2026-10-18T13:15:00.000Z');
     expect(e.context?.happenedAt).toBe('2026-10-18T11:40:00.000Z');
     expect(e.entityRef).toEqual({ kind: 'driver', key: '59H123456', label: '59H1-234.56' });
@@ -56,6 +56,15 @@ describe('eventFromAnswer', () => {
     expect(e.source).toEqual({ kind: 'reminder' });
     expect(e.author).toBe('hieu');
     expect(e.device).toBe('dgen1');
+  });
+
+  it('gives every answer to the same lookup the same event id, and another lookup another one', () => {
+    const first = eventFromAnswer(answer({ answerId: 'a1', answer: 'good' }), who)!;
+    const second = eventFromAnswer(answer({ answerId: 'a2', answer: 'bad', answeredAt: '2026-10-18T13:20:00.000Z' }), who)!;
+    const later = eventFromAnswer(answer({ answerId: 'a3', lookedUpAt: '2026-10-18T15:00:00.000Z' }), who)!;
+    expect(second.eventId).toBe(first.eventId);
+    expect(later.eventId).not.toBe(first.eventId);
+    expect(first.eventId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 
   it('makes no event for Không đi or for an answer given after 48 hours', () => {
@@ -73,6 +82,17 @@ describe('settleAnswers', () => {
     expect(written.map((e) => e.verdict)).toEqual(['bad']);
     expect(state.cleared).toEqual(['a3f9c21d-7b44-4c2e-9f10-2c7a51d9e001']);
     expect(state.pending).toEqual([]);
+  });
+
+  it('writes one event when the same lookup was answered twice', async () => {
+    const { store, state } = memoryStore(
+      [pendingReminder],
+      [answer({ answerId: 'a1' }), answer({ answerId: 'a2', answeredAt: '2026-10-18T13:15:01.000Z' })],
+    );
+    const written: JudexpEvent[] = [];
+    expect(await settleAnswers(store, async (e) => void written.push(e), who)).toEqual({ written: 1, kept: 0 });
+    expect(written).toHaveLength(1);
+    expect(state.cleared).toEqual(['a1', 'a2']);
   });
 
   it('writes nothing for Không đi but still clears it and its reminder', async () => {

@@ -10,7 +10,7 @@ vi.mock('./plugins/saf', () => ({ Saf: { pickFolder: vi.fn(async () => ({ uri: '
 import type { SnapshotStore } from './index/snapshotStore';
 import type { ReminderNativePlugin, ReminderSchedule } from './plugins/reminders';
 import type { ReminderAnswer, ReminderStore } from './reminders/reminderStore';
-import { reminderFor, type Reminder } from './domain/reminders';
+import { eventIdForLookup, reminderFor, type Reminder } from './domain/reminders';
 
 const NOW = new Date('2026-10-16T12:00:00Z');
 
@@ -489,7 +489,7 @@ describe('AppShell, reminders', () => {
     await waitFor(() => expect(files.size).toBe(1));
     const written = JSON.parse([...files.values()][0]);
     expect(written.verdict).toBe('good');
-    expect(written.eventId).toBe('b7c1e2f0-1111-4c2e-9f10-2c7a51d9e002');
+    expect(written.eventId).toBe(eventIdForLookup('driver:59H123456', '2026-10-16T10:00:00.000Z'));
     expect(written.source).toEqual({ kind: 'reminder' });
     await waitFor(() => expect(r.state.answers).toEqual([]));
   });
@@ -514,6 +514,20 @@ describe('AppShell, reminders', () => {
     fireEvent.click(await screen.findByRole('button', { name: /chọn folder kho/i }));
     await screen.findByRole('searchbox');
     await waitFor(() => expect(r.calls.requested).toBe(1));
+  });
+
+  it('does not write again from Chờ chấm what was already answered on the notification', async () => {
+    const { deps, files } = fakeKho();
+    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW);
+    const r = fakeReminders({ pending: [pending] });
+    render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} reminders={r.reminders} clock={() => NOW} />);
+    const row = await screen.findByTestId('reminder-driver:59H123456');
+    // Tapped on the notification while the app stayed open: queued, not settled yet.
+    r.state.answers.push(answer({ lookedUpAt: pending.lookedUpAt, expiresAt: pending.expiresAt, answeredAt: '2026-10-16T12:00:30.000Z' }));
+    fireEvent.click(within(row).getByRole('button', { name: /xấu/i }));
+    await waitFor(() => expect(r.state.pending).toEqual([]));
+    await waitFor(() => expect(files.size).toBe(1));
+    expect(JSON.parse([...files.values()][0]).verdict).toBe('good');
   });
 
   it('a double tap in Chờ chấm writes one event', async () => {

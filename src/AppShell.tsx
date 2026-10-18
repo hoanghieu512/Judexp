@@ -333,6 +333,14 @@ export default function AppShell({
   }
 
   async function answerReminderOnce(reminder: Reminder, answer: Answer, dirs: KhoDirs) {
+    // An answer may already be queued from the notification: settle it first,
+    // and if that answered this lookup, do not write a second rating for it.
+    await settle(dirs, { author, device });
+    const stillWaiting = (await reminders.store.load()).some((r) => r.id === reminder.id && r.lookedUpAt === reminder.lookedUpAt);
+    if (!stillWaiting) {
+      await reminders.native.cancel({ notificationId: reminder.notificationId }).catch(() => {});
+      return;
+    }
     const event = eventFromAnswer(
       {
         answerId: crypto.randomUUID(),
