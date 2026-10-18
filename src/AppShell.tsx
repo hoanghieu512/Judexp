@@ -114,6 +114,8 @@ export default function AppShell({
   const [notifications, setNotifications] = useState<'on' | 'off' | 'unknown'>('unknown');
   // One settle at a time: two at once could write the same answer twice.
   const settling = useRef(false);
+  // Chờ chấm answers in flight: each button rates on touch, so a double tap is easy.
+  const answering = useRef(new Set<string>());
   const [kho, setKhoChoice] = useState<KhoChoice | null>(null);
   const [dirs, setDirs] = useState<KhoDirs | null>(null);
   const [state, setState] = useState<State>(emptyState());
@@ -320,6 +322,17 @@ export default function AppShell({
 
   async function answerReminder(reminder: Reminder, answer: Answer) {
     if (!dirs) return;
+    const lookup = `${reminder.id}|${reminder.lookedUpAt}`;
+    if (answering.current.has(lookup)) return;
+    answering.current.add(lookup);
+    try {
+      await answerReminderOnce(reminder, answer, dirs);
+    } finally {
+      answering.current.delete(lookup);
+    }
+  }
+
+  async function answerReminderOnce(reminder: Reminder, answer: Answer, dirs: KhoDirs) {
     const event = eventFromAnswer(
       {
         answerId: crypto.randomUUID(),

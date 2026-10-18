@@ -516,6 +516,25 @@ describe('AppShell, reminders', () => {
     await waitFor(() => expect(r.calls.requested).toBe(1));
   });
 
+  it('a double tap in Chờ chấm writes one event', async () => {
+    const { deps, files } = fakeKho();
+    const write = deps.saf.writeFile;
+    deps.saf.writeFile = async (opts) => {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      return write(opts);
+    };
+    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW);
+    const r = fakeReminders({ pending: [pending] });
+    render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} reminders={r.reminders} clock={() => NOW} />);
+    const row = await screen.findByTestId('reminder-driver:59H123456');
+    const bad = within(row).getByRole('button', { name: /xấu/i });
+    fireEvent.click(bad);
+    fireEvent.click(bad);
+    await waitFor(() => expect(r.state.pending).toEqual([]));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(files.size).toBe(1);
+  });
+
   it('Không đi in Chờ chấm writes nothing', async () => {
     const { deps, files } = fakeKho();
     const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW);
