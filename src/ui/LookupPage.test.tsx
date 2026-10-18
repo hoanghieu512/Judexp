@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import LookupPage from './LookupPage';
 import { applyEvents, emptyState, type State } from '../domain/reduce';
 import type { EntityKind, JudexpEvent, Verdict } from '../domain/events';
+import type { LookupTarget } from '../domain/reminders';
 
 const NOW = new Date('2026-10-16T12:00:00Z');
 
@@ -101,5 +102,71 @@ describe('LookupPage', () => {
     render(<LookupPage state={state} now={NOW} />);
     expect(screen.getByText(/gặp gần đây/i)).toBeInTheDocument();
     expect(screen.getByTestId('entity-59H123456')).toBeInTheDocument();
+  });
+});
+
+describe('LookupPage, reporting a finished lookup', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function setup(state: State) {
+    vi.useFakeTimers();
+    const calls: string[] = [];
+    const onLookup = vi.fn((t: LookupTarget) => void calls.push(`lookup:${t.key}`));
+    const onOpen = vi.fn((key: string) => void calls.push(`open:${key}`));
+    const view = render(<LookupPage state={state} now={NOW} onOpen={onOpen} onLookup={onLookup} />);
+    const type = (value: string) => fireEvent.change(screen.getByRole('searchbox'), { target: { value } });
+    const wait = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
+    return { onLookup, onOpen, calls, type, wait, view };
+  }
+
+  it('reports a lookup once the box has been still for 2.5 seconds', () => {
+    const { onLookup, type, wait } = setup(stateWith(met('driver', '59H123456', 'bad', { entityRef: { kind: 'driver', key: '59H123456', label: '59H1-234.56' } })));
+    type('59H1-234.56');
+    wait(2499);
+    expect(onLookup).not.toHaveBeenCalled();
+    wait(1);
+    expect(onLookup).toHaveBeenCalledTimes(1);
+    expect(onLookup).toHaveBeenCalledWith({ kind: 'driver', key: '59H123456', label: '59H1-234.56' });
+  });
+
+  it('reports a new full plate that finds nothing', () => {
+    const { onLookup, type, wait } = setup(emptyState());
+    type('51A99999');
+    wait(2500);
+    expect(onLookup).toHaveBeenCalledWith({ kind: 'driver', key: '51A99999', label: '51A99999' });
+  });
+
+  it('does not report while several entities match or the plate is half typed', () => {
+    const { onLookup, type, wait } = setup(stateWith(met('driver', '59H123456', 'good'), met('driver', '59H123457', 'good')));
+    type('59h1');
+    wait(5000);
+    expect(onLookup).not.toHaveBeenCalled();
+  });
+
+  it('does not report the same settled query twice', () => {
+    const state = stateWith(met('driver', '59H123456', 'good'));
+    const { onLookup, onOpen, type, wait, view } = setup(state);
+    type('23456');
+    wait(2500);
+    // The index refreshes: same entity, new state object.
+    view.rerender(<LookupPage state={stateWith(met('driver', '59H123456', 'good'))} now={NOW} onOpen={onOpen} onLookup={onLookup} />);
+    wait(5000);
+    expect(onLookup).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports at once when a result is opened', () => {
+    const { calls, type } = setup(stateWith(met('driver', '59H123456', 'good')));
+    type('23456');
+    fireEvent.click(screen.getByTestId('entity-59H123456'));
+    expect(calls).toEqual(['lookup:59H123456', 'open:59H123456']);
+  });
+
+  it('does not report opening a row from Gặp gần đây', () => {
+    const { onLookup, onOpen } = setup(stateWith(met('driver', '59H123456', 'good')));
+    fireEvent.click(screen.getByTestId('entity-59H123456'));
+    expect(onOpen).toHaveBeenCalledWith('59H123456');
+    expect(onLookup).not.toHaveBeenCalled();
   });
 });
