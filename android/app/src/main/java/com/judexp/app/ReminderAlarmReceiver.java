@@ -16,11 +16,9 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * Fires when a reminder is due and shows it with four buttons. Each button is
@@ -82,25 +80,11 @@ public class ReminderAlarmReceiver extends BroadcastReceiver {
             intent.getLongExtra("atMs", 0L));
     }
 
-    /** ISO-8601 UTC, with or without milliseconds; -1 when unreadable. */
-    static long parseIso(String iso) {
-        if (iso == null) return -1;
-        for (String pattern : new String[] { "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'" }) {
-            SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.US);
-            format.setTimeZone(TimeZone.getTimeZone("UTC"));
-            try {
-                Date date = format.parse(iso);
-                if (date != null) return date.getTime();
-            } catch (ParseException ignored) {}
-        }
-        return -1;
-    }
-
     @Override
     public void onReceive(Context ctx, Intent intent) {
         ReminderAlarm a = fromExtras(intent);
         long now = System.currentTimeMillis();
-        long expires = parseIso(a.expiresAt);
+        long expires = ReminderAnswer.parseIso(a.expiresAt);
         if (expires > 0 && expires <= now) return;
         if (Build.VERSION.SDK_INT >= 33
             && ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -155,7 +139,7 @@ public class ReminderAlarmReceiver extends BroadcastReceiver {
     }
 
     private static String localTime(String iso) {
-        long ms = parseIso(iso);
+        long ms = ReminderAnswer.parseIso(iso);
         if (ms < 0) return "?";
         return new SimpleDateFormat("HH:mm", Locale.US).format(new Date(ms));
     }

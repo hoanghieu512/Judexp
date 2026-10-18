@@ -3,6 +3,7 @@ package com.judexp.app;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -29,6 +30,21 @@ public final class ReminderAnswer {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
         return format.format(new Date(ms));
+    }
+
+    /** ISO-8601 UTC, with or without milliseconds; -1 when unreadable. */
+    public static long parseIso(String iso) {
+        if (iso == null) return -1;
+        for (String pattern : new String[] { "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'" }) {
+            SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.US);
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            format.setLenient(false);
+            try {
+                Date date = format.parse(iso);
+                if (date != null) return date.getTime();
+            } catch (ParseException ignored) {}
+        }
+        return -1;
     }
 
     public static String toJson(String answerId, ReminderAlarm alarm, String answer, long answeredAtMs) {
