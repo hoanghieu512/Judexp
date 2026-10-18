@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Debug builds only (merged from src/debug, never in a release build): lets the e2e
+             smoke tests show a pending reminder now instead of waiting out its ten-minute alarm
+             window. Only a sender holding DUMP may call it, which the adb shell does and apps
+             cannot. -->
+        <receiver
+            android:name=".ReminderShowNowReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP" />
+    </application>
+
+</manifest>
