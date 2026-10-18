@@ -156,6 +156,16 @@ describe('LookupPage, reporting a finished lookup', () => {
     expect(onLookup).toHaveBeenCalledTimes(1);
   });
 
+  it('reports the same words again after the box was cleared', () => {
+    const { onLookup, type, wait } = setup(stateWith(met('driver', '59H123456', 'good')));
+    type('23456');
+    wait(2500);
+    type('');
+    type('23456');
+    wait(2500);
+    expect(onLookup).toHaveBeenCalledTimes(2);
+  });
+
   it('reports at once when a result is opened', () => {
     const { calls, type } = setup(stateWith(met('driver', '59H123456', 'good')));
     type('23456');

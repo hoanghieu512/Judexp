@@ -81,7 +81,11 @@ export default function LookupPage({
   // "23456" must not leave a reminder for whatever "2345" matched.
   useEffect(() => {
     const typed = query.trim();
-    if (typed === '') return;
+    if (typed === '') {
+      // A cleared box ends the lookup: the same words typed later are a new one.
+      reported.current = null;
+      return;
+    }
     const timer = setTimeout(() => {
       const target = lookupTarget(typed, results);
       if (target) reportOnce(typed, target);
