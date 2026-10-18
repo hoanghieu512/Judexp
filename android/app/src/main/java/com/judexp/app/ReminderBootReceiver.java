@@ -23,19 +23,8 @@ public class ReminderBootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context ctx, Intent intent) {
-        String json = readPending(ctx);
-        if (json == null) return;
-        SharedPreferences prefs = ctx.getSharedPreferences(ReminderReschedule.SHOWN_PREFS, Context.MODE_PRIVATE);
-        Set<String> shown = prefs.getStringSet(ReminderReschedule.SHOWN_KEY, Collections.emptySet());
-        for (ReminderAlarm alarm : ReminderReschedule.afterBoot(json, System.currentTimeMillis(), shown)) {
-            ReminderAlarmReceiver.schedule(ctx, alarm);
-        }
-    }
-
-    /** The app's pending.json, or null when there is none or it cannot be read. */
-    static String readPending(Context ctx) {
         File file = new File(ctx.getFilesDir(), "pending.json");
-        if (!file.isFile()) return null;
+        if (!file.isFile()) return;
         try (FileInputStream in = new FileInputStream(file)) {
             byte[] bytes = new byte[(int) file.length()];
             int read = 0;
@@ -44,10 +33,14 @@ public class ReminderBootReceiver extends BroadcastReceiver {
                 if (n < 0) break;
                 read += n;
             }
-            return new String(bytes, 0, read, StandardCharsets.UTF_8);
+            String json = new String(bytes, 0, read, StandardCharsets.UTF_8);
+            SharedPreferences prefs = ctx.getSharedPreferences(ReminderReschedule.SHOWN_PREFS, Context.MODE_PRIVATE);
+            Set<String> shown = prefs.getStringSet(ReminderReschedule.SHOWN_KEY, Collections.emptySet());
+            for (ReminderAlarm alarm : ReminderReschedule.afterBoot(json, System.currentTimeMillis(), shown)) {
+                ReminderAlarmReceiver.schedule(ctx, alarm);
+            }
         } catch (IOException e) {
             Log.w(TAG, "could not read pending.json: " + e.getMessage());
-            return null;
         }
     }
 }

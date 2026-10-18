@@ -3,9 +3,11 @@
 
     <application>
         <!-- Debug builds only (merged from src/debug, never in a release build): lets the e2e
-             smoke tests show a pending reminder now instead of waiting out its ten-minute alarm
-             window. Only a sender holding DUMP may call it, which the adb shell does and apps
-             cannot. -->
+             smoke tests fire a scheduled reminder now instead of waiting out its ten-minute
+             alarm window. Only a sender holding DUMP may call it: the adb shell, or a privileged
+             system app; DUMP is never granted to an ordinary app. Every APK installed today is a
+             debug build, so the receiver is on the Prod phones too; the most it can do there is
+             show a reminder early, for someone who already has adb on the phone. -->
         <receiver
             android:name=".ReminderShowNowReceiver"
             android:exported="true"

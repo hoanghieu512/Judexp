@@ -1,39 +1,46 @@
 package com.judexp.app;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
-
-import java.util.Collections;
 
 /**
- * Debug builds only (src/debug): shows a pending reminder's notification now,
- * through the very code its alarm runs. A reminder's alarm has a ten-minute
- * window, which is too slow for the e2e smoke tests. The manifest entry
- * requires DUMP, so only adb can send it:
+ * Debug builds only (src/debug): fires a reminder's alarm now instead of
+ * within its ten-minute window, which is too slow for the e2e smoke tests.
  *
- *   adb shell am broadcast -n com.judexp.app/.ReminderShowNowReceiver --es reminderId driver:00E000003
+ * It replays the very PendingIntent that ReminderPlugin.schedule set, found
+ * by its request code (the notification id), so the notification shows with
+ * schedule's own extras, and a test fails when schedule set nothing or set it
+ * wrong. The alarm is cancelled, so it does not ring again later. The
+ * manifest entry requires DUMP, which the adb shell holds:
+ *
+ *   adb shell am broadcast -n com.judexp.app/.ReminderShowNowReceiver --ei notificationId 1113385910
+ *
+ * Result code SHOWN, or NOTHING_SCHEDULED when no alarm is set for that id.
  */
 public class ReminderShowNowReceiver extends BroadcastReceiver {
-    private static final String TAG = "JudexpReminder";
+    static final int SHOWN = 1;
+    static final int NOTHING_SCHEDULED = 2;
 
     @Override
     public void onReceive(Context ctx, Intent intent) {
-        String id = intent.getStringExtra("reminderId");
-        String json = ReminderBootReceiver.readPending(ctx);
-        if (id == null || json == null) {
-            Log.w(TAG, "show now: no reminder id, or no pending.json");
+        int notificationId = intent.getIntExtra("notificationId", 0);
+        // PendingIntents match on request code and intent, not extras: this is the one schedule set.
+        PendingIntent alarm = PendingIntent.getBroadcast(ctx, notificationId, new Intent(ctx, ReminderAlarmReceiver.class),
+            PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
+        if (alarm == null) {
+            setResultCode(NOTHING_SCHEDULED);
             return;
         }
-        // Nothing counts as shown here: the point is to show it again on demand.
-        for (ReminderAlarm alarm : ReminderReschedule.afterBoot(json, System.currentTimeMillis(), Collections.emptySet())) {
-            if (!id.equals(alarm.reminderId)) continue;
-            Intent due = new Intent(ctx, ReminderAlarmReceiver.class);
-            ReminderAlarmReceiver.putExtras(due, alarm);
-            new ReminderAlarmReceiver().onReceive(ctx, due);
+        ((AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE)).cancel(alarm);
+        try {
+            alarm.send();
+        } catch (PendingIntent.CanceledException e) {
+            setResultCode(NOTHING_SCHEDULED);
             return;
         }
-        Log.w(TAG, "show now: no pending reminder " + id);
+        setResultCode(SHOWN);
     }
 }
