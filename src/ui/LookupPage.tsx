@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { searchHits } from '../search/fuzzy';
-import { lookupTarget } from '../search/lookupTarget';
+import { lookupTarget, targetOf } from '../search/lookupTarget';
 import type { LookupTarget, Reminder } from '../domain/reminders';
 import type { Answer } from '../reminders/reminderStore';
 import PendingBox from './PendingBox';
@@ -99,7 +99,7 @@ export default function LookupPage({
     const typed = query.trim();
     const entity = results.find((e) => e.key === key);
     if (typed !== '' && entity) {
-      reportOnce(typed, { kind: entity.kind, key: entity.key, label: entity.labels[entity.labels.length - 1] ?? entity.key });
+      reportOnce(typed, targetOf(entity));
     }
     onOpen?.(key);
   }

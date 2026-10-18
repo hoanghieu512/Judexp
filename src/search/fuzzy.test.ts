@@ -52,6 +52,27 @@ describe('searchEntities, plates', () => {
     expect(keys(st, '59H1Z3456')).toContain('59H123456');
   });
 
+  it('finds a piece from the middle of a plate from three characters', () => {
+    expect(keys(st, '234')).toEqual(['59H123456']);
+    expect(keys(st, '23')).toEqual([]);
+  });
+
+  it('ranks a middle piece below a suffix', () => {
+    const two = stateWith(met('driver', '59H123456'), met('driver', '51A99234'));
+    expect(keys(two, '234')).toEqual(['51A99234', '59H123456']);
+  });
+
+  it('does not show a known driver for a never-met plate that shares some digits', () => {
+    // Trigrams on plates made 51H12345 look like 59H123456: a stranger's row,
+    // and a reminder that would rate the wrong vehicle.
+    expect(keys(stateWith(met('driver', '59H123456', 'Nguyễn Văn An')), '51H12345')).toEqual([]);
+    expect(keys(stateWith(met('driver', '51H23588', 'Anh A')), '51H23017')).toEqual([]);
+  });
+
+  it('still finds a driver by the name on the label', () => {
+    expect(keys(stateWith(met('driver', '59H123456', 'Nguyễn Văn An')), 'van an')).toEqual(['59H123456']);
+  });
+
   it('does not dump the whole kho for a one-character query', () => {
     expect(searchEntities(st, '5')).toEqual([]);
   });
@@ -133,6 +154,15 @@ describe('searchEntities, ranking', () => {
     expect(keys(st, '59h1')).toEqual(['59H100002', '59H100003', '59H100001']);
   });
 
+  it('breaks the tie by recency whatever shape the plate label was written in', () => {
+    const st = stateWith(
+      met('driver', '59H100001', '59H1-000.01', { createdAt: '2026-10-01T12:00:00Z' }),
+      met('driver', '59H100002', 'Anh B', { createdAt: '2026-10-15T12:00:00Z' }),
+      met('driver', '59H100003', '59h100003', { createdAt: '2026-10-14T12:00:00Z' }),
+    );
+    expect(keys(st, '59h1')).toEqual(['59H100002', '59H100003', '59H100001']);
+  });
+
   it('does not match two letters in the middle of a word', () => {
     const st = stateWith(met('restaurant', 'banh mi hoa', 'Bánh mì Hòa'), met('restaurant', 'an nhien', 'An Nhiên'));
     expect(keys(st, 'an')).toEqual(['an nhien']);
@@ -175,13 +205,23 @@ describe('searchEntities, OCR text', () => {
 });
 
 describe('searchHits', () => {
+  const st = stateWith(met('driver', '59H123456'), met('driver', '59H123457'), met('restaurant', 'ba ghi', 'Quán Ba Ghi'));
+  const matched = (q: string, how: string) =>
+    searchHits(st, q)
+      .filter((h) => h.match === how)
+      .map((h) => h.entity.key);
+
   it('marks only a match on the whole plate or the whole name as exact', () => {
-    const st = stateWith(met('driver', '59H123456'), met('driver', '59H123457'), met('restaurant', 'ba ghi', 'Quán Ba Ghi'));
-    const exact = (q: string) => searchHits(st, q).filter((h) => h.exact).map((h) => h.entity.key);
-    expect(exact('59H1-234.56')).toEqual(['59H123456']);
-    expect(exact('59h1')).toEqual([]);
-    expect(exact('Ba Ghi')).toEqual(['ba ghi']);
-    expect(exact('Quán Ba Ghi')).toEqual(['ba ghi']);
-    expect(exact('ba')).toEqual([]);
+    expect(matched('59H1-234.56', 'exact')).toEqual(['59H123456']);
+    expect(matched('59h1', 'exact')).toEqual([]);
+    expect(matched('Ba Ghi', 'exact')).toEqual(['ba ghi']);
+    expect(matched('Quán Ba Ghi', 'exact')).toEqual(['ba ghi']);
+    expect(matched('ba', 'exact')).toEqual([]);
+  });
+
+  it('marks a plate or name that starts with the whole query as a prefix', () => {
+    expect(matched('59h1', 'prefix')).toEqual(['59H123456', '59H123457']);
+    expect(matched('ba', 'prefix')).toEqual(['ba ghi']);
+    expect(matched('59H123456', 'prefix')).toEqual([]);
   });
 });

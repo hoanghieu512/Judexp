@@ -26,6 +26,8 @@ const LOOKALIKES: Record<string, string> = {
 };
 
 const MIN_PLATE_QUERY = 2;
+/** "234" of "59H1-234.56" is a whole group of the number as people read it. */
+const MIN_PLATE_INSIDE = 3;
 const MIN_FUZZY_QUERY = 4;
 /** A piece from inside a word only counts from here: "an" sits inside half the names in a kho. */
 const MIN_INNER_QUERY = 4;
@@ -34,8 +36,8 @@ const MIN_TRIGRAM_SIMILARITY = 0.34;
 /**
  * Scores, best first. A whole word beats the start of a longer one ("pho"
  * finds "Phở 24" and "Sài Gòn Phở" before "Phòng trà"), and a match at the
- * start of the name beats one further in. Only EXACT may name the one entity
- * a lookup was about (`lookupTarget`).
+ * start of the name beats one further in. `lookupTarget` reads them through
+ * `HitMatch`: EXACT, a match at the start, or looser.
  */
 const EXACT = 100;
 const WHOLE_AT_START = 90;
@@ -45,6 +47,7 @@ const PREFIX_INSIDE = 70;
 const PLATE_SUFFIX = 70;
 const PLATE_ONE_EDIT = 60;
 const INSIDE_WORD = 50;
+const PLATE_INSIDE = 50;
 const TRIGRAM_MAX = 40;
 
 function fold(plate: string): string {
@@ -103,6 +106,7 @@ function plateScore(query: string, key: string): number {
   if (key.startsWith(q)) return PREFIX_AT_START;
   if (key.endsWith(q)) return PLATE_SUFFIX;
   if (query.length >= MIN_FUZZY_QUERY && withinOneEdit(q, key)) return PLATE_ONE_EDIT;
+  if (query.length >= MIN_PLATE_INSIDE && key.includes(q)) return PLATE_INSIDE;
   return 0;
 }
 
@@ -163,18 +167,27 @@ function nameForms(raw: string): NameForms {
  */
 const preparedByState = new WeakMap<State, Prepared[]>();
 
+/**
+ * The strings an entity is found by as a name. A driver's plate goes through
+ * the plate rules only, whether as its key or as a label written like it:
+ * read as words, "59H1-000.01" outranked plates of the same score, and
+ * trigrams made a never-met 51H12345 look like 59H123456. A place's key is
+ * generated, so pieces of it would match at random.
+ */
+function namesOf(entity: Entity): string[] {
+  if (entity.kind === 'driver') return entity.labels.filter((label) => normalizePlate(label) !== entity.key);
+  if (entity.kind === 'place') return entity.labels;
+  return [entity.key, ...entity.labels];
+}
+
 function prepared(state: State): Prepared[] {
   let list = preparedByState.get(state);
   if (!list) {
-    list = [...state.entities.values()].map((entity) => {
-      // A place's key is generated, so pieces of it would match at random.
-      const named = entity.kind === 'place' ? entity.labels : [entity.key, ...entity.labels];
-      return {
-        entity,
-        plate: entity.kind === 'driver' ? fold(entity.key) : undefined,
-        names: named.map(nameForms),
-      };
-    });
+    list = [...state.entities.values()].map((entity) => ({
+      entity,
+      plate: entity.kind === 'driver' ? fold(entity.key) : undefined,
+      names: namesOf(entity).map(nameForms),
+    }));
     preparedByState.set(state, list);
   }
   return list;
@@ -209,10 +222,21 @@ function scoreEntity(p: Prepared, q: Query): number {
   return best;
 }
 
+/**
+ * How a hit matched, for `lookupTarget`: the whole plate or name (`exact`),
+ * a plate or name that starts with the whole query (`prefix`, so the query
+ * may still be on its way to it), or anything looser.
+ */
+export type HitMatch = 'exact' | 'prefix' | 'loose';
+
 export interface SearchHit {
   entity: Entity;
-  /** The whole plate or the whole name, not a piece or a guess. */
-  exact: boolean;
+  match: HitMatch;
+}
+
+function matchOf(score: number): HitMatch {
+  if (score === EXACT) return 'exact';
+  return score === WHOLE_AT_START || score === PREFIX_AT_START ? 'prefix' : 'loose';
 }
 
 /**
@@ -247,7 +271,7 @@ export function searchHits(state: State, query: string): SearchHit[] {
         instant(b.entity.lastSeen) - instant(a.entity.lastSeen) ||
         a.entity.key.localeCompare(b.entity.key),
     )
-    .map(({ entity, score }) => ({ entity, exact: score === EXACT }));
+    .map(({ entity, score }) => ({ entity, match: matchOf(score) }));
 }
 
 export function searchEntities(state: State, query: string): Entity[] {

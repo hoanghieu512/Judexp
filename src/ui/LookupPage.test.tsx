@@ -153,6 +153,13 @@ describe('LookupPage, reporting a finished lookup', () => {
     expect(onLookup.mock.calls[0][0].key).toBe('59H123456');
   });
 
+  it('reports a new driver for a whole plate that only comes close to a known one', () => {
+    const { onLookup, type, wait } = setup(stateWith(met('driver', '59H123456', 'good')));
+    type('59H123458');
+    wait(5000);
+    expect(onLookup).toHaveBeenCalledWith({ kind: 'driver', key: '59H123458', label: '59H123458' });
+  });
+
   it('does not report the same settled query twice', () => {
     const state = stateWith(met('driver', '59H123456', 'good'));
     const { onLookup, onOpen, type, wait, view } = setup(state);
