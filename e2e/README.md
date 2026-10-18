@@ -93,4 +93,6 @@ Test bấm và đọc theo `aria-label` nói việc cộng đối tượng:
 - **Câu trả lời app không settle được nằm lại hàng chờ mãi** (câu của kho khác, hay `khoUri` hỏng): `answerFor` khớp cả `reminderId` lẫn `lookedUpAt` của đúng lần tra.
 - **Đồng hồ UBS1 từng tụt về 2024** sau khi hết pin; ngày tháng lạ thì xem `adb shell date` trước. Phép kiểm event đã không phụ thuộc thứ tự tên file nữa.
 - **Gboard UBS1 nuốt chữ "u"** khi gõ qua adb (Gu Library). Biển `00E…` không có chữ "u"; tra tên có "u" thì gõ cách khác.
+- **Artifact lúc trượt có thể chứa secret**: `screen.txt` và ảnh chụp ghi lại màn đang mở, mà màn Cài đặt hiện API key Syncthing của máy dạng chữ thường (gặp ngày 19/10). `.e2e/` đã gitignore; đừng gửi thư mục đó cho ai.
+- **Một lần chập chờn chưa rõ gốc** (19/10, bản 0.2.0): test chấm nhanh trượt vì ngay sau khi gõ biển ở Tra cứu, app lại đứng ở Cài đặt, đã cuộn xuống giữa trang. Chạy lại hai lần riêng test đó và một lượt cả bộ đều xanh. App không giữ lịch sử điều hướng, nên phím Back lọt tới app chỉ đưa app về nền chứ không sang Cài đặt; nghi cú chạm theo ref của engine trúng nhầm nút "Cài đặt" (Gu Library từng gặp lỗi cùng họ), chưa chứng minh. Gặp lại thì chạy với `--video on` để thấy cú chạm.
 - Không dùng `app.clearState()`, `installApp`, `--test-ime`.

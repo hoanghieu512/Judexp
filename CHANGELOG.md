@@ -6,8 +6,9 @@ File này cho **huynh và đệ** đọc: nguyên nhân, file nào, số đo, đ
 
 Quy ước một mục: chữ đậm nói chuyện gì thay đổi, rồi nguyên nhân, rồi file trong ngoặc khi có ích. Ghi máy đã kiểm (dGen1, UBS1) và phần chưa kiểm. Việc trên `main` chưa gắn tag nằm ở `[Unreleased]`; lúc gắn tag thì đổi thành số bản và ngày.
 
-## [Unreleased]: Nhắc chấm 90 phút sau mỗi lần tra · kho bị Android giấu thì báo khởi động lại máy · ô Tra cứu xếp kết quả đúng hơn
+## [0.2.0] (2026-10-19): Nhắc chấm 90 phút sau mỗi lần tra · kho bị Android giấu thì báo khởi động lại máy · ô Tra cứu xếp kết quả đúng hơn
 ### Added
+- **Cài đặt hiện phiên bản** ("Judexp phiên bản 0.2.0", mục Máy này). Version chỉ còn một nguồn là `package.json`: `android/app/build.gradle` đọc `versionName` từ đó như Gu Library và tính `versionCode` từ semver (0.2.0 thành 200; trước đó là `1` / `"1.0"` của khuôn Capacitor, nên preflight e2e từng in "app v1.0"), Vite inject `__APP_VERSION__`. Đây là điều kiện để làm bảng "Có gì mới" sau này.
 - **Nhắc chấm sau mỗi lần tra** (M4, spec §9.3). Tra xong mà rõ đúng một đối tượng (ô tìm đứng yên 2,5 giây, hoặc chạm vào một kết quả), hoặc gõ đủ một biển số chưa từng gặp, thì app lưu một nhắc và hẹn 90 phút sau (`src/search/lookupTarget.ts`, `src/domain/reminders.ts`). Thông báo có ba nút Tốt, Ổn, Xấu. Chạm nút **không mở app**: `ReminderActionReceiver` chỉ ghi một file câu trả lời (`.tmp` rồi đổi tên) vào vùng dữ liệu riêng và cất thông báo. Khi app mở, quay lại foreground, hoặc mỗi phút lúc app đang mở, JS biến câu trả lời thành event `encounter` với `source.kind: "reminder"` bằng chính `newEncounter`, nên schema event chỉ nằm một chỗ (`src/reminders/settle.ts`). Nhắc quá 48 giờ không trả lời thì tự bỏ.
 - **Hộp Chờ chấm** trên màn Tra cứu: nhắc đang chờ, có nút **Không đi** (chỉ tắt nhắc, không ghi gì vào kho), cộng những lần gặp chưa chấm (`src/ui/PendingBox.tsx`).
 - **Nhắc được đặt lại sau khi khởi động máy hay cập nhật app**: AlarmManager mất alarm khi reboot, nên `ReminderBootReceiver` đọc lại `pending.json`. Đã thử reboot UBS1: alarm đặt lại đúng giờ.
@@ -61,7 +62,7 @@ Quy ước một mục: chữ đậm nói chuyện gì thay đổi, rồi nguyê
 - Review độc lập hai nhánh (Opus, context sạch): `fix/review-minors` 0 Critical, 2 Important; M4 0 Critical, 5 Important, 8 Minor. Đã sửa hết Important, cộng một Minor nâng hạng (nhắc không gắn kho), mỗi bản sửa có một test đỏ trước.
 - **Còn treo**: 7 Minor của M4 (hàng đợi ghi `pending.json`, trạng thái quyền theo kênh, hẹn lại khi mở app, độ chặt của `lookupTarget`, boot receiver chưa kiểm action, câu chữ spec, xin quyền hai lần ở chế độ dev) và các Minor m3 tới m12 của review 0.1.0. Hai mục phải chốt **trước event quán đầu tiên**, vì sau đó đổi khóa là phải có migration: "Q.1" và "Q1" ra hai khóa quán (m8), chữ Đ trong biển số bị mất khi chuẩn hóa (m9, seri MĐ của xe máy điện).
 - Chưa kiểm: chưa lần nào chờ đủ 90 phút thật; mọi lần thử đều hẹn lại cùng nhắc sau 30 giây.
-- Bản cuối (`cf0738f`) đã cài trên dGen1 và UBS1, không còn nhắc hay alarm thử nào treo. Phần sửa kho bị giấu đã báo sang Gu Library (cùng `SafPlugin`), bên đó thành 1.42.3 và sửa rộng hơn (`writeFile`, `createDir`, `copyToDir`, khớp tên không phân biệt hoa thường); nên mang các sửa đó về Judexp trước hoặc cùng M3, vì M3 sẽ chép ảnh vào `inbox/`.
+- Bản 0.2.0 đã cài trên UBS1 và dGen1 (`versionName` 0.2.0 trên cả hai), e2e xanh trên UBS1. Bản hết M4 (`cf0738f`) từng cài trên cả hai máy, không còn nhắc hay alarm thử nào treo. Phần sửa kho bị giấu đã báo sang Gu Library (cùng `SafPlugin`), bên đó thành 1.42.3 và sửa rộng hơn (`writeFile`, `createDir`, `copyToDir`, khớp tên không phân biệt hoa thường); nên mang các sửa đó về Judexp trước hoặc cùng M3, vì M3 sẽ chép ảnh vào `inbox/`.
 
 ## [0.1.0] (2026-10-16): Tra biển số, chấm ba mức, ghi vào kho thật (M0, M0.5, M1)
 ### Added

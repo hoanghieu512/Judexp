@@ -31,7 +31,7 @@ Thiết kế, quyết định và rủi ro: **[spec](docs/superpowers/specs/2026
 | M1 | Domain, khớp mờ, index, luồng Hỏi đường gõ, nhập tay | Xong, nghiệm thu trên dGen1 (`v0.1.0`) |
 | M2 | Phase test parser đối đầu (OCR local và vision LLM) | Chưa làm, chờ bộ 25 tới 30 ảnh thật |
 | M3 | Worker, share ảnh, nạp nền từ lịch sử, camera chụp tại chỗ | Chưa làm |
-| M4 | Nhắc chấm 90 phút, nút trên thông báo, hộp Chờ chấm | Xong trên `main`, chưa gắn tag; spike S5 đã đóng |
+| M4 | Nhắc chấm 90 phút, nút trên thông báo, hộp Chờ chấm | Xong (`v0.2.0`); spike S5 đã đóng |
 | M5 | Bộ icon app và icon bốn loại | Chưa làm |
 
 Lịch sử thay đổi: **[CHANGELOG.md](CHANGELOG.md)**.
@@ -131,7 +131,7 @@ Chưa có bản release ký: Judexp chưa có keystore riêng. Khi cần thì th
 
 ## Version
 
-`package.json` đang ở `0.1.0` (tag `v0.1.0`). `android/app/build.gradle` vẫn là `versionName "1.0"`, `versionCode 1` của khuôn Capacitor, **chưa nối** với `package.json`. Trước khi làm bảng "Có gì mới" như Gu Library phải gom về một nguồn: gradle đọc `versionName` từ `package.json`, Vite inject `__APP_VERSION__`.
+Một nguồn duy nhất là `package.json` (hiện `0.2.0`, tag `v0.2.0`), như Gu Library. `android/app/build.gradle` đọc `versionName` từ đó và tính `versionCode` = major × 10000 + minor × 100 + patch (0.2.0 là 200), nên không bao giờ quên tăng. Vite inject `__APP_VERSION__`; Cài đặt hiện "Judexp phiên bản X" ở mục Máy này, và preflight e2e in đúng số đó. Bump version là sửa `package.json` (`npm version x.y.z --no-git-tag-version`, sửa luôn `package-lock.json`) rồi build lại; đừng sửa hai chỗ.
 
 ---
 
