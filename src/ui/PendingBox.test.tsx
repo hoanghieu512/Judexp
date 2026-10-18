@@ -33,6 +33,12 @@ describe('PendingBox', () => {
     expect(names).toEqual(['Tốt', 'Ổn', 'Xấu', 'Không đi']);
   });
 
+  it('names each answer by the one it rates, so two reminders never share a label', () => {
+    show();
+    expect(screen.getByRole('button', { name: 'Chấm xấu cho 59H1-234.56' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Không đi 59H1-234.56' })).toBeInTheDocument();
+  });
+
   it('answers a reminder with the tapped button', () => {
     const { onAnswer } = show();
     fireEvent.click(screen.getByRole('button', { name: /xấu/i }));

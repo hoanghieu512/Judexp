@@ -61,6 +61,18 @@ describe('LookupPage', () => {
     expect(within(row).getAllByTestId('tag')[0]).toHaveTextContent('chạy ẩu');
   });
 
+  it('names a result row by what it opens, its colour and its meetings', () => {
+    const state = stateWith(
+      met('driver', '59H123456', 'bad', { createdAt: '2026-10-10T12:00:00Z' }),
+      met('driver', '59H123456', 'bad'),
+      met('driver', '51A99999', null),
+    );
+    typeQuery(state, '59h1');
+    expect(screen.getByRole('button', { name: 'Mở 59H123456, xấu, 2 lần gặp, 2 ngày trước' })).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: '51a' } });
+    expect(screen.getByRole('button', { name: 'Mở 51A99999, chưa chấm, 1 lần gặp' })).toBeInTheDocument();
+  });
+
   it('shows an unrated entity as grey and says it was never rated', () => {
     const state = stateWith(met('driver', '59H123456', null), met('driver', '59H123456', null));
     typeQuery(state, '59h1');

@@ -43,6 +43,10 @@ export default function EntityRow({
   const isPlate = entity.kind === 'driver';
   const rated = entity.encounters.some((e) => e.verdict !== null);
   const latestLabel = entity.labels[entity.labels.length - 1];
+  const shown = isPlate ? entity.key : latestLabel ?? entity.key;
+  // What a screen reader says, and what the e2e smoke tests find a row by:
+  // what it opens, the colour in words, and how often it was met.
+  const name = `Mở ${shown}, ${COLOR_LABELS[color]}, ${meetings} lần gặp${rated ? `, ${relativeTime(entity.lastSeen, now)}` : ''}`;
 
   return (
     <button
@@ -50,6 +54,7 @@ export default function EntityRow({
       className="jx-row"
       data-testid={`entity-${entity.key}`}
       data-color={color}
+      aria-label={name}
       onClick={() => onOpen?.(entity.key)}
     >
       <span className="jx-mark" data-color={color} aria-label={COLOR_LABELS[color]}>
@@ -60,7 +65,7 @@ export default function EntityRow({
           className={isPlate ? 'jx-plate' : 'jx-name'}
           data-testid={`entity-key-${entity.key}`}
         >
-          {isPlate ? entity.key : latestLabel ?? entity.key}
+          {shown}
         </span>
         <span className="jx-sub">
           {' '}

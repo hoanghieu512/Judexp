@@ -16,20 +16,20 @@ describe('QuickRateSheet', () => {
     setup();
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H1-234.56' } });
     expect(saveButton()).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm xấu' }));
     expect(saveButton()).toBeEnabled();
   });
 
   it('requires an entity before saving', () => {
     setup();
-    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm xấu' }));
     expect(saveButton()).toBeDisabled();
   });
 
   it('writes an encounter event with the chosen verdict, tags and normalized key', () => {
     const { onSave } = setup();
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H1-234.56' } });
-    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm xấu' }));
     fireEvent.click(screen.getByRole('button', { name: 'chạy ẩu' }));
     fireEvent.click(saveButton());
 
@@ -47,7 +47,7 @@ describe('QuickRateSheet', () => {
   it('keeps a free-typed tag that is not in the vocabulary', () => {
     const { onSave } = setup();
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H123456' } });
-    fireEvent.click(screen.getByRole('button', { name: /^tốt$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm tốt' }));
     fireEvent.change(screen.getByLabelText(/tag riêng/i), { target: { value: 'mũ bảo hiểm thơm' } });
     fireEvent.click(screen.getByRole('button', { name: /thêm tag/i }));
     fireEvent.click(saveButton());
@@ -57,7 +57,7 @@ describe('QuickRateSheet', () => {
   it('toggles a tag off when tapped twice', () => {
     const { onSave } = setup();
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H123456' } });
-    fireEvent.click(screen.getByRole('button', { name: /^ổn$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm ổn' }));
     fireEvent.click(screen.getByRole('button', { name: 'chạy ẩu' }));
     fireEvent.click(screen.getByRole('button', { name: 'chạy ẩu' }));
     fireEvent.click(saveButton());
@@ -70,7 +70,7 @@ describe('QuickRateSheet', () => {
     fireEvent.change(screen.getByLabelText(/tên/i), { target: { value: 'Bún Bò Huế 14' } });
     fireEvent.click(screen.getByRole('button', { name: /toạ độ/i }));
     await screen.findByText(/đã lấy toạ độ/i);
-    fireEvent.click(screen.getByRole('button', { name: /^tốt$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm tốt' }));
     fireEvent.click(saveButton());
     expect(onSave.mock.calls[0][0].context?.geo).toEqual({ lat: 10.77, lng: 106.7, accuracy: 12 });
   });
@@ -82,6 +82,15 @@ describe('QuickRateSheet, choosing what is being rated', () => {
     render(<QuickRateSheet author="huynh" device="zflip4" onSave={onSave} />);
     return { onSave };
   }
+
+  it('names each verdict button by what it does and says which one is chosen', () => {
+    open();
+    const bad = screen.getByRole('button', { name: 'Chấm xấu' });
+    expect(bad).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(bad);
+    expect(bad).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /^xe$/i })).toHaveAttribute('aria-pressed', 'true');
+  });
 
   it('offers all four kinds, not drivers alone', () => {
     open();
@@ -101,7 +110,7 @@ describe('QuickRateSheet, choosing what is being rated', () => {
     const { onSave } = open();
     fireEvent.click(screen.getByRole('button', { name: /^quán$/i }));
     fireEvent.change(screen.getByLabelText(/tên quán/i), { target: { value: 'Quán Bún Bò Huế 14' } });
-    fireEvent.click(screen.getByRole('button', { name: /^tốt$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm tốt' }));
     fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
     expect(onSave.mock.calls[0][0].entityRef).toMatchObject({ kind: 'restaurant', key: 'bun bo hue 14' });
   });
@@ -112,7 +121,7 @@ describe('QuickRateSheet, choosing what is being rated', () => {
     const { onSave } = open();
     fireEvent.click(screen.getByRole('button', { name: /^địa điểm$/i }));
     fireEvent.change(screen.getByLabelText(/tên địa điểm/i), { target: { value: 'Chỗ ngồi hóng gió' } });
-    fireEvent.click(screen.getByRole('button', { name: /^tốt$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm tốt' }));
     fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
     const ref = onSave.mock.calls[0][0].entityRef!;
     expect(ref.kind).toBe('place');

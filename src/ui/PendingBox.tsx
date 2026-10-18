@@ -39,12 +39,19 @@ export default function PendingBox({
           </p>
           <div className="jx-verdicts" data-columns="4">
             {VERDICTS.map((v) => (
-              <button key={v.value} type="button" className="jx-verdict" data-color={v.value} onClick={() => onAnswer(r, v.value)}>
+              <button
+                key={v.value}
+                type="button"
+                className="jx-verdict"
+                data-color={v.value}
+                aria-label={`Chấm ${v.label.toLowerCase()} cho ${r.label}`}
+                onClick={() => onAnswer(r, v.value)}
+              >
                 <span aria-hidden="true">{v.mark}</span>
                 {v.label}
               </button>
             ))}
-            <button type="button" className="jx-verdict" onClick={() => onAnswer(r, 'skip')}>
+            <button type="button" className="jx-verdict" aria-label={`Không đi ${r.label}`} onClick={() => onAnswer(r, 'skip')}>
               Không đi
             </button>
           </div>

@@ -143,7 +143,7 @@ describe('AppShell', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H1-234.56' } });
-    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm xấu' }));
     fireEvent.click(screen.getByRole('button', { name: 'chạy ẩu' }));
     fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
 
@@ -167,7 +167,7 @@ describe('AppShell, index snapshot', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H1-234.56' } });
-    fireEvent.click(screen.getByRole('button', { name: /^tốt$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm tốt' }));
     fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
 
     await waitFor(() => expect(JSON.parse(snapshots.stored() ?? '{}').events).toHaveLength(1));
@@ -334,7 +334,7 @@ describe('AppShell, when a rating cannot be written', () => {
     render(<AppShell reminders={noReminders()} deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => NOW} />);
     fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H123456' } });
-    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm xấu' }));
     fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
 
     expect(await screen.findByText(/chưa ghi được/i)).toBeInTheDocument();
@@ -360,7 +360,7 @@ describe('AppShell, when the index cannot be saved or re-read', () => {
   async function rateOnce() {
     fireEvent.click(await screen.findByRole('button', { name: /chấm nhanh/i }));
     fireEvent.change(screen.getByLabelText(/biển số/i), { target: { value: '59H123456' } });
-    fireEvent.click(screen.getByRole('button', { name: /^xấu$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chấm xấu' }));
     fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
   }
 

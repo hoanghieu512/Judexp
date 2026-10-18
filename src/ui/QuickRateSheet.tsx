@@ -106,6 +106,7 @@ export default function QuickRateSheet({
               type="button"
               className="jx-tag"
               data-selected={kind === k.value}
+              aria-pressed={kind === k.value}
               onClick={() => {
                 setChosenKind(k.value);
                 setTags([]);
@@ -148,6 +149,8 @@ export default function QuickRateSheet({
             className="jx-verdict"
             data-color={v.value}
             data-selected={verdict === v.value}
+            aria-label={`Chấm ${v.label.toLowerCase()}`}
+            aria-pressed={verdict === v.value}
             onClick={() => setVerdict(v.value)}
           >
             <span aria-hidden="true">{v.mark}</span>
@@ -163,6 +166,7 @@ export default function QuickRateSheet({
             type="button"
             className="jx-tag"
             data-selected={tags.includes(tag)}
+            aria-pressed={tags.includes(tag)}
             onClick={() => toggle(tag)}
           >
             {tag}
