@@ -264,7 +264,7 @@ Hai đường vào:
 |---|---|
 | Từng chấm người này | Màu, verdict từng lần, lần gần nhất cách đây bao lâu, ba tag hay gặp nhất. Bằng chứng mạnh. |
 | Đã gặp nhưng chưa chấm | Xám, "đã đi xe này 3 lần, chưa chấm lần nào". Tín hiệu yếu, và nói rõ là yếu. |
-| Chưa gặp bao giờ | Nói thẳng "chưa gặp người này". Đây là **trường hợp thường gặp nhất**, nhất là trong tháng đầu, nên nó phải là một câu trả lời đàng hoàng chứ không phải một màn hình rỗng. |
+| Chưa gặp bao giờ | Nói thẳng "chưa gặp người này". Đây là **trường hợp thường gặp nhất**, nhất là trong tháng đầu, nên nó phải là một câu trả lời đàng hoàng chứ không phải một màn hình rỗng. Gõ đủ một biển mà chỉ có biển **gần giống** (lệch một ký tự, mảnh giữa biển...) thì vẫn là "chưa gặp người này"; biển gần giống hiện riêng dưới tiêu đề "Biển gần giống, có thể là xe khác", để gõ nhầm vẫn thấy xe đã gặp mà màu của xe kia không bị đọc thành câu trả lời (chốt 2026-10-18). |
 
 **Luồng Hỏi không sinh encounter.** Chuyến chưa xảy ra thì chưa có gì để ghi. Nó chỉ sinh một nhắc chờ ở §9.3.
 
