@@ -115,7 +115,7 @@ cd android && ./gradlew testDebugUnitTest   # JUnit cho receiver và hàng chờ
 npm run e2e
 ```
 
-Ba test khói (tra cứu, chấm nhanh, nhắc chấm qua nút trên thông báo) chạy trên UBS1, **ghi thẳng vào kho QA** bằng dải biển `00E…`, khoảng 1 phút 48 giây, không gọi model. Cần APK debug, kho QA đã chọn, thông báo bật, không PIN; dGen1 không chạy được. Cách cài, những gì mỗi lượt để lại trong kho, và các bẫy: [`e2e/README.md`](e2e/README.md).
+Ba test khói (tra cứu, chấm nhanh, nhắc chấm qua nút trên thông báo) chạy trên UBS1, **ghi thẳng vào kho QA** bằng dải biển `00E…`, khoảng 2 phút, không gọi model. Cần APK debug, kho QA đã chọn với folder Syncthing đuôi `-qa`, thông báo bật, không PIN; dGen1 không chạy được. Cách cài, những gì mỗi lượt để lại trong kho, và các bẫy: [`e2e/README.md`](e2e/README.md).
 
 ### Build APK debug và cài lên máy
 
