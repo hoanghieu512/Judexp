@@ -4,6 +4,9 @@ import AppShell from './AppShell';
 import type { KhoDeps } from './storage/kho';
 import type { PrefsStore } from './profile/settings';
 import type { SafEntry } from './plugins/saf';
+
+// AppShell calls the folder picker straight on the plugin; everything else goes through deps.
+vi.mock('./plugins/saf', () => ({ Saf: { pickFolder: vi.fn(async () => ({ uri: 'content://kho' })) } }));
 import type { SnapshotStore } from './index/snapshotStore';
 import type { ReminderNativePlugin, ReminderSchedule } from './plugins/reminders';
 import type { ReminderAnswer, ReminderStore } from './reminders/reminderStore';
@@ -502,6 +505,15 @@ describe('AppShell, reminders', () => {
     expect(JSON.parse([...files.values()][0]).verdict).toBe('bad');
     await waitFor(() => expect(r.state.pending).toEqual([]));
     expect(r.calls.cancel).toEqual([pending.notificationId]);
+  });
+
+  it('asks for notifications once a kho is picked for the first time', async () => {
+    const { deps } = fakeKho();
+    const r = fakeReminders({ granted: false });
+    render(<AppShell deps={deps} prefs={fakePrefs()} snapshots={memorySnapshots()} reminders={r.reminders} clock={() => NOW} />);
+    fireEvent.click(await screen.findByRole('button', { name: /chọn folder kho/i }));
+    await screen.findByRole('searchbox');
+    await waitFor(() => expect(r.calls.requested).toBe(1));
   });
 
   it('Không đi in Chờ chấm writes nothing', async () => {

@@ -299,6 +299,8 @@ export default function AppShell({
     const layout = await ensureKhoLayout(deps, uri);
     setDirs(layout);
     await refresh(layout);
+    // A first run reaches a kho here, not at start, so this is where it asks.
+    await askNotificationsOnce();
   }
 
   async function onLookup(target: LookupTarget) {
