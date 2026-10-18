@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -17,6 +18,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 
@@ -132,6 +134,12 @@ public class ReminderAlarmReceiver extends BroadcastReceiver {
             builder.addAction(0, BUTTONS[i], pi);
         }
 
+        // Marked before showing, so a reboot never shows the same reminder twice.
+        SharedPreferences prefs = ctx.getSharedPreferences(ReminderReschedule.SHOWN_PREFS, Context.MODE_PRIVATE);
+        prefs.edit()
+            .putStringSet(ReminderReschedule.SHOWN_KEY,
+                ReminderReschedule.markShown(prefs.getStringSet(ReminderReschedule.SHOWN_KEY, Collections.emptySet()), a, now))
+            .commit();
         try {
             NotificationManagerCompat.from(ctx).notify(a.notificationId, builder.build());
         } catch (SecurityException e) {

@@ -3,7 +3,10 @@ package com.judexp.app;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.Test;
 
 public class ReminderRescheduleTest {
@@ -18,7 +21,7 @@ public class ReminderRescheduleTest {
 
     @Test
     public void keepsAFutureDueTime() {
-        List<ReminderAlarm> alarms = ReminderReschedule.afterBoot(pending("2026-10-18T12:30:00.000Z", "2026-10-20T11:00:00.000Z"), NOW);
+        List<ReminderAlarm> alarms = ReminderReschedule.afterBoot(pending("2026-10-18T12:30:00.000Z", "2026-10-20T11:00:00.000Z"), NOW, Collections.emptySet());
         assertEquals(1, alarms.size());
         ReminderAlarm a = alarms.get(0);
         assertEquals(NOW + 30 * 60_000L, a.atMs);
@@ -32,24 +35,42 @@ public class ReminderRescheduleTest {
 
     @Test
     public void firesSoonWhenTheDueTimePassedWhileOff() {
-        List<ReminderAlarm> alarms = ReminderReschedule.afterBoot(pending("2026-10-18T11:30:00Z", "2026-10-20T11:00:00Z"), NOW);
+        List<ReminderAlarm> alarms = ReminderReschedule.afterBoot(pending("2026-10-18T11:30:00Z", "2026-10-20T11:00:00Z"), NOW, Collections.emptySet());
         assertEquals(1, alarms.size());
         assertEquals(NOW + 60_000L, alarms.get(0).atMs);
     }
 
     @Test
     public void dropsExpiredReminders() {
-        assertTrue(ReminderReschedule.afterBoot(pending("2026-10-16T12:30:00.000Z", "2026-10-18T12:00:00.000Z"), NOW).isEmpty());
+        assertTrue(ReminderReschedule.afterBoot(pending("2026-10-16T12:30:00.000Z", "2026-10-18T12:00:00.000Z"), NOW, Collections.emptySet()).isEmpty());
+    }
+
+    @Test
+    public void skipsAReminderAlreadyShown() {
+        String json = pending("2026-10-18T11:30:00.000Z", "2026-10-20T11:00:00.000Z");
+        ReminderAlarm shown = ReminderReschedule.afterBoot(json, NOW, Collections.emptySet()).get(0);
+        Set<String> marks = ReminderReschedule.markShown(Collections.emptySet(), shown, NOW);
+        assertTrue(ReminderReschedule.afterBoot(json, NOW, marks).isEmpty());
+    }
+
+    @Test
+    public void markShownForgetsMarksPastTheirExpiry() {
+        Set<String> old = new HashSet<>();
+        old.add((NOW - 1) + "|driver:51A99999|2026-10-16T11:00:00.000Z");
+        ReminderAlarm alarm = ReminderReschedule.afterBoot(pending("2026-10-18T12:30:00.000Z", "2026-10-20T11:00:00.000Z"), NOW, Collections.emptySet()).get(0);
+        Set<String> marks = ReminderReschedule.markShown(old, alarm, NOW);
+        assertEquals(1, marks.size());
+        assertTrue(marks.iterator().next().endsWith("|driver:59H123456|2026-10-18T11:00:00.000Z"));
     }
 
     @Test
     public void ignoresMalformedJson() {
-        assertTrue(ReminderReschedule.afterBoot("{oops", NOW).isEmpty());
+        assertTrue(ReminderReschedule.afterBoot("{oops", NOW, Collections.emptySet()).isEmpty());
     }
 
     @Test
     public void ignoresAnUnknownVersion() {
         String v2 = pending("2026-10-18T12:30:00.000Z", "2026-10-20T11:00:00.000Z").replace("\"version\":1", "\"version\":2");
-        assertTrue(ReminderReschedule.afterBoot(v2, NOW).isEmpty());
+        assertTrue(ReminderReschedule.afterBoot(v2, NOW, Collections.emptySet()).isEmpty());
     }
 }

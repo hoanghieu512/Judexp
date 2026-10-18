@@ -3,12 +3,15 @@ package com.judexp.app;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * AlarmManager drops every alarm on reboot, and an app update can do the
@@ -31,7 +34,9 @@ public class ReminderBootReceiver extends BroadcastReceiver {
                 read += n;
             }
             String json = new String(bytes, 0, read, StandardCharsets.UTF_8);
-            for (ReminderAlarm alarm : ReminderReschedule.afterBoot(json, System.currentTimeMillis())) {
+            SharedPreferences prefs = ctx.getSharedPreferences(ReminderReschedule.SHOWN_PREFS, Context.MODE_PRIVATE);
+            Set<String> shown = prefs.getStringSet(ReminderReschedule.SHOWN_KEY, Collections.emptySet());
+            for (ReminderAlarm alarm : ReminderReschedule.afterBoot(json, System.currentTimeMillis(), shown)) {
                 ReminderAlarmReceiver.schedule(ctx, alarm);
             }
         } catch (IOException e) {
