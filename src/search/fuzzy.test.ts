@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { searchEntities } from './fuzzy';
+import { searchEntities, searchHits } from './fuzzy';
+import { restaurantKey } from '../domain/keys';
 import { applyEvents, emptyState, type State } from '../domain/reduce';
 import type { EntityKind, JudexpEvent } from '../domain/events';
 
@@ -83,6 +84,15 @@ describe('searchEntities, names', () => {
   });
 });
 
+describe('searchEntities, places', () => {
+  it('finds a place by its name, never by pieces of its generated key', () => {
+    const key = '0192f3a4-7b2c-7d10-9e44-5a6b7c8d9e0f';
+    const st = stateWith(met('place', key, 'Công viên Gia Định'));
+    expect(keys(st, 'gia dinh')).toEqual([key]);
+    expect(keys(st, '7b2c')).toEqual([]);
+  });
+});
+
 describe('searchEntities, merged entities', () => {
   it('resolves a merged-away key to the surviving entity, once', () => {
     const a = met('restaurant', 'bun bo hue 14', 'Bún Bò Huế 14');
@@ -103,5 +113,75 @@ describe('searchEntities, ranking', () => {
   it('puts the exact match first', () => {
     const st = stateWith(met('driver', '59H123456'), met('driver', '59H1234567'));
     expect(keys(st, '59H123456')[0]).toBe('59H123456');
+  });
+
+  it('puts a whole word above the start of a longer word', () => {
+    const st = stateWith(
+      met('restaurant', 'phong tra xua', 'Phòng trà Xưa'),
+      met('restaurant', 'sai gon pho', 'Sài Gòn Phở'),
+      met('restaurant', 'pho 24', 'Phở 24'),
+    );
+    expect(keys(st, 'pho')).toEqual(['pho 24', 'sai gon pho', 'phong tra xua']);
+  });
+
+  it('breaks a tie with the most recent meeting, not the order things were first written', () => {
+    const st = stateWith(
+      met('driver', '59H100001', undefined, { createdAt: '2026-10-10T12:00:00Z' }),
+      met('driver', '59H100002', undefined, { createdAt: '2026-10-15T12:00:00Z' }),
+      met('driver', '59H100003', undefined, { createdAt: '2026-10-12T12:00:00Z' }),
+    );
+    expect(keys(st, '59h1')).toEqual(['59H100002', '59H100003', '59H100001']);
+  });
+
+  it('does not match two letters in the middle of a word', () => {
+    const st = stateWith(met('restaurant', 'banh mi hoa', 'Bánh mì Hòa'), met('restaurant', 'an nhien', 'An Nhiên'));
+    expect(keys(st, 'an')).toEqual(['an nhien']);
+  });
+
+  it('still matches a longer piece from the middle of a word', () => {
+    const st = stateWith(met('restaurant', 'an nhien', 'An Nhiên'));
+    expect(keys(st, 'hien')).toEqual(['an nhien']);
+  });
+});
+
+describe('searchEntities, while typing', () => {
+  const st = stateWith(
+    met('restaurant', restaurantKey('Quán Ba Ghi'), 'Quán Ba Ghi'),
+    met('restaurant', restaurantKey('Nhà hàng Ngọc Sương'), 'Nhà hàng Ngọc Sương'),
+  );
+
+  it('finds a place while its generic prefix is still being typed', () => {
+    expect(keys(st, 'quán')).toEqual(['ba ghi']);
+    expect(keys(st, 'quán b')).toEqual(['ba ghi']);
+    expect(keys(st, 'nha hang')).toEqual(['ngoc suong']);
+    expect(keys(st, 'nhà hàng n')).toEqual(['ngoc suong']);
+  });
+
+  it('still finds the place by its name alone', () => {
+    expect(keys(st, 'ba ghi')).toEqual(['ba ghi']);
+    expect(keys(st, 'ngoc')).toEqual(['ngoc suong']);
+  });
+});
+
+describe('searchEntities, OCR text', () => {
+  it('finds a sign read with an eth (Ð) by its name typed with d or Đ', () => {
+    // The key keeps the eth: keys are frozen in the kho, only search folds it.
+    const key = restaurantKey('Ðức Phở');
+    const st = stateWith(met('restaurant', key, 'Ðức Phở'));
+    expect(keys(st, 'duc')).toEqual([key]);
+    expect(keys(st, 'Đức')).toEqual([key]);
+    expect(keys(st, 'duc pho')).toEqual([key]);
+  });
+});
+
+describe('searchHits', () => {
+  it('marks only a match on the whole plate or the whole name as exact', () => {
+    const st = stateWith(met('driver', '59H123456'), met('driver', '59H123457'), met('restaurant', 'ba ghi', 'Quán Ba Ghi'));
+    const exact = (q: string) => searchHits(st, q).filter((h) => h.exact).map((h) => h.entity.key);
+    expect(exact('59H1-234.56')).toEqual(['59H123456']);
+    expect(exact('59h1')).toEqual([]);
+    expect(exact('Ba Ghi')).toEqual(['ba ghi']);
+    expect(exact('Quán Ba Ghi')).toEqual(['ba ghi']);
+    expect(exact('ba')).toEqual([]);
   });
 });
