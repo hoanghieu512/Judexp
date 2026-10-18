@@ -4,7 +4,7 @@ import { dishKey, normalizePlate, restaurantKey } from '../domain/keys';
 import { tagsFor } from '../domain/tags';
 import './ui.css';
 
-const VERDICTS: { value: Verdict; label: string; mark: string }[] = [
+export const VERDICTS: { value: Verdict; label: string; mark: string }[] = [
   { value: 'good', label: 'Tốt', mark: '✔' },
   { value: 'ok', label: 'Ổn', mark: '–' },
   { value: 'bad', label: 'Xấu', mark: '✕' },

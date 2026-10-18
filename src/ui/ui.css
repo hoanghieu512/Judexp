@@ -111,6 +111,8 @@ html, body, #root { height: 100%; }
 .jx-empty { color: var(--jx-text-dim); font-size: var(--jx-text-md); padding: var(--jx-space-4) 0; }
 
 .jx-verdicts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--jx-space-3); }
+/* Chờ chấm puts "Không đi" beside the three verdicts, on one row. */
+.jx-verdicts[data-columns='4'] { grid-template-columns: repeat(4, 1fr); }
 
 .jx-verdict {
   min-height: var(--jx-touch-verdict);

@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import LookupPage from './LookupPage';
 import { applyEvents, emptyState, type State } from '../domain/reduce';
 import type { EntityKind, JudexpEvent, Verdict } from '../domain/events';
-import type { LookupTarget } from '../domain/reminders';
+import { reminderFor, type LookupTarget } from '../domain/reminders';
 
 const NOW = new Date('2026-10-16T12:00:00Z');
 
@@ -168,5 +168,20 @@ describe('LookupPage, reporting a finished lookup', () => {
     fireEvent.click(screen.getByTestId('entity-59H123456'));
     expect(onOpen).toHaveBeenCalledWith('59H123456');
     expect(onLookup).not.toHaveBeenCalled();
+  });
+});
+
+describe('LookupPage, Chờ chấm', () => {
+  it('shows Chờ chấm above Gặp gần đây when the box is empty', () => {
+    const pending = reminderFor({ kind: 'driver', key: '51A99999', label: '51A-999.99' }, new Date('2026-10-16T11:00:00Z'));
+    render(<LookupPage state={stateWith(met('driver', '59H123456', 'good'))} now={NOW} reminders={[pending]} onAnswer={() => {}} />);
+    const headings = screen.getAllByRole('heading').map((h) => h.textContent);
+    expect(headings.indexOf('Chờ chấm')).toBeGreaterThanOrEqual(0);
+    expect(headings.indexOf('Chờ chấm')).toBeLessThan(headings.indexOf('Gặp gần đây'));
+  });
+
+  it('puts entities with an unrated meeting in Chờ chấm', () => {
+    render(<LookupPage state={stateWith(met('driver', '51A99999', null))} now={NOW} reminders={[]} onAnswer={() => {}} />);
+    expect(screen.getByRole('heading', { name: 'Chờ chấm' })).toBeInTheDocument();
   });
 });
