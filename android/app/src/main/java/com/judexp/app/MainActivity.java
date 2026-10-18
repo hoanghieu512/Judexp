@@ -15,6 +15,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SafPlugin.class);
         registerPlugin(SyncthingPlugin.class);
         registerPlugin(ShareTargetPlugin.class);
+        registerPlugin(ReminderPlugin.class);
         super.onCreate(savedInstanceState);
         handleSendIntent(getIntent());
     }
