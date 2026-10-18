@@ -61,7 +61,7 @@ Lịch sử thay đổi: **[CHANGELOG.md](CHANGELOG.md)**.
 | Native | Capacitor 8 (Android, minSdk 24, target/compile SDK 36); plugin tự viết `SafPlugin`, `ShareTargetPlugin`, `SyncthingPlugin` (lấy từ Gu Library) và `ReminderPlugin` cùng các receiver |
 | Lưu trữ | Kho qua SAF; snapshot index, nhắc chờ và câu trả lời nhắc qua `@capacitor/filesystem` (`Directory.Data`); cài đặt qua `@capacitor/preferences` |
 | Đồng bộ | Syncthing, chạy ngoài app |
-| Test | Vitest 5 + Testing Library + jsdom; JUnit cho phần Java |
+| Test | Vitest 5 + Testing Library + jsdom; JUnit cho phần Java; e2e trên máy thật bằng tester-army/e2e + agent-device (`e2e/`) |
 
 ### Cấu trúc thư mục
 
@@ -108,6 +108,14 @@ cd android && ./gradlew testDebugUnitTest   # JUnit cho receiver và hàng chờ
 ```
 
 `npm test` không typecheck. Luôn chạy `npm run build` trước khi gọi là xong.
+
+### E2E trên máy thật
+
+```bash
+npm run e2e
+```
+
+Ba test khói (tra cứu, chấm nhanh, nhắc chấm qua nút trên thông báo) chạy trên UBS1, **ghi thẳng vào kho QA** bằng dải biển `00E…`, khoảng 1 phút 48 giây, không gọi model. Cần APK debug, kho QA đã chọn, thông báo bật, không PIN; dGen1 không chạy được. Cách cài, những gì mỗi lượt để lại trong kho, và các bẫy: [`e2e/README.md`](e2e/README.md).
 
 ### Build APK debug và cài lên máy
 
