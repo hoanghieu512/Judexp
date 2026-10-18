@@ -183,7 +183,7 @@ describe('LookupPage, reporting a finished lookup', () => {
 
 describe('LookupPage, Chờ chấm', () => {
   it('shows Chờ chấm above Gặp gần đây when the box is empty', () => {
-    const pending = reminderFor({ kind: 'driver', key: '51A99999', label: '51A-999.99' }, new Date('2026-10-16T11:00:00Z'));
+    const pending = reminderFor({ kind: 'driver', key: '51A99999', label: '51A-999.99' }, new Date('2026-10-16T11:00:00Z'), 'content://kho');
     render(<LookupPage state={stateWith(met('driver', '59H123456', 'good'))} now={NOW} reminders={[pending]} onAnswer={() => {}} />);
     const headings = screen.getAllByRole('heading').map((h) => h.textContent);
     expect(headings.indexOf('Chờ chấm')).toBeGreaterThanOrEqual(0);

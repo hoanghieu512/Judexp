@@ -425,6 +425,7 @@ describe('AppShell, reminders', () => {
       expiresAt: '2026-10-18T10:00:00.000Z',
       answer: 'good',
       answeredAt: '2026-10-16T11:45:00.000Z',
+      khoUri: ROOT_URI,
       ...over,
     };
   }
@@ -496,7 +497,7 @@ describe('AppShell, reminders', () => {
 
   it('answering in Chờ chấm writes one event and cancels the notification', async () => {
     const { deps, files } = fakeKho();
-    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW);
+    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW, ROOT_URI);
     const r = fakeReminders({ pending: [pending] });
     render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} reminders={r.reminders} clock={() => NOW} />);
     const row = await screen.findByTestId('reminder-driver:59H123456');
@@ -518,7 +519,7 @@ describe('AppShell, reminders', () => {
 
   it('does not write again from Chờ chấm what was already answered on the notification', async () => {
     const { deps, files } = fakeKho();
-    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW);
+    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW, ROOT_URI);
     const r = fakeReminders({ pending: [pending] });
     render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} reminders={r.reminders} clock={() => NOW} />);
     const row = await screen.findByTestId('reminder-driver:59H123456');
@@ -537,7 +538,7 @@ describe('AppShell, reminders', () => {
       await new Promise((resolve) => setTimeout(resolve, 150));
       return write(opts);
     };
-    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW);
+    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW, ROOT_URI);
     const r = fakeReminders({ pending: [pending] });
     render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} reminders={r.reminders} clock={() => NOW} />);
     const row = await screen.findByTestId('reminder-driver:59H123456');
@@ -549,9 +550,18 @@ describe('AppShell, reminders', () => {
     expect(files.size).toBe(1);
   });
 
+  it('shows only the reminders of the kho in use', async () => {
+    const { deps } = fakeKho();
+    const elsewhere = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW, 'content://kho-qa');
+    const r = fakeReminders({ pending: [elsewhere] });
+    render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} reminders={r.reminders} clock={() => NOW} />);
+    await screen.findByRole('searchbox');
+    expect(screen.queryByTestId('reminder-driver:59H123456')).toBeNull();
+  });
+
   it('Không đi in Chờ chấm writes nothing', async () => {
     const { deps, files } = fakeKho();
-    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW);
+    const pending = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, NOW, ROOT_URI);
     const r = fakeReminders({ pending: [pending] });
     render(<AppShell deps={deps} prefs={khoPrefs()} snapshots={memorySnapshots()} reminders={r.reminders} clock={() => NOW} />);
     const row = await screen.findByTestId('reminder-driver:59H123456');

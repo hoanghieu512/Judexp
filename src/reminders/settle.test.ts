@@ -5,7 +5,7 @@ import { eventIdForLookup, reminderFor, type Reminder } from '../domain/reminder
 import type { JudexpEvent } from '../domain/events';
 
 const who = { author: 'hieu', device: 'dgen1' };
-const pendingReminder = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, new Date('2026-10-18T11:40:00Z'));
+const pendingReminder = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, new Date('2026-10-18T11:40:00Z'), 'content://kho');
 
 function answer(over: Partial<ReminderAnswer> = {}): ReminderAnswer {
   return {
@@ -18,6 +18,7 @@ function answer(over: Partial<ReminderAnswer> = {}): ReminderAnswer {
     expiresAt: '2026-10-20T11:40:00.000Z',
     answer: 'bad',
     answeredAt: '2026-10-18T13:15:00.000Z',
+    khoUri: 'content://kho',
     ...over,
   };
 }
@@ -77,7 +78,7 @@ describe('settleAnswers', () => {
   it('writes a tapped verdict, then clears it and its reminder', async () => {
     const { store, state } = memoryStore([pendingReminder], [answer()]);
     const written: JudexpEvent[] = [];
-    const result = await settleAnswers(store, async (e) => void written.push(e), who);
+    const result = await settleAnswers(store, async (e) => void written.push(e), who, 'content://kho');
     expect(result).toEqual({ written: 1, kept: 0 });
     expect(written.map((e) => e.verdict)).toEqual(['bad']);
     expect(state.cleared).toEqual(['a3f9c21d-7b44-4c2e-9f10-2c7a51d9e001']);
@@ -90,15 +91,23 @@ describe('settleAnswers', () => {
       [answer({ answerId: 'a1' }), answer({ answerId: 'a2', answeredAt: '2026-10-18T13:15:01.000Z' })],
     );
     const written: JudexpEvent[] = [];
-    expect(await settleAnswers(store, async (e) => void written.push(e), who)).toEqual({ written: 1, kept: 0 });
+    expect(await settleAnswers(store, async (e) => void written.push(e), who, 'content://kho')).toEqual({ written: 1, kept: 0 });
     expect(written).toHaveLength(1);
     expect(state.cleared).toEqual(['a1', 'a2']);
+  });
+
+  it('leaves an answer from another kho for when that kho is open again', async () => {
+    const { store, state } = memoryStore([pendingReminder], [answer({ khoUri: 'content://kho-qa' })]);
+    const written: JudexpEvent[] = [];
+    expect(await settleAnswers(store, async (e) => void written.push(e), who, 'content://kho')).toEqual({ written: 0, kept: 1 });
+    expect(written).toEqual([]);
+    expect(state.cleared).toEqual([]);
   });
 
   it('writes nothing for Không đi but still clears it and its reminder', async () => {
     const { store, state } = memoryStore([pendingReminder], [answer({ answer: 'skip' })]);
     const written: JudexpEvent[] = [];
-    expect(await settleAnswers(store, async (e) => void written.push(e), who)).toEqual({ written: 0, kept: 0 });
+    expect(await settleAnswers(store, async (e) => void written.push(e), who, 'content://kho')).toEqual({ written: 0, kept: 0 });
     expect(written).toEqual([]);
     expect(state.cleared).toHaveLength(1);
     expect(state.pending).toEqual([]);
@@ -107,7 +116,7 @@ describe('settleAnswers', () => {
   it('writes nothing for an answer given after 48 hours, and clears it', async () => {
     const { store, state } = memoryStore([], [answer({ answeredAt: '2026-10-21T08:00:00.000Z' })]);
     const written: JudexpEvent[] = [];
-    await settleAnswers(store, async (e) => void written.push(e), who);
+    await settleAnswers(store, async (e) => void written.push(e), who, 'content://kho');
     expect(written).toEqual([]);
     expect(state.cleared).toHaveLength(1);
   });
@@ -116,16 +125,16 @@ describe('settleAnswers', () => {
     const { store, state } = memoryStore([pendingReminder], [answer()]);
     const result = await settleAnswers(store, async () => {
       throw new Error('kho cannot be listed');
-    }, who);
+    }, who, 'content://kho');
     expect(result).toEqual({ written: 0, kept: 1 });
     expect(state.cleared).toEqual([]);
     expect(state.pending).toEqual([pendingReminder]);
   });
 
   it('does not clear a newer reminder for the same entity', async () => {
-    const newer = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, new Date('2026-10-18T14:00:00Z'));
+    const newer = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, new Date('2026-10-18T14:00:00Z'), 'content://kho');
     const { store, state } = memoryStore([newer], [answer()]);
-    await settleAnswers(store, async () => {}, who);
+    await settleAnswers(store, async () => {}, who, 'content://kho');
     expect(state.pending).toEqual([newer]);
   });
 
@@ -136,9 +145,9 @@ describe('settleAnswers', () => {
     first.store.clearAnswer = async () => {
       throw new Error('killed');
     };
-    await settleAnswers(first.store, async (e) => void ids.push(e.eventId), who).catch(() => {});
+    await settleAnswers(first.store, async (e) => void ids.push(e.eventId), who, 'content://kho').catch(() => {});
     const second = memoryStore([], [answer()]);
-    await settleAnswers(second.store, async (e) => void ids.push(e.eventId), who);
+    await settleAnswers(second.store, async (e) => void ids.push(e.eventId), who, 'content://kho');
     expect(ids).toHaveLength(2);
     expect(ids[0]).toBe(ids[1]);
   });

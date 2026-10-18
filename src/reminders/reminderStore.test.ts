@@ -43,6 +43,7 @@ const reminder: Reminder = {
   lookedUpAt: '2026-10-18T11:40:00.000Z',
   dueAt: '2026-10-18T13:10:00.000Z',
   expiresAt: '2026-10-20T11:40:00.000Z',
+  khoUri: 'content://kho',
 };
 
 function answer(over: Partial<ReminderAnswer> = {}): ReminderAnswer {
@@ -56,6 +57,7 @@ function answer(over: Partial<ReminderAnswer> = {}): ReminderAnswer {
     expiresAt: '2026-10-20T11:40:00.000Z',
     answer: 'bad',
     answeredAt: '2026-10-18T13:15:00.000Z',
+    khoUri: 'content://kho',
     ...over,
   };
 }

@@ -60,6 +60,7 @@ public final class ReminderAnswer {
             json.put("expiresAt", alarm.expiresAt);
             json.put("answer", answer);
             json.put("answeredAt", isoUtc(answeredAtMs));
+            json.put("khoUri", alarm.khoUri);
             return json.toString();
         } catch (JSONException e) {
             throw new IllegalStateException(e);

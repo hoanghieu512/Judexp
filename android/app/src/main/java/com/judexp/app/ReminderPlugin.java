@@ -62,7 +62,7 @@ public class ReminderPlugin extends Plugin {
         }
         ReminderAlarm alarm = new ReminderAlarm(notificationId, reminderId,
             call.getString("kind", ""), call.getString("key", ""), call.getString("label", ""),
-            call.getString("lookedUpAt", ""), call.getString("expiresAt", ""), at);
+            call.getString("lookedUpAt", ""), call.getString("expiresAt", ""), call.getString("khoUri", ""), at);
         // A new lookup of the same entity replaces a reminder already showing.
         NotificationManagerCompat.from(getContext()).cancel(notificationId);
         ReminderAlarmReceiver.schedule(getContext(), alarm);

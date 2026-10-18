@@ -8,6 +8,8 @@ export interface ReminderSchedule {
   label: string;
   lookedUpAt: string;
   expiresAt: string;
+  /** Passed through to the answer file, so the answer reaches the right kho. */
+  khoUri: string;
   /** Epoch milliseconds. */
   at: number;
 }

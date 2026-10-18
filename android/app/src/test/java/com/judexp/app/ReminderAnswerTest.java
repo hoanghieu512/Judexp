@@ -10,7 +10,7 @@ public class ReminderAnswerTest {
     private static ReminderAlarm alarm(String label) {
         return new ReminderAlarm(
             4242, "driver:59H123456", "driver", "59H123456", label,
-            "2026-10-16T08:40:00.000Z", "2026-10-18T08:40:00.000Z", 1792145633374L);
+            "2026-10-16T08:40:00.000Z", "2026-10-18T08:40:00.000Z", "content://kho", 1792145633374L);
     }
 
     @Test
@@ -24,6 +24,7 @@ public class ReminderAnswerTest {
         assertEquals("2026-10-16T08:40:00.000Z", json.getString("lookedUpAt"));
         assertEquals("2026-10-18T08:40:00.000Z", json.getString("expiresAt"));
         assertEquals("bad", json.getString("answer"));
+        assertEquals("content://kho", json.getString("khoUri"));
         assertEquals("2026-10-16T10:13:53.374Z", json.getString("answeredAt"));
     }
 

@@ -13,7 +13,7 @@ public class ReminderRescheduleTest {
     private static String pending(String dueAt, String expiresAt) {
         return "{\"version\":1,\"reminders\":[{\"id\":\"driver:59H123456\",\"notificationId\":4242,"
             + "\"kind\":\"driver\",\"key\":\"59H123456\",\"label\":\"59H1-234.56\","
-            + "\"lookedUpAt\":\"2026-10-18T11:00:00.000Z\",\"dueAt\":\"" + dueAt + "\",\"expiresAt\":\"" + expiresAt + "\"}]}";
+            + "\"lookedUpAt\":\"2026-10-18T11:00:00.000Z\",\"dueAt\":\"" + dueAt + "\",\"expiresAt\":\"" + expiresAt + "\",\"khoUri\":\"content://kho\"}]}";
     }
 
     @Test
@@ -27,6 +27,7 @@ public class ReminderRescheduleTest {
         assertEquals("59H1-234.56", a.label);
         assertEquals("2026-10-18T11:00:00.000Z", a.lookedUpAt);
         assertEquals("2026-10-20T11:00:00.000Z", a.expiresAt);
+        assertEquals("content://kho", a.khoUri);
     }
 
     @Test

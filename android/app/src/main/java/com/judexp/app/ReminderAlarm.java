@@ -12,10 +12,12 @@ public final class ReminderAlarm {
     public final String label;
     public final String lookedUpAt;
     public final String expiresAt;
+    /** Opaque to the native side: carried into the answer so the app writes it to the right kho. */
+    public final String khoUri;
     public final long atMs;
 
     public ReminderAlarm(int notificationId, String reminderId, String kind, String key, String label,
-                         String lookedUpAt, String expiresAt, long atMs) {
+                         String lookedUpAt, String expiresAt, String khoUri, long atMs) {
         this.notificationId = notificationId;
         this.reminderId = reminderId;
         this.kind = kind;
@@ -23,6 +25,7 @@ public final class ReminderAlarm {
         this.label = label;
         this.lookedUpAt = lookedUpAt;
         this.expiresAt = expiresAt;
+        this.khoUri = khoUri;
         this.atMs = atMs;
     }
 }

@@ -23,6 +23,8 @@ export interface ReminderAnswer {
   expiresAt: string;
   answer: Answer;
   answeredAt: string;
+  /** Carried from the reminder through the notification, so it is written to the right kho. */
+  khoUri: string;
 }
 
 export interface ReminderStore {
@@ -39,7 +41,7 @@ const PENDING = 'pending.json';
 const ANSWERS = 'reminder-answers';
 const VERSION = 1;
 const ANSWER_VALUES: Answer[] = ['good', 'ok', 'bad', 'skip'];
-const STRING_FIELDS = ['answerId', 'reminderId', 'kind', 'key', 'label', 'lookedUpAt', 'expiresAt', 'answeredAt'] as const;
+const STRING_FIELDS = ['answerId', 'reminderId', 'kind', 'key', 'label', 'lookedUpAt', 'expiresAt', 'answeredAt', 'khoUri'] as const;
 
 function isAnswer(value: unknown): value is ReminderAnswer {
   if (typeof value !== 'object' || value === null) return false;

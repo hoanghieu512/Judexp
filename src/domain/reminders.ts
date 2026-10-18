@@ -25,6 +25,8 @@ export interface Reminder {
   lookedUpAt: string;
   dueAt: string;
   expiresAt: string;
+  /** The kho the lookup was made in: an answer must never land in another one. */
+  khoUri: string;
 }
 
 export const REMIND_AFTER_MS = 90 * 60_000;
@@ -37,7 +39,7 @@ export function notificationIdFor(id: string): number {
   return h & 0x7fffffff || 1;
 }
 
-export function reminderFor(target: LookupTarget, now: Date): Reminder {
+export function reminderFor(target: LookupTarget, now: Date, khoUri: string): Reminder {
   const id = `${target.kind}:${target.key}`;
   const t = now.getTime();
   return {
@@ -49,6 +51,7 @@ export function reminderFor(target: LookupTarget, now: Date): Reminder {
     lookedUpAt: new Date(t).toISOString(),
     dueAt: new Date(t + REMIND_AFTER_MS).toISOString(),
     expiresAt: new Date(t + GIVE_UP_AFTER_MS).toISOString(),
+    khoUri,
   };
 }
 
@@ -56,10 +59,10 @@ export function stillPending(list: Reminder[], now: Date): Reminder[] {
   return list.filter((r) => Date.parse(r.expiresAt) > now.getTime());
 }
 
-/** Drops expired ones, then replaces any reminder with the same id. */
-export function remember(list: Reminder[], target: LookupTarget, now: Date): Reminder[] {
-  const next = reminderFor(target, now);
-  return [...stillPending(list, now).filter((r) => r.id !== next.id), next];
+/** Drops expired ones, then replaces any reminder with the same id in the same kho. */
+export function remember(list: Reminder[], target: LookupTarget, now: Date, khoUri: string): Reminder[] {
+  const next = reminderFor(target, now, khoUri);
+  return [...stillPending(list, now).filter((r) => !(r.id === next.id && r.khoUri === khoUri)), next];
 }
 
 /** cyrb128: a small, well-mixed 128-bit string hash. Not for secrets, only for stable ids. */

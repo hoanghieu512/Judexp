@@ -71,6 +71,11 @@ function useNow(clock: () => Date): Date {
   return now;
 }
 
+/** Reminders still waiting, for the kho in use only. */
+function pendingIn(list: Reminder[], khoUri: string, now: Date): Reminder[] {
+  return stillPending(list, now).filter((r) => r.khoUri === khoUri);
+}
+
 /**
  * What to tell huynh when the kho will not open. A hidden kho is the phone's
  * fault, not the folder's, so picking the folder again would not help.
@@ -181,13 +186,13 @@ export default function AppShell({
   // Answers tapped on notifications become events here, the next time the app
   // is open with a readable kho. A failure keeps the answer for the next try.
   const settle = useCallback(
-    async (layout: KhoDirs, who: Identity) => {
+    async (layout: KhoDirs, who: Identity, khoUri: string) => {
       if (settling.current) return;
       settling.current = true;
       try {
-        const { written } = await settleAnswers(reminders.store, (e) => writeEvent(deps, layout.events, e), who);
+        const { written } = await settleAnswers(reminders.store, (e) => writeEvent(deps, layout.events, e), who, khoUri);
         if (written > 0) await refresh(layout);
-        setPending(stillPending(await reminders.store.load(), latestClock.current()));
+        setPending(pendingIn(await reminders.store.load(), khoUri, latestClock.current()));
       } catch (err) {
         deps.log(`could not settle reminder answers: ${(err as Error).message}`);
       } finally {
@@ -233,7 +238,7 @@ export default function AppShell({
           const layout = await ensureKhoLayout(deps, chosen.rootUri);
           setDirs(layout);
           await refresh(layout);
-          await settle(layout, { author: authorName, device: deviceId });
+          await settle(layout, { author: authorName, device: deviceId }, chosen.rootUri);
           await askNotificationsOnce();
         }
       } catch (err) {
@@ -248,9 +253,9 @@ export default function AppShell({
   // The app comes back to the foreground, or a minute passes: an answer may
   // have been tapped on a notification meanwhile.
   useEffect(() => {
-    if (!ready || !dirs) return;
-    settle(dirs, { author, device });
-  }, [now, ready, dirs, author, device, settle]);
+    if (!ready || !dirs || !kho) return;
+    settle(dirs, { author, device }, kho.rootUri);
+  }, [now, ready, dirs, kho, author, device, settle]);
 
   // Poll rather than subscribe: ten seconds is plenty for a light that
   // answers "is what I just wrote already on Atomman?".
@@ -306,10 +311,11 @@ export default function AppShell({
   }
 
   async function onLookup(target: LookupTarget) {
+    if (!kho) return;
     try {
-      const list = remember(await reminders.store.load(), target, latestClock.current());
+      const list = remember(await reminders.store.load(), target, latestClock.current(), kho.rootUri);
       await reminders.store.save(list);
-      setPending(list);
+      setPending(pendingIn(list, kho.rootUri, latestClock.current()));
       const reminder = list[list.length - 1];
       const { granted } = await reminders.native.permission();
       setNotifications(granted ? 'on' : 'off');
@@ -335,8 +341,10 @@ export default function AppShell({
   async function answerReminderOnce(reminder: Reminder, answer: Answer, dirs: KhoDirs) {
     // An answer may already be queued from the notification: settle it first,
     // and if that answered this lookup, do not write a second rating for it.
-    await settle(dirs, { author, device });
-    const stillWaiting = (await reminders.store.load()).some((r) => r.id === reminder.id && r.lookedUpAt === reminder.lookedUpAt);
+    await settle(dirs, { author, device }, reminder.khoUri);
+    const stillWaiting = (await reminders.store.load()).some(
+      (r) => r.id === reminder.id && r.lookedUpAt === reminder.lookedUpAt && r.khoUri === reminder.khoUri,
+    );
     if (!stillWaiting) {
       await reminders.native.cancel({ notificationId: reminder.notificationId }).catch(() => {});
       return;
@@ -352,6 +360,7 @@ export default function AppShell({
         expiresAt: reminder.expiresAt,
         answer,
         answeredAt: latestClock.current().toISOString(),
+        khoUri: reminder.khoUri,
       },
       { author, device },
     );
@@ -370,9 +379,11 @@ export default function AppShell({
         setProblem(`Đã ghi lần chấm này vào kho, nhưng chưa đọc lại được kho: ${(err as Error).message}. Nó sẽ hiện khi mở lại app.`);
       }
     }
-    const rest = (await reminders.store.load()).filter((r) => !(r.id === reminder.id && r.lookedUpAt === reminder.lookedUpAt));
+    const rest = (await reminders.store.load()).filter(
+      (r) => !(r.id === reminder.id && r.lookedUpAt === reminder.lookedUpAt && r.khoUri === reminder.khoUri),
+    );
     await reminders.store.save(rest);
-    setPending(stillPending(rest, latestClock.current()));
+    setPending(pendingIn(rest, reminder.khoUri, latestClock.current()));
     await reminders.native.cancel({ notificationId: reminder.notificationId }).catch(() => {});
   }
 

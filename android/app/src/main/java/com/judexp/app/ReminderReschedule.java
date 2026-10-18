@@ -42,6 +42,7 @@ public final class ReminderReschedule {
                     r.optString("label"),
                     r.optString("lookedUpAt"),
                     r.optString("expiresAt"),
+                    r.optString("khoUri"),
                     Math.max(due, nowMs + LATE_DELAY_MS)));
             }
             return alarms;

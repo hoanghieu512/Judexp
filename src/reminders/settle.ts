@@ -35,17 +35,26 @@ export function eventFromAnswer(answer: ReminderAnswer, who: Identity): JudexpEv
   });
 }
 
-/** Writes each usable answer, then clears it and its reminder. Keeps an answer whose write failed. */
+/**
+ * Writes each usable answer for the kho in use, then clears it and its
+ * reminder. Keeps an answer whose write failed, and an answer from another
+ * kho, which waits until that kho is open again.
+ */
 export async function settleAnswers(
   store: ReminderStore,
   write: (event: JudexpEvent) => Promise<void>,
   who: Identity,
+  khoUri: string,
 ): Promise<{ written: number; kept: number }> {
   let written = 0;
   let kept = 0;
   // Oldest first, so the first tap for a lookup wins and later ones are only cleared.
   const answered = new Set<string>();
   for (const answer of await store.answers()) {
+    if (answer.khoUri !== khoUri) {
+      kept += 1;
+      continue;
+    }
     const lookup = `${answer.reminderId}|${answer.lookedUpAt}`;
     const event = answered.has(lookup) ? null : eventFromAnswer(answer, who);
     if (event) {
@@ -62,7 +71,9 @@ export async function settleAnswers(
     await store.clearAnswer(answer.answerId);
     // Only the reminder this answer was for: a newer lookup of the same entity stays.
     const pending = await store.load();
-    const rest = pending.filter((r) => !(r.id === answer.reminderId && r.lookedUpAt === answer.lookedUpAt));
+    const rest = pending.filter(
+      (r) => !(r.id === answer.reminderId && r.lookedUpAt === answer.lookedUpAt && r.khoUri === answer.khoUri),
+    );
     if (rest.length !== pending.length) await store.save(rest);
   }
   return { written, kept };

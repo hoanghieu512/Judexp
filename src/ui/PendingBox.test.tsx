@@ -5,7 +5,7 @@ import { reminderFor } from '../domain/reminders';
 import type { Entity } from '../domain/reduce';
 
 const NOW = new Date('2026-10-18T13:20:00Z');
-const plateReminder = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, new Date('2026-10-18T11:40:00Z'));
+const plateReminder = reminderFor({ kind: 'driver', key: '59H123456', label: '59H1-234.56' }, new Date('2026-10-18T11:40:00Z'), 'content://kho');
 
 const unratedEntity: Entity = {
   key: '51A99999',
@@ -42,7 +42,7 @@ describe('PendingBox', () => {
   });
 
   it('shows a restaurant name in the name style, not the plate style', () => {
-    const place = reminderFor({ kind: 'restaurant', key: 'com tam ba ghi', label: 'Cơm Tấm Ba Ghi' }, new Date('2026-10-18T11:40:00Z'));
+    const place = reminderFor({ kind: 'restaurant', key: 'com tam ba ghi', label: 'Cơm Tấm Ba Ghi' }, new Date('2026-10-18T11:40:00Z'), 'content://kho');
     show({ reminders: [place] });
     expect(screen.getByText('Cơm Tấm Ba Ghi')).toHaveClass('jx-name');
   });

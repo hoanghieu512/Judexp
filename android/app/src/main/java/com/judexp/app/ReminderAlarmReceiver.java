@@ -71,6 +71,7 @@ public class ReminderAlarmReceiver extends BroadcastReceiver {
         intent.putExtra("label", a.label);
         intent.putExtra("lookedUpAt", a.lookedUpAt);
         intent.putExtra("expiresAt", a.expiresAt);
+        intent.putExtra("khoUri", a.khoUri);
         intent.putExtra("atMs", a.atMs);
     }
 
@@ -83,6 +84,7 @@ public class ReminderAlarmReceiver extends BroadcastReceiver {
             intent.getStringExtra("label"),
             intent.getStringExtra("lookedUpAt"),
             intent.getStringExtra("expiresAt"),
+            intent.getStringExtra("khoUri"),
             intent.getLongExtra("atMs", 0L));
     }
 
