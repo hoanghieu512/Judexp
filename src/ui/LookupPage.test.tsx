@@ -74,6 +74,30 @@ describe('LookupPage', () => {
     expect(screen.getByText(/chưa gặp/i)).toBeInTheDocument();
   });
 
+  it('answers "chưa gặp" for a whole plate that only comes close to a known one, and shows that one apart', () => {
+    // One character off is another vehicle (§9.3): its colour must not read as this plate's answer.
+    typeQuery(stateWith(met('driver', '59H123456', 'bad')), '59H123458');
+    expect(screen.getByTestId('no-match')).toHaveTextContent(/chưa gặp người này/i);
+    const near = screen.getByTestId('near-plates');
+    expect(near).toHaveTextContent(/gần giống/i);
+    expect(within(near).getByTestId('entity-59H123456')).toBeInTheDocument();
+  });
+
+  it('puts the exact plate first and a plate one character off under its own heading', () => {
+    typeQuery(stateWith(met('driver', '59H123456', 'good'), met('driver', '59H123457', 'bad')), '59H1-234.56');
+    expect(screen.queryByTestId('no-match')).not.toBeInTheDocument();
+    const near = screen.getByTestId('near-plates');
+    expect(within(near).queryByTestId('entity-59H123456')).not.toBeInTheDocument();
+    expect(within(near).getByTestId('entity-59H123457')).toBeInTheDocument();
+    expect(screen.getByTestId('entity-59H123456')).toBeInTheDocument();
+  });
+
+  it('keeps one list while a plate is still being typed', () => {
+    typeQuery(stateWith(met('driver', '59H123456', 'good'), met('driver', '59H123457', 'bad')), '59h1');
+    expect(screen.queryByTestId('near-plates')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId(/^entity-59H/)).toHaveLength(2);
+  });
+
   it('does not call a place a person when a name finds nothing', () => {
     typeQuery(emptyState(), 'Bún Bò Huế 14');
     expect(screen.getByTestId('no-match')).toHaveTextContent(/chưa ghé chỗ này/i);

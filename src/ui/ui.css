@@ -110,6 +110,9 @@ html, body, #root { height: 100%; }
 
 .jx-empty { color: var(--jx-text-dim); font-size: var(--jx-text-md); padding: var(--jx-space-4) 0; }
 
+/* The answer rows, and the near plates under their heading, spaced like the screen. */
+.jx-results { display: flex; flex-direction: column; gap: var(--jx-space-4); }
+
 .jx-verdicts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--jx-space-3); }
 /* Chờ chấm puts "Không đi" beside the three verdicts, on one row. */
 .jx-verdicts[data-columns='4'] { grid-template-columns: repeat(4, 1fr); }

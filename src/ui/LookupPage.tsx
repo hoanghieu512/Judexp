@@ -116,7 +116,7 @@ export default function LookupPage({
       />
 
       {typing ? (
-        <DecisionCard query={query} results={results} now={now} onOpen={openResult} />
+        <DecisionCard query={query} hits={hits} now={now} onOpen={openResult} />
       ) : (
         <>
           <PendingBox reminders={reminders} unrated={unrated} now={now} onAnswer={onAnswer} onOpen={(key) => onOpen?.(key)} />
