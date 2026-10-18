@@ -1,14 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { lookupTarget } from './lookupTarget';
+import type { SearchHit } from './fuzzy';
 import type { Entity } from '../domain/reduce';
 
 function entity(key: string, labels: string[], kind: Entity['kind'] = 'driver'): Entity {
   return { key, kind, labels, firstSeen: '2026-10-16T10:00:00Z', lastSeen: '2026-10-16T10:00:00Z', encounters: [] };
 }
 
+/** Hits the way the search returns them, none of them exact unless asked. */
+const found = (...entities: Entity[]): SearchHit[] => entities.map((e) => ({ entity: e, exact: false }));
+const exactly = (e: Entity): SearchHit => ({ entity: e, exact: true });
+
 describe('lookupTarget', () => {
   it('points at the one entity the search found', () => {
-    expect(lookupTarget('23456', [entity('59H123456', ['59H1-234.56'])])).toEqual({
+    expect(lookupTarget('23456', found(entity('59H123456', ['59H1-234.56'])))).toEqual({
       kind: 'driver',
       key: '59H123456',
       label: '59H1-234.56',
@@ -16,8 +21,8 @@ describe('lookupTarget', () => {
   });
 
   it('uses the newest label of the entity, or its key when it has none', () => {
-    expect(lookupTarget('ba ghi', [entity('com tam ba ghi', ['Ba Ghi', 'Cơm Tấm Ba Ghi'], 'restaurant')])?.label).toBe('Cơm Tấm Ba Ghi');
-    expect(lookupTarget('59h1', [entity('59H123456', [])])?.label).toBe('59H123456');
+    expect(lookupTarget('ba ghi', found(entity('com tam ba ghi', ['Ba Ghi', 'Cơm Tấm Ba Ghi'], 'restaurant')))?.label).toBe('Cơm Tấm Ba Ghi');
+    expect(lookupTarget('59h1', found(entity('59H123456', [])))?.label).toBe('59H123456');
   });
 
   it('points at a new driver when a full plate finds nothing', () => {
@@ -28,11 +33,21 @@ describe('lookupTarget', () => {
     expect(lookupTarget('59h1', [])).toBeNull();
   });
 
-  it('points at nobody when several entities match', () => {
-    expect(lookupTarget('59h1', [entity('59H123456', []), entity('59H123457', [])])).toBeNull();
+  it('points at nobody when several entities match and none of them exactly', () => {
+    expect(lookupTarget('59h1', found(entity('59H123456', []), entity('59H123457', [])))).toBeNull();
+  });
+
+  it('points at the exact match even when a neighbour one character off also matches', () => {
+    const hits = [exactly(entity('59H123456', [])), ...found(entity('59H123457', []))];
+    expect(lookupTarget('59H123456', hits)?.key).toBe('59H123456');
+  });
+
+  it('points at nobody when two entities match exactly', () => {
+    const hits = [exactly(entity('ba ghi', ['Ba Ghi'], 'restaurant')), exactly(entity('com tam ba ghi', ['Ba Ghi'], 'restaurant'))];
+    expect(lookupTarget('ba ghi', hits)).toBeNull();
   });
 
   it('points at nobody for an empty query', () => {
-    expect(lookupTarget('   ', [entity('59H123456', [])])).toBeNull();
+    expect(lookupTarget('   ', found(entity('59H123456', [])))).toBeNull();
   });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { searchEntities } from '../search/fuzzy';
+import { searchHits } from '../search/fuzzy';
 import { lookupTarget } from '../search/lookupTarget';
 import type { LookupTarget, Reminder } from '../domain/reminders';
 import type { Answer } from '../reminders/reminderStore';
@@ -65,7 +65,8 @@ export default function LookupPage({
     box.current?.focus();
   }, []);
 
-  const results = useMemo(() => searchEntities(state, query), [state, query]);
+  const hits = useMemo(() => searchHits(state, query), [state, query]);
+  const results = useMemo(() => hits.map((hit) => hit.entity), [hits]);
   const recent = useMemo(() => recentlyMet(state), [state]);
   const unrated = useMemo(() => unratedMeetings(state), [state]);
   const typing = query.trim() !== '';
@@ -87,11 +88,11 @@ export default function LookupPage({
       return;
     }
     const timer = setTimeout(() => {
-      const target = lookupTarget(typed, results);
+      const target = lookupTarget(typed, hits);
       if (target) reportOnce(typed, target);
     }, SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [query, results]);
+  }, [query, hits]);
 
   // Opening a result is the clearest sign of which one was meant.
   function openResult(key: string) {

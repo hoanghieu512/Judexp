@@ -145,6 +145,14 @@ describe('LookupPage, reporting a finished lookup', () => {
     expect(onLookup).not.toHaveBeenCalled();
   });
 
+  it('reports a whole plate typed exactly, even when a neighbour plate also matches', () => {
+    const { onLookup, type, wait } = setup(stateWith(met('driver', '59H123456', 'good'), met('driver', '59H123457', 'good')));
+    type('59H1-234.56');
+    wait(5000);
+    expect(onLookup).toHaveBeenCalledTimes(1);
+    expect(onLookup.mock.calls[0][0].key).toBe('59H123456');
+  });
+
   it('does not report the same settled query twice', () => {
     const state = stateWith(met('driver', '59H123456', 'good'));
     const { onLookup, onOpen, type, wait, view } = setup(state);
