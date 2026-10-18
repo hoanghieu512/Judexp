@@ -43,16 +43,16 @@ export function looksLikeFullPlate(raw: string): boolean {
 }
 
 /**
- * Name key: drop diacritics, lower case, turn punctuation into word breaks,
- * collapse whitespace, then strip one leading generic prefix. `đ` needs its
- * own rule: it is not a composed character, so NFD leaves it untouched.
+ * A name folded to plain words: drop diacritics, lower case, turn punctuation
+ * into word breaks, collapse whitespace. `đ` needs its own rule: it is not a
+ * composed character, so NFD leaves it untouched.
  *
  * Punctuation is how the same sign gets typed differently ("Ba Ghi - Q7",
  * "Ba Ghi Q7"), so it carries no identity. Apostrophes are dropped instead of
  * breaking the word, so "McDonald's" stays one word.
  */
-export function normalizeName(raw: string): string {
-  const flat = raw
+export function foldName(raw: string): string {
+  return raw
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/đ/g, 'd')
@@ -62,11 +62,23 @@ export function normalizeName(raw: string): string {
     .replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
 
+/** Strip one leading generic prefix ("quan", "nha hang"...) from a folded name. */
+export function stripGenericPrefix(folded: string): string {
   for (const prefix of GENERIC_PREFIXES) {
-    if (flat.startsWith(prefix + ' ')) return flat.slice(prefix.length + 1);
+    if (folded.startsWith(prefix + ' ')) return folded.slice(prefix.length + 1);
   }
-  return flat;
+  return folded;
+}
+
+/**
+ * Name key: the folded name without its leading generic prefix. Keys live in
+ * the kho for good, so any change here splits entities already written;
+ * search folds its own way on top of `foldName` instead.
+ */
+export function normalizeName(raw: string): string {
+  return stripGenericPrefix(foldName(raw));
 }
 
 /**
