@@ -44,9 +44,17 @@ export default function EntityRow({
   const rated = entity.encounters.some((e) => e.verdict !== null);
   const latestLabel = entity.labels[entity.labels.length - 1];
   const shown = isPlate ? entity.key : latestLabel ?? entity.key;
+  const tags = topTags(entity);
   // What a screen reader says, and what the e2e smoke tests find a row by:
-  // what it opens, the colour in words, and how often it was met.
-  const name = `Mở ${shown}, ${COLOR_LABELS[color]}, ${meetings} lần gặp${rated ? `, ${relativeTime(entity.lastSeen, now)}` : ''}`;
+  // what it opens, the colour in words, how often it was met, and the tags
+  // the row shows (a label replaces the content a reader would read).
+  const name = [
+    `Mở ${shown}`,
+    COLOR_LABELS[color],
+    `${meetings} lần gặp`,
+    ...(rated ? [relativeTime(entity.lastSeen, now)] : []),
+    ...tags,
+  ].join(', ');
 
   return (
     <button
@@ -72,9 +80,9 @@ export default function EntityRow({
           {isPlate && latestLabel ? `${latestLabel}, ` : ''}
           {meetings} lần gặp, {rated ? relativeTime(entity.lastSeen, now) : 'chưa chấm lần nào'}
         </span>
-        {topTags(entity).length > 0 && (
+        {tags.length > 0 && (
           <span className="jx-tags">
-            {topTags(entity).map((tag) => (
+            {tags.map((tag) => (
               <span className="jx-tag" data-testid="tag" key={tag}>
                 {tag}
               </span>

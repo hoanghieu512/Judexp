@@ -73,6 +73,12 @@ describe('LookupPage', () => {
     expect(screen.getByRole('button', { name: 'Mở 51A99999, chưa chấm, 1 lần gặp' })).toBeInTheDocument();
   });
 
+  it('keeps the top tags in the row name, as a screen reader would read the row', () => {
+    const state = stateWith(met('driver', '59H123456', 'bad', { tags: ['chạy ẩu', 'nói nhiều'] }));
+    typeQuery(state, '59h1');
+    expect(screen.getByRole('button', { name: 'Mở 59H123456, xấu, 1 lần gặp, 2 ngày trước, chạy ẩu, nói nhiều' })).toBeInTheDocument();
+  });
+
   it('shows an unrated entity as grey and says it was never rated', () => {
     const state = stateWith(met('driver', '59H123456', null), met('driver', '59H123456', null));
     typeQuery(state, '59h1');
