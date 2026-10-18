@@ -32,6 +32,17 @@ export function looksLikePlate(raw: string): boolean {
 }
 
 /**
+ * Whether typed text is a whole Vietnamese plate, not a fragment: two
+ * province digits, one or two series letters, then four to six digits
+ * (`51A1234`, `51A12345`, `59H123456`, `29LD12345`). Only a whole plate can
+ * name a driver nobody has met yet.
+ */
+export function looksLikeFullPlate(raw: string): boolean {
+  if (!/^[0-9a-zA-Z\s.\-]+$/.test(raw.trim())) return false;
+  return /^\d{2}[A-Z]{1,2}\d{4,6}$/.test(normalizePlate(raw));
+}
+
+/**
  * Name key: drop diacritics, lower case, turn punctuation into word breaks,
  * collapse whitespace, then strip one leading generic prefix. `đ` needs its
  * own rule: it is not a composed character, so NFD leaves it untouched.

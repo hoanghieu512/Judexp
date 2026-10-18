@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { looksLikePlate, normalizePlate, normalizeName, restaurantKey, dishKey } from './keys';
+import { looksLikeFullPlate, looksLikePlate, normalizePlate, normalizeName, restaurantKey, dishKey } from './keys';
 
 describe('normalizePlate', () => {
   it('strips separators and upper-cases', () => {
@@ -22,6 +22,22 @@ describe('looksLikePlate', () => {
     expect(looksLikePlate('pho 2000')).toBe(false);
     expect(looksLikePlate('Anh Tuấn')).toBe(false);
     expect(looksLikePlate('H')).toBe(false);
+  });
+});
+
+describe('looksLikeFullPlate', () => {
+  it('recognises a complete plate however it is written', () => {
+    expect(looksLikeFullPlate('59H1-234.56')).toBe(true);
+    expect(looksLikeFullPlate('51A-123.45')).toBe(true);
+    expect(looksLikeFullPlate('29LD-123.45')).toBe(true);
+    expect(looksLikeFullPlate('51A1234')).toBe(true);
+  });
+
+  it('does not take a half-typed plate or a name for a complete plate', () => {
+    expect(looksLikeFullPlate('59h1')).toBe(false);
+    expect(looksLikeFullPlate('23456')).toBe(false);
+    expect(looksLikeFullPlate('Bún bò Huế 14')).toBe(false);
+    expect(looksLikeFullPlate('')).toBe(false);
   });
 });
 
