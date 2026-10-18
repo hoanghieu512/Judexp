@@ -225,6 +225,7 @@ export default function SettingsPage({
         onBlur={(e) => onPin(e.target.value.trim() === '' ? null : e.target.value.trim())}
       />
       <p className="jx-sub">PIN chỉ chặn người cầm máy, nó không mã hoá dữ liệu trong kho.</p>
+      <p className="jx-sub">Judexp phiên bản {__APP_VERSION__}</p>
 
       {notifications !== 'unknown' && (
         <>

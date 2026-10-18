@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+import groovy.json.JsonSlurper
+
+// One version for the whole app: package.json, as in Gu Library. versionCode follows from it
+// (0.2.0 -> 200, 1.4.12 -> 10412) so a release can never forget to raise it.
+def appVersion = new JsonSlurper().parseText(rootProject.file("../package.json").getText("UTF-8")).version
+def (vMajor, vMinor, vPatch) = appVersion.tokenize('.').collect { it as int }
+
 android {
     namespace = "com.judexp.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +14,8 @@ android {
         applicationId "com.judexp.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode vMajor * 10000 + vMinor * 100 + vPatch
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

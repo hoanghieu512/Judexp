@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import SettingsPage from './SettingsPage';
 
 function show(over: Record<string, unknown> = {}) {
@@ -231,5 +233,13 @@ describe('SettingsPage, a draft that is not in use yet', () => {
     fireEvent.change(screen.getByLabelText(/api key/i), { target: { value: 'new-key' } });
     fireEvent.click(screen.getByRole('button', { name: /lưu và kiểm tra/i }));
     expect(props.onSyncConfig).toHaveBeenCalledWith({ ...saved, apiKey: 'new-key' });
+  });
+});
+
+describe('SettingsPage, version', () => {
+  it('says which version is installed, the one in package.json', () => {
+    const { version } = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8')) as { version: string };
+    show();
+    expect(screen.getByText(`Judexp phiên bản ${version}`)).toBeInTheDocument();
   });
 });
