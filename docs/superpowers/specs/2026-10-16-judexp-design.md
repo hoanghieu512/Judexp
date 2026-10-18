@@ -149,7 +149,7 @@ Tên file: `<ISO8601 compact>_<device>_<uuid7>.json`, ví dụ `20261016T190322Z
   },
 
   "source": {
-    "kind": "share_history",        // share_booking | share_history | manual
+    "kind": "share_history",        // share_booking | share_history | camera | manual | reminder
     "imageRef": "a3f9c21.jpg",      // tên file trong inbox\, nếu có
     "imageKind": "history_list",    // booking | history_list | order_detail | unknown
     "batchRef": "a3f9c21",          // nhiều encounter sinh từ cùng một ảnh thì chung batchRef
@@ -282,8 +282,8 @@ Nguyên tắc xuyên suốt: **chấm điểm và nhận dạng là hai việc r
 **Mỗi lần tra cứu là một tín hiệu huynh sắp đi chuyến đó.** App không cần huynh làm thêm gì: nó đã biết lúc 18h40 huynh tra `59H123456`.
 
 - Mỗi lần tra cứu sinh một **nhắc chờ**, hẹn **90 phút** sau.
-- Thông báo có bốn nút: **tốt, ổn, xấu, không đi**. Chạm là event `encounter` vào kho, không cần mở app.
-- Chạm **không đi** thì **không ghi gì vào kho**, chỉ tắt nhắc. Chuyến không xảy ra thì không có ký ức nào để lưu.
+- Thông báo hiện ba nút **tốt, ổn, xấu**: Android chỉ vẽ ba nút đầu của một thông báo (đã thử trên UBS1 và dGen1 ngày 2026-10-18). Chạm một nút là xong, **không mở app**: câu trả lời vào hàng chờ trong vùng dữ liệu riêng của app, và thành event `encounter` (`source.kind: reminder`) trong kho ở lần mở app kế tiếp.
+- **Không đi** nằm trong hộp Chờ chấm. Vuốt bỏ hay kệ thông báo cũng chỉ ẩn nó, nhắc vẫn chờ trong hộp. Chọn không đi thì **không ghi gì vào kho**, chỉ tắt nhắc. Chuyến không xảy ra thì không có ký ức nào để lưu.
 - Nhắc chờ quá **48 giờ** không trả lời thì tự bỏ, vì sau đó huynh cũng không còn nhớ để chấm cho đúng.
 - Nhắc chờ lưu trong `pending.json` ở vùng dữ liệu riêng của app: **không nằm trong kho, không sync**, vì máy nào tra thì máy đó nhắc. Cố ý để ngoài index SQLite, vì dựng lại index sẽ xóa mất nhắc đang chờ.
 
@@ -456,7 +456,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | S2 | `ShareTargetPlugin` nhận được `image/*` share từ app đặt xe và app đồ ăn | **Đã đóng ở M0 (2026-10-16, UBS1).** Ba đường gửi đều nhận được URI và đọc ra đúng PNG qua `Saf.readFileBase64`: share từ Google Photos khi app đang mở, khi app đang tắt, và nút Chia sẻ trên khung xem trước ảnh chụp màn hình của hệ thống. Đường cuối chính là đường "chụp màn Grab rồi chia sẻ", chỉ khác nội dung ảnh. Chưa thử với ảnh chụp trên chính màn Grab hay ShopeeFood vì máy test không cài hai app đó. |
 | S3 | Thư viện SQLite cho Capacitor | Gú's Library ghi rõ "chưa chốt thư viện". Nếu plugin SQLite gây rắc rối cho build CLI thì **phương án lùi**: giữ index trong bộ nhớ và cache ra một file JSON, vẫn đủ nhanh ở mức vài nghìn event. |
 | S4 | iOS đọc folder Möbius Sync từ Capacitor | Möbius Pro sync được (đã chứng minh với Obsidian), nhưng app của mình đọc folder đó cần document picker và security-scoped bookmark, là việc native, chưa thử. Ngoài v1. |
-| S5 | Nút hành động trên thông báo để chấm không cần mở app | Tính năng M4, **không còn là tùy sức** vì nhãn verdict là thứ §19.1 sống nhờ. Nếu nút trên thông báo vướng thì lùi về: chạm thông báo mở thẳng hộp Chờ chấm. |
+| S5 | Nút hành động trên thông báo để chấm không cần mở app | **Đã đóng ở M4 (2026-10-18, UBS1 và dGen1).** Plugin chuẩn mở app khi bấm nút, nên Judexp tự viết phần native: nút là broadcast tới một receiver chỉ ghi câu trả lời vào hàng chờ, không mở activity nào. Hai giới hạn thật: Android chỉ vẽ ba nút đầu (Không đi chuyển vào hộp Chờ chấm), và alarm không chính xác dùng cửa sổ 10 phút (`setWindow`), vì `setAndAllowWhileIdle` cho trễ tới một giờ. |
 
 ## 17. Mốc triển khai
 
@@ -467,7 +467,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | **M1** | `domain` + `search` + `index` + luồng Hỏi đường gõ + nhập tay | Tra biển số gõ sai một ký tự vẫn ra. Thẻ quyết định hiện đúng cả ba tình huống §9.1. App dùng được thật dù chưa có ảnh. |
 | **M2** | Phase test parser đối đầu, ba nhóm ảnh | Có bảng số đo, chốt parser theo quy tắc §10. |
 | **M3** | Worker, share ảnh lịch sử (một ảnh nhiều dòng), nạp nền §9.4, share ảnh màn ghép tài xế, **camera chụp tại chỗ §9.5** | Chụp một ảnh lịch sử ra đúng số dòng, chấm được từng dòng. Chụp một quán ngoài đường, lưu được kèm toạ độ, và sau khi worker xử lý thì trên máy chỉ còn bản thu nhỏ. |
-| **M4** | Nhắc chấm 90 phút, bốn nút trên thông báo (§9.3) | Tra một biển số, 90 phút sau nhận thông báo, chạm một nút là event vào kho. |
+| **M4** | Nhắc chấm 90 phút, ba nút trên thông báo cùng hộp Chờ chấm (§9.3) | Tra một biển số, 90 phút sau (trễ tối đa 10 phút) nhận thông báo, chạm một nút là xong không mở app, và lần mở app kế tiếp event vào kho. |
 | **M5** | Bộ icon app và icon bốn loại | Khớp với hệ thiết kế M0.5. |
 
 M0 cố tình đứng đầu vì nó là **rủi ro cao nhất**, không phải vì nó dễ. M4 không phải tính năng phụ: không có nó thì nhãn verdict không tích lũy, và §19.1 vĩnh viễn không có dữ liệu để hiệu chỉnh.

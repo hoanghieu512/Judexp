@@ -30,12 +30,18 @@ public class ReminderAlarmReceiver extends BroadcastReceiver {
     static final String[] BUTTONS = { "Tốt", "Ổn", "Xấu", "Không đi" };
     static final String[] ANSWERS = { "good", "ok", "bad", "skip" };
     static final String EXTRA_ANSWER = "answer";
+    /** The shortest window Android 12+ allows without the exact-alarm permission. */
+    static final long WINDOW_MS = 10 * 60_000L;
     private static final String TAG = "JudexpReminder";
 
     /**
      * The one place an alarm is set. PendingIntent identity ignores extras, so
      * the request code is the notification id: scheduling the same reminder
      * again replaces its alarm instead of adding a second one.
+     *
+     * A window alarm, not setAndAllowWhileIdle: that one may arrive up to 75%
+     * of the wait late, capped at an hour, so a 90-minute reminder could come
+     * two and a half hours after the lookup. Ten minutes needs no permission.
      */
     public static void schedule(Context ctx, ReminderAlarm alarm) {
         Intent intent = new Intent(ctx, ReminderAlarmReceiver.class);
@@ -43,7 +49,7 @@ public class ReminderAlarmReceiver extends BroadcastReceiver {
         PendingIntent pi = PendingIntent.getBroadcast(ctx, alarm.notificationId, intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         AlarmManager alarms = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
-        alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarm.atMs, pi);
+        alarms.setWindow(AlarmManager.RTC_WAKEUP, alarm.atMs, WINDOW_MS, pi);
     }
 
     public static void cancel(Context ctx, int notificationId) {
