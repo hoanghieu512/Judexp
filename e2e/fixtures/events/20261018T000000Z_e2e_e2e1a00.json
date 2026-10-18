@@ -1,0 +1,1 @@
+{"schemaVersion":1,"eventId":"e2e1a000-0000-4000-8000-000000000001","type":"encounter","createdAt":"2026-10-18T00:00:00.000Z","visibility":"private","author":"e2e","device":"e2e","entityRef":{"kind":"driver","key":"00E000001","label":"00E-000.01"},"verdict":null,"tags":[],"source":{"kind":"manual"}}
