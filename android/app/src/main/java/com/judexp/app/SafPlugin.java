@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.UriPermission;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.activity.result.ActivityResult;
 import androidx.documentfile.provider.DocumentFile;
@@ -20,9 +21,12 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 @CapacitorPlugin(name = "Saf")
 public class SafPlugin extends Plugin {
+    private static final String TAG = "JudexpSaf";
 
     @PluginMethod
     public void pickFolder(PluginCall call) {
@@ -240,13 +244,16 @@ public class SafPlugin extends Plugin {
         } catch (Exception e) { call.reject("copy failed: " + e.getMessage()); }
     }
 
-    // Bảo đảm có folder con tên `name` (reuse nếu đã có) — dùng cho _inbox/_print.
-    // Chống TẠO TRÙNG "_inbox (k)": khi worker/Syncthing vừa xóa+tạo lại _inbox, cache của
-    // DocumentFile.findFile trả stale → tưởng chưa có → createDirectory → Samsung auto-dedup ra
-    // "_inbox (1)". File ghi vào đó thành mồ côi (worker chỉ quét "_inbox") → kẹt + môn có thể
-    // biến mất (snapshot coi "_inbox (k)" là môn rồi throw). Hai lớp chống:
-    //   (1) dò con bằng cursor DocumentsContract TƯƠI trước khi tạo (như listFolder);
-    //   (2) nếu vẫn lỡ tạo bản dedup (tên trả về != tên xin) → xóa bản rỗng, trả bản gốc.
+    // Make sure the folder `name` exists under the parent, reusing it if it does (the kho's
+    // events/inbox/parsed/attachments). The provider never hands back a duplicate on purpose: when
+    // `name` is taken it creates "name (1)" instead, and anything written there is lost to every
+    // other reader. Two guards against that:
+    //   (1) look for the child with a fresh DocumentsContract query first (DocumentFile.findFile
+    //       caches and can go stale while Syncthing churns the folder);
+    //   (2) if the provider renamed the new folder anyway, find the real one, remove the empty copy
+    //       and hand back the real one.
+    // Both lookups accept the name in another case: UBS1's kho disk ignores case, so a kho that
+    // holds "Events" makes createDirectory("events") come back as "events (1)".
     @PluginMethod
     public void ensureDir(PluginCall call) {
         String parentUri = call.getString("parentUri");
@@ -255,7 +262,6 @@ public class SafPlugin extends Plugin {
         try {
             Uri parentTree = android.net.Uri.parse(parentUri);
             com.getcapacitor.JSObject ret = new com.getcapacitor.JSObject();
-            // (1) Dò tươi: đã có đúng folder tên `name` → reuse, không tạo.
             String existing = findChildDirByName(parentTree, name);
             if (existing != null) { ret.put("uri", existing); call.resolve(ret); return; }
             androidx.documentfile.provider.DocumentFile parent =
@@ -263,26 +269,36 @@ public class SafPlugin extends Plugin {
             if (parent == null) { call.reject("bad parent"); return; }
             androidx.documentfile.provider.DocumentFile child = parent.createDirectory(name);
             if (child == null) { call.reject("createDirectory returned null"); return; }
-            // (2) Bị dedup ("_inbox (1)")? = bản gốc ĐÃ tồn tại (dò (1) lỡ vì churn). Xóa bản
-            // trùng rỗng vừa tạo rồi trả bản gốc — CHỈ khi xác nhận được gốc (không thì giữ chỗ ghi).
-            if (!name.equals(child.getName())) {
+            String gotName = child.getName();
+            if (!name.equals(gotName)) {
+                // The new folder is the real one when the provider only would not tell its name.
+                String created = child.getUri().toString();
                 String real = findChildDirByName(parentTree, name);
-                if (real != null) { child.delete(); ret.put("uri", real); call.resolve(ret); return; }
-                // The rename proves `name` exists, yet the parent's listing cannot see it:
-                // the provider is hiding the parent's children (seen on dGen1 after a bad
-                // boot). Handing back the renamed folder would split the kho, so undo the
-                // empty copy and refuse. JS maps KHO_HIDDEN to KhoUnreadableError.
-                child.delete();
-                call.reject("'" + name + "' exists but the provider does not list it", "KHO_HIDDEN");
-                return;
+                if (real != null && !real.equals(created)) {
+                    if (!child.delete()) Log.w(TAG, "ensureDir could not remove the copy '" + gotName + "'");
+                    ret.put("uri", real); call.resolve(ret); return;
+                }
+                if (real == null) {
+                    // The rename proves `name` exists, yet the parent's listing cannot see it:
+                    // the provider is hiding the parent's children (seen on dGen1 after a bad
+                    // boot). Handing back the renamed folder would split the kho, so undo the
+                    // empty copy and refuse. JS maps KHO_HIDDEN to KhoUnreadableError.
+                    boolean removed = child.delete();
+                    Log.w(TAG, "ensureDir '" + name + "' is hidden; copy '" + gotName + "' removed=" + removed);
+                    call.reject("'" + name + "' is on disk but the provider does not list it"
+                        + (removed ? "" : "; could not remove the copy '" + gotName + "'"), "KHO_HIDDEN");
+                    return;
+                }
             }
             ret.put("uri", child.getUri().toString());
             call.resolve(ret);
         } catch (Exception e) { call.reject("ensureDir failed: " + e.getMessage()); }
     }
 
-    // Dò con là THƯ MỤC tên khớp bằng một cursor DocumentsContract tươi (giống listFolder) → không
-    // qua cache DocumentFile.findFile (nguồn stale gây tạo trùng). Trả URI con, hoặc null nếu vắng.
+    // The child folder named `name` (or, failing that, named `name` in another case: SafNames.pick),
+    // found with a fresh DocumentsContract query like listFolder's rather than the
+    // DocumentFile.findFile cache. Its URI, or null. A failed query finds nothing, so the caller
+    // goes on to createDirectory.
     private String findChildDirByName(Uri parentTree, String name) {
         String parentDocId;
         try { parentDocId = android.provider.DocumentsContract.getDocumentId(parentTree); }
@@ -293,16 +309,19 @@ public class SafPlugin extends Plugin {
             android.provider.DocumentsContract.Document.COLUMN_DISPLAY_NAME,
             android.provider.DocumentsContract.Document.COLUMN_MIME_TYPE
         };
+        List<String> ids = new ArrayList<>();
+        List<String> names = new ArrayList<>();
         try (android.database.Cursor c =
                  getContext().getContentResolver().query(childrenUri, proj, null, null, null)) {
             while (c != null && c.moveToNext()) {
-                if (name.equals(c.getString(1))
-                    && android.provider.DocumentsContract.Document.MIME_TYPE_DIR.equals(c.getString(2))) {
-                    return android.provider.DocumentsContract.buildDocumentUriUsingTree(parentTree, c.getString(0)).toString();
+                if (android.provider.DocumentsContract.Document.MIME_TYPE_DIR.equals(c.getString(2))) {
+                    ids.add(c.getString(0));
+                    names.add(c.getString(1));
                 }
             }
-        } catch (Exception e) { /* dò lỗi → coi như chưa có, để createDirectory thử */ }
-        return null;
+        } catch (Exception e) { /* nothing listed */ }
+        int i = SafNames.pick(names, name);
+        return i < 0 ? null : android.provider.DocumentsContract.buildDocumentUriUsingTree(parentTree, ids.get(i)).toString();
     }
 
     // Tạo folder mới, CHẶN nếu trùng (khác ensureDir reuse). Dùng cho tạo môn/folder con.

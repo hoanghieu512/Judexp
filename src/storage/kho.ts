@@ -51,15 +51,20 @@ export async function ensureKhoLayout(deps: KhoDeps, rootUri: string): Promise<K
       const { uri } = await deps.saf.ensureDir({ parentUri: rootUri, name });
       dirs[name] = uri;
     } catch (err) {
-      if ((err as { code?: string }).code === HIDDEN_CODE) throw new KhoUnreadableError((err as Error).message);
+      if ((err as { code?: string } | null | undefined)?.code === HIDDEN_CODE) {
+        throw new KhoUnreadableError((err as Error).message);
+      }
       throw err;
     }
   }
 
   // Trust nothing the root cannot show: a folder ensured but not listed is a
-  // folder some other part of the kho does not see either.
+  // folder some other part of the kho does not see either. Case does not
+  // count, because the plugin hands back "Events" for "events" on a disk
+  // that ignores case (UBS1). An entry the provider would not name arrives
+  // without one and counts as not listed.
   const { entries } = await deps.saf.listFolder({ uri: rootUri });
-  const listed = new Set(entries.filter((e) => e.isDirectory).map((e) => e.name));
+  const listed = new Set(entries.filter((e) => e.isDirectory).map((e) => (e.name ?? '').toLowerCase()));
   const missing = SUBFOLDERS.filter((name) => !listed.has(name));
   if (missing.length > 0) throw new KhoUnreadableError(`root does not list ${missing.join(', ')}`);
   return dirs;

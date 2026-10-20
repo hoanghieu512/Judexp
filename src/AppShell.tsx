@@ -84,7 +84,7 @@ function khoProblem(err: unknown, fallback: string): string {
   if (err instanceof KhoUnreadableError) {
     return 'Android đang không cho app đọc folder kho, thường do máy khởi động lỗi. Khởi động lại máy rồi mở lại app. Trong lúc này app không ghi gì vào kho.';
   }
-  return `Không mở được kho: ${(err as Error).message}.${fallback}`;
+  return `Không mở được kho: ${err instanceof Error ? err.message : String(err)}.${fallback}`;
 }
 
 type View = { name: 'lookup' } | { name: 'rate' } | { name: 'entity'; key: string } | { name: 'settings' };

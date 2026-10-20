@@ -12,7 +12,7 @@ interface FakeFile {
   lastModified?: number;
 }
 
-function fakeKho(files: FakeFile[] = [], options: { hideRoot?: boolean } = {}) {
+function fakeKho(files: FakeFile[] = [], options: { hideRoot?: boolean; listAs?: Record<string, string> } = {}) {
   const logged: string[] = [];
   const written: { dirUri: string; name: string; content: string }[] = [];
   const dirs: string[] = [];
@@ -31,9 +31,11 @@ function fakeKho(files: FakeFile[] = [], options: { hideRoot?: boolean } = {}) {
 
   const deps: KhoDeps = {
     saf: {
+      // `listAs` names the folder already on disk for a requested name, the
+      // way the plugin hands back "Events" when asked for "events".
       async ensureDir({ parentUri, name }) {
         dirs.push(name);
-        return { uri: `${parentUri}/${name}` };
+        return { uri: `${parentUri}/${options.listAs?.[name] ?? name}` };
       },
       // The root lists the folders ensured so far plus loose files (like
       // _worker.log); any other folder lists the files. `hideRoot` mimics the
@@ -41,7 +43,10 @@ function fakeKho(files: FakeFile[] = [], options: { hideRoot?: boolean } = {}) {
       async listFolder({ uri }) {
         if (uri !== ROOT_URI) return { entries };
         if (options.hideRoot) return { entries: [] };
-        const folders = dirs.map<SafEntry>((name) => ({ name, isDirectory: true, uri: `${ROOT_URI}/${name}` }));
+        const folders = dirs.map<SafEntry>((asked) => {
+          const name = options.listAs?.[asked] ?? asked;
+          return { name, isDirectory: true, uri: `${ROOT_URI}/${name}` };
+        });
         return { entries: [...folders, ...entries] };
       },
       async readFile({ uri }) {
@@ -108,6 +113,41 @@ describe('ensureKhoLayout', () => {
       throw boom;
     };
     await expect(ensureKhoLayout(deps, ROOT_URI)).rejects.toBe(boom);
+  });
+
+  // Reading `.code` off a bare rejection used to throw a TypeError that hid
+  // what the plugin said.
+  it.each([undefined, null])('passes a %s rejection through unchanged', async (reason) => {
+    const { deps } = fakeKho();
+    deps.saf.ensureDir = async () => {
+      throw reason;
+    };
+    await expect(ensureKhoLayout(deps, ROOT_URI)).rejects.toBe(reason);
+  });
+
+  // UBS1's kho disk ignores case, so a kho holding "Events" already has the
+  // events folder: the plugin hands that one back and the root lists it so.
+  it('accepts a folder the root lists in another case', async () => {
+    const { deps } = fakeKho([], { listAs: { events: 'Events' } });
+    const layout = await ensureKhoLayout(deps, ROOT_URI);
+    expect(layout.events).toBe('content://kho/Events');
+  });
+
+  it('still refuses a root that lists only a renamed copy', async () => {
+    const { deps } = fakeKho([], { listAs: { events: 'events (1)' } });
+    await expect(ensureKhoLayout(deps, ROOT_URI)).rejects.toBeInstanceOf(KhoUnreadableError);
+  });
+
+  // The plugin drops a null name from the entry, as a provider may send while
+  // it hides the kho: that folder is not listed, and it must not crash.
+  it('refuses a root that lists a folder without its name', async () => {
+    const { deps } = fakeKho();
+    const list = deps.saf.listFolder;
+    deps.saf.listFolder = async (options) => {
+      const { entries } = await list(options);
+      return { entries: entries.map((e) => (e.name === 'events' ? { ...e, name: undefined as unknown as string } : e)) };
+    };
+    await expect(ensureKhoLayout(deps, ROOT_URI)).rejects.toBeInstanceOf(KhoUnreadableError);
   });
 });
 

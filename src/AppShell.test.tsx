@@ -312,6 +312,21 @@ describe('AppShell, when the kho cannot be opened', () => {
     expect(screen.queryByText(/đang mở kho/i)).not.toBeInTheDocument();
   });
 
+  // Reading `.message` off a bare rejection threw inside the catch, so no
+  // banner showed at all.
+  it('still says the kho did not open when the plugin rejects with nothing', async () => {
+    const { deps } = fakeKho();
+    deps.saf.ensureDir = async () => {
+      throw undefined;
+    };
+    const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://gone', label: 'Hieu' }) });
+
+    render(<AppShell reminders={noReminders()} deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => NOW} />);
+
+    expect(await screen.findByText(/không mở được kho/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /chọn folder kho/i })).toBeInTheDocument();
+  });
+
   it('survives a snapshot that cannot be parsed', async () => {
     const { deps } = fakeKho();
     const prefs = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: 'content://kho', label: 'Hieu' }) });
