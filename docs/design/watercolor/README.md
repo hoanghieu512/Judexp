@@ -12,7 +12,7 @@
 | `logo-cyclo-d1-cutout.webp` | Cùng chiếc xe, đã tách nền (có kênh trong suốt). Phần giấy kem nằm lọt trong bánh và mui vẫn còn, nên trên nền tối cần quầng sáng sau xe | 823 x 749 |
 | `logo-lockup-day.webp` | Logo đầy đủ tham chiếu: xe D1, chữ Judexp Fraunces màu `#b5532a`, vệt đường chấm `#8a6a4a`; nền trong suốt | 1024 x 1280 |
 | `logo-lockup-night.webp` | Như trên, chữ màu đào `#f3b994`, vệt đường `#d9cdb8`, cho nền tối | 1024 x 1280 |
-| `icon-launcher-d1.webp` | Icon màn hình chính: xe D1 chiếm 62% cạnh, nằm trong vùng an toàn, nền kem `#f7eedb` | 1024 x 1024 |
+| `icon-launcher-d1.webp` | Icon màn hình chính: xe D1 chiếm 62% cạnh, nền kem `#f7eedb`. Xe còn lấn khỏi vòng an toàn 66dp khoảng 3dp và lệch xuống 2dp, nên khi xuất icon cuối thu còn khoảng 90% và căn lại tâm (§7 của spec) | 1024 x 1024 |
 | `kinds-k1.webp` | Bộ 4 icon loại K1 trên một tấm: xe (taxi cổ xanh vàng và Cub đỏ), quán (xe đẩy mái sọc), món (tô phở), địa điểm (ghim có nhà phố) | 1024 x 1024 |
 | `empty-state-day.webp` | Hình doodle màn tìm không thấy, bản ngày | 1024 x 1024 |
 | `empty-state-night.webp` | Cùng hình, bản đêm trên giấy tối | 1024 x 1024 |

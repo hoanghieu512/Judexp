@@ -32,7 +32,7 @@ Thiết kế, quyết định và rủi ro: **[spec](docs/superpowers/specs/2026
 | M2 | Phase test parser đối đầu (OCR local và vision LLM) | Chưa làm, chờ bộ 25 tới 30 ảnh thật |
 | M3 | Worker, share ảnh, nạp nền từ lịch sử, camera chụp tại chỗ | Chưa làm |
 | M4 | Nhắc chấm 90 phút, nút trên thông báo, hộp Chờ chấm | Xong (`v0.2.0`); spike S5 đã đóng |
-| M5 | Theme Watercolor Sài Gòn (ngày, đêm theo máy) và bộ nhận diện xích lô: icon app, icon thông báo, màn mở app, màn chờ mở kho, bộ 4 icon loại | Đã chốt thiết kế ([spec Watercolor](docs/superpowers/specs/2026-10-27-judexp-watercolor-design.md)), chưa làm |
+| M5 | Theme Watercolor Sài Gòn (ngày, đêm theo máy) và bộ nhận diện xích lô: icon app, icon thông báo, màn mở app, màn chờ mở kho, bộ 4 icon loại, hình màn tìm không thấy | Đã chốt thiết kế ([spec Watercolor](docs/superpowers/specs/2026-10-27-judexp-watercolor-design.md)), chưa làm |
 
 Lịch sử thay đổi: **[CHANGELOG.md](CHANGELOG.md)**.
 

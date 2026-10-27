@@ -425,7 +425,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 - **Tương phản cao, chữ to, vùng chạm lớn.** Không có chỗ cho chữ nhỏ thanh mảnh.
 - **Theme Watercolor Sài Gòn: ngày làm chính, đêm theo chế độ tối của máy** (D13, thay cho "dark mode mặc định" ban đầu). Màu nước chỉ nằm ở hình minh họa, không đè lên tín hiệu verdict.
 - **Màu không được là tín hiệu duy nhất.** Ba mức verdict phải phân biệt được cả khi mù màu đỏ lục, nên mỗi mức có icon và hình dạng riêng.
-- **Biển số render bằng font mono.** Font thường thì `0` với `O`, `1` với `l` nhìn như nhau, mà app này sống chết ở chỗ đọc đúng biển số.
+- **Biển số render bằng font mono.** Font thường thì `0` với `O`, `1` với `l` nhìn như nhau, mà app này sống chết ở chỗ đọc đúng biển số. Áp dụng ở mọi chỗ hiển thị biển số, ô chỉ nhập biển số và ô mã ở Cài đặt; ô Tra cứu nhận cả biển lẫn tên quán nên dùng font thân (W13 của [spec Watercolor](2026-10-27-judexp-watercolor-design.md)).
 - **Chuyển động tối giản**, vì chạy trong webview và máy test thuộc lớp yếu.
 
 Đầu ra phase thiết kế (trước khi code UI): một file token (màu, cỡ chữ, bán kính, khoảng cách) cộng ba màn hình mẫu. Phần sinh ảnh bằng API để dành cho **icon app và bộ icon bốn loại** (xe, quán, món, địa điểm), làm sau khi luồng đã chạy, lúc đó mới biết cần đúng bao nhiêu icon và cỡ nào.
