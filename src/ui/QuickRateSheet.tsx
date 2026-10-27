@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { newEncounter, type EntityKind, type Geo, type JudexpEvent, type Verdict } from '../domain/events';
 import { dishKey, normalizePlate, restaurantKey } from '../domain/keys';
 import { tagsFor } from '../domain/tags';
+import KindIcon from './KindIcon';
 import './ui.css';
 
 export const VERDICTS: { value: Verdict; label: string; mark: string }[] = [
@@ -112,6 +113,7 @@ export default function QuickRateSheet({
                 setTags([]);
               }}
             >
+              <KindIcon kind={k.value} size={28} />
               {k.label}
             </button>
           ))}

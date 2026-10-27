@@ -2,6 +2,7 @@ import { entityColor, meetingCount, type EntityColor } from '../domain/color';
 import type { Entity } from '../domain/reduce';
 import { relativeTime } from './relativeTime';
 import VerdictMark from './VerdictMark';
+import KindIcon from './KindIcon';
 
 /** Colour is never the only signal: every state carries a mark too. */
 export const COLOR_MARKS: Record<EntityColor, string> = {
@@ -67,6 +68,7 @@ export default function EntityRow({
       onClick={() => onOpen?.(entity.key)}
     >
       <VerdictMark color={color} glyph={COLOR_MARKS[color]} label={COLOR_LABELS[color]} />
+      <KindIcon kind={entity.kind} size={22} />
       <span>
         <span
           className={isPlate ? 'jx-plate' : 'jx-name'}

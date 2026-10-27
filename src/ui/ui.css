@@ -148,7 +148,22 @@ html, body, #root { height: 100%; }
 
 .jx-tags { display: flex; gap: var(--jx-space-2); flex-wrap: wrap; margin-top: var(--jx-space-1); }
 
+/* The K1 kind icon: fixed size, never squeezed by a long name. */
+.jx-kind { flex: none; }
+
+/* A reminder card's first line: the kind icon, then the name. */
+.jx-prompt-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--jx-space-2);
+  margin: 0;
+}
+
 .jx-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--jx-space-1);
   background: var(--jx-chip-bg);
   border: none;
   border-radius: 999px;

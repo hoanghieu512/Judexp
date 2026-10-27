@@ -7,6 +7,7 @@ import { instant, type State } from '../domain/reduce';
 import MergePrompt from './MergePrompt';
 import { relativeTime } from './relativeTime';
 import VerdictMark from './VerdictMark';
+import KindIcon from './KindIcon';
 import './ui.css';
 
 const VERDICT_MARKS: Record<string, string> = { good: '✔', ok: '–', bad: '✕', grey: '?' };
@@ -86,6 +87,7 @@ export default function EntityPage({
           glyph={COLOR_MARKS[entityColor(entity)]}
           label={COLOR_LABELS[entityColor(entity)]}
         />
+        <KindIcon kind={entity.kind} size={32} />
         <span>
           <span className={entity.kind === 'driver' ? 'jx-plate' : 'jx-name'}>{entityKey}</span>
           <span className="jx-sub" data-testid="labels">

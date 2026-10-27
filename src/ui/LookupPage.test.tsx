@@ -41,6 +41,17 @@ function typeQuery(state: State, query: string) {
 }
 
 describe('LookupPage', () => {
+  it('puts the kind icon between the mark and the name, and keeps the row label', () => {
+    typeQuery(stateWith(met('driver', '59H123456', 'bad')), '59h1');
+    const row = screen.getByTestId('entity-59H123456');
+    const [mark, picture] = [...row.children];
+    expect(mark).toHaveClass('jx-mark');
+    expect(picture).toHaveAttribute('data-kind', 'driver');
+    expect(picture).toHaveAttribute('width', '22');
+    // The e2e tests find a row by this exact label; the icon adds nothing to it.
+    expect(row).toHaveAttribute('aria-label', 'Mở 59H123456, xấu, 1 lần gặp, 2 ngày trước');
+  });
+
   it('focuses the search box on mount', () => {
     render(<LookupPage state={emptyState()} now={NOW} />);
     expect(screen.getByRole('searchbox')).toHaveFocus();
