@@ -1,42 +1,71 @@
 /*
- * Judexp design tokens.
+ * Judexp design tokens: the Watercolor Sài Gòn theme.
  *
  * Use context drives every value here: one hand, outdoors, possibly in hard
  * sun or at night, in a hurry because a driver has already accepted. So:
- * dark by default, high contrast, large text, large targets, and a verdict
- * that is never signalled by colour alone.
+ * high contrast, large text, large targets, and a verdict that is never
+ * signalled by colour alone. Colour belongs to the verdict; the watercolour
+ * lives in the illustrations, never behind a verdict mark.
+ *
+ * Day is the main theme and sits in :root. Night follows the phone's dark
+ * mode and is written twice, the same both times: once under the phone's
+ * setting, once under :root[data-scheme='dark'], which native code sets if the
+ * WebView ever misses a change (spike S6). data-theme is kept free for a
+ * future theme picker; it does not choose light or dark.
  */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* Surfaces */
-  --jx-bg: #0c0e11;
-  --jx-surface: #161a20;
-  --jx-surface-raised: #1f252d;
-  --jx-border: #2c343e;
+  --jx-bg: #f6eddd;
+  --jx-surface: #fffaf1;
+  /* Spare: nothing uses it since the Watercolor components got their own tokens. */
+  --jx-surface-raised: #efe3cd;
+  --jx-border: #e0cfb3;
+  --jx-shadow: #e0cfb3;
+  --jx-dash: #c9b391;
 
   /* Text */
-  --jx-text: #f3f6f9;
-  --jx-text-dim: #9fabb9;
-  --jx-text-on-accent: #0c0e11;
+  --jx-text: #2b2118;
+  --jx-text-dim: #6c5f4e;
+  --jx-text-on-accent: #fffaf1;
+  --jx-title: #6b3f24;
+  --jx-ink: #3b2a1e;
+
+  /* Navigation and chips */
+  --jx-accent: #3977a5;
+  --jx-nav-border: #3b2a1e;
+  --jx-chip-bg: #8ec3e633;
+  --jx-chip-text: #3a4e5c;
 
   /* Verdict. Never the only signal: every verdict also carries a mark. */
-  --jx-good: #35c97a;
-  --jx-ok: #eab308;
-  --jx-bad: #f2545b;
-  --jx-unrated: #78889a;
+  --jx-good: #13754d;
+  --jx-ok: #896305;
+  --jx-bad: #bc2e37;
+  --jx-unrated: #5c6b7c;
 
-  --jx-good-soft: #35c97a26;
-  --jx-ok-soft: #eab30826;
-  --jx-bad-soft: #f2545b26;
-  --jx-unrated-soft: #78889a26;
+  /* Behind a verdict mark or button: solid, mixed in advance, so nothing
+     shows through and the contrast is the same wherever it sits (W14). */
+  --jx-good-soft: #e0e9dc;
+  --jx-ok-soft: #f9ebc6;
+  --jx-bad-soft: #f6dfd9;
 
-  /* Marks that ride along with the colour, for red-green colour blindness */
-  --jx-mark-good: '\2714'; /* check */
-  --jx-mark-ok: '\2013';   /* dash */
-  --jx-mark-bad: '\2715';  /* cross */
-  --jx-mark-unrated: '\003F'; /* question mark */
+  /* The three washes on the page, at their strongest point. */
+  --jx-wash-peach: #fbd9bd;
+  --jx-wash-sky: #cde4f2;
+  --jx-wash-mint: #d7ecd9;
+
+  /* Brand: the Judexp word and the dotted road under the logo, and its stars. */
+  --jx-brand: #b5532a;
+  --jx-road: #8a6a4a;
+  --jx-star: #f5c542;
+  --jx-star-edge: #a8611c;
+
+  /* What shows by day and what by night, so pictures switch with the colours. */
+  --jx-show-day: block;
+  --jx-show-night: none;
+  --jx-halo-opacity: 0;
 
   /* Type */
   /* Bundled, not system-ui: the AOSP WebView on the cheap test phone resolves
@@ -77,19 +106,75 @@
   --jx-motion-ease: cubic-bezier(0.2, 0, 0.2, 1);
 }
 
-:root[data-theme='light'] {
-  color-scheme: light;
-  --jx-bg: #f7f9fb;
-  --jx-surface: #ffffff;
-  --jx-surface-raised: #eef2f6;
-  --jx-border: #d4dce5;
-  --jx-text: #11161c;
-  --jx-text-dim: #556070;
-  --jx-text-on-accent: #ffffff;
-  --jx-good: #16885a;
-  --jx-ok: #9a6f06;
-  --jx-bad: #c6303a;
-  --jx-unrated: #5c6b7c;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-scheme='light']) {
+    color-scheme: dark;
+    --jx-bg: #1a1714;
+    --jx-surface: #24201c;
+    --jx-surface-raised: #2e2924;
+    --jx-border: #3d362f;
+    --jx-shadow: #0f0d0b;
+    --jx-dash: #5a4f43;
+    --jx-text: #f6eee2;
+    --jx-text-dim: #bcb09e;
+    --jx-text-on-accent: #1a1714;
+    --jx-title: #f3b994;
+    --jx-ink: #d9cdb8;
+    --jx-accent: #8ec3e6;
+    --jx-nav-border: #4a4138;
+    --jx-chip-bg: #8ec3e626;
+    --jx-chip-text: #cfe3f1;
+    --jx-good: #35c97a;
+    --jx-ok: #eab308;
+    --jx-bad: #f6767b;
+    --jx-unrated: #7c8c9d;
+    --jx-good-soft: #27392a;
+    --jx-ok-soft: #423619;
+    --jx-bad-soft: #442d2a;
+    --jx-wash-peach: #5a3a2a55;
+    --jx-wash-sky: #2f4f6655;
+    --jx-wash-mint: #2f4d3a44;
+    --jx-brand: #f3b994;
+    --jx-road: #d9cdb8;
+    --jx-show-day: none;
+    --jx-show-night: block;
+    --jx-halo-opacity: 0.8;
+  }
+}
+
+/* The same night block, for native to force when the WebView misses a change. */
+:root[data-scheme='dark'] {
+  color-scheme: dark;
+  --jx-bg: #1a1714;
+  --jx-surface: #24201c;
+  --jx-surface-raised: #2e2924;
+  --jx-border: #3d362f;
+  --jx-shadow: #0f0d0b;
+  --jx-dash: #5a4f43;
+  --jx-text: #f6eee2;
+  --jx-text-dim: #bcb09e;
+  --jx-text-on-accent: #1a1714;
+  --jx-title: #f3b994;
+  --jx-ink: #d9cdb8;
+  --jx-accent: #8ec3e6;
+  --jx-nav-border: #4a4138;
+  --jx-chip-bg: #8ec3e626;
+  --jx-chip-text: #cfe3f1;
+  --jx-good: #35c97a;
+  --jx-ok: #eab308;
+  --jx-bad: #f6767b;
+  --jx-unrated: #7c8c9d;
+  --jx-good-soft: #27392a;
+  --jx-ok-soft: #423619;
+  --jx-bad-soft: #442d2a;
+  --jx-wash-peach: #5a3a2a55;
+  --jx-wash-sky: #2f4f6655;
+  --jx-wash-mint: #2f4d3a44;
+  --jx-brand: #f3b994;
+  --jx-road: #d9cdb8;
+  --jx-show-day: none;
+  --jx-show-night: block;
+  --jx-halo-opacity: 0.8;
 }
 
 @media (prefers-reduced-motion: reduce) {

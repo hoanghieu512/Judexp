@@ -3,7 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
     <title>Judexp</title>
+    <!-- The page colour before any script runs, so nothing flashes between the
+         system splash and React's first paint. Mirrors tokens.css. -->
+    <style>
+      html { background: #f6eddd; }
+      @media (prefers-color-scheme: dark) { html:not([data-scheme='light']) { background: #1a1714; } }
+      html[data-scheme='dark'] { background: #1a1714; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

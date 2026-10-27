@@ -81,7 +81,7 @@ html, body, #root { height: 100%; }
 .jx-mark[data-color='bad'] { background: var(--jx-bad-soft); color: var(--jx-bad); }
 
 .jx-mark[data-color='grey'],
-.jx-mark[data-color='unrated'] { background: var(--jx-unrated-soft); color: var(--jx-unrated); }
+.jx-mark[data-color='unrated'] { background: transparent; color: var(--jx-unrated); }
 
 /* Plates in mono: 0 against O and 1 against l decide who this driver is. */
 .jx-plate {
