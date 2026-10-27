@@ -9,12 +9,7 @@ import { reminderFor } from '@app/domain/reminders';
 import type { Reminder } from '@app/domain/reminders';
 import type { PrefsStore } from '@app/profile/settings';
 
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
-import '@fontsource/inter/vietnamese-400.css';
-import '@fontsource/inter/vietnamese-600.css';
-import '@fontsource/roboto-mono/500.css';
+// The app's own fonts come with AppShell (src/ui/theme/fonts.css).
 import '@ionic/react/css/core.css';
 import '@ionic/react/css/normalize.css';
 import '@ionic/react/css/structure.css';

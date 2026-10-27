@@ -31,6 +31,7 @@ import { Saf } from './plugins/saf';
 import { Syncthing } from './plugins/syncthing';
 import { syncStatus, type SyncConfig, type SyncState } from './sync/status';
 import type { JudexpEvent } from './domain/events';
+import './ui/theme/fonts.css';
 import './ui/theme/tokens.css';
 import './ui/ui.css';
 

@@ -68,21 +68,31 @@
   --jx-halo-opacity: 0;
 
   /* Type */
-  /* Bundled, not system-ui: the AOSP WebView on the cheap test phone resolves
-     system-ui to a monospace face, which turns the whole app into a terminal. */
-  --jx-font: 'Inter', system-ui, -apple-system, sans-serif;
-  /* Plates render in mono so 0/O and 1/l cannot be confused. */
-  --jx-font-mono: 'Roboto Mono', ui-monospace, Menlo, monospace;
+  /* Bundled (fonts.css), not system-ui: the AOSP WebView on the cheap test
+     phone resolves system-ui to a monospace face, which turns the whole app
+     into a terminal. */
+  --jx-font: 'Nunito', sans-serif;
+  /* Plates render in mono so 0/O and 1/l cannot be confused; the zero is dotted. */
+  --jx-font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  /* Titles, names, the logo word: soft like an old shop sign. */
+  --jx-font-display: 'Fraunces Variable', serif;
+  /* Doodle lines. */
+  --jx-font-hand: 'Mali', cursive;
 
   --jx-text-xl: 1.75rem;
   --jx-text-lg: 1.375rem;
   --jx-text-md: 1.0625rem;
   --jx-text-sm: 0.9375rem;
   --jx-text-xs: 0.8125rem;
+  --jx-text-title: 1.4rem;
+  --jx-text-name: 1.15rem;
+  --jx-text-hand: 1.2rem;
 
   --jx-weight-regular: 400;
   --jx-weight-medium: 600;
   --jx-weight-bold: 700;
+  --jx-weight-display: 650;
+  --jx-weight-heavy: 800;
 
   /* Space */
   --jx-space-1: 4px;
