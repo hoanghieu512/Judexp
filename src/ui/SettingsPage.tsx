@@ -3,6 +3,7 @@ import type { SyncState } from '../sync/status';
 import type { KhoChoice } from '../profile/settings';
 import { isLikelyDeviceId, looksLikeDeviceId, type SyncConfig } from '../sync/status';
 import VerdictMark, { type MarkColor } from './VerdictMark';
+import LogoLockup from './LogoLockup';
 import './ui.css';
 
 const LIGHT: Record<SyncState, string> = {
@@ -106,6 +107,8 @@ export default function SettingsPage({
 
   return (
     <div className="jx-screen">
+      {/* Also the first-run screen and the kho error screen, so the logo greets all three. */}
+      <LogoLockup variant="header" />
       <h2 className="jx-section-title">Kho</h2>
       <div className="jx-row">
         <span className="jx-name" data-testid="kho-label">

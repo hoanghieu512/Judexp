@@ -158,6 +158,31 @@ describe('AppShell', () => {
   });
 });
 
+describe('AppShell, while the kho opens', () => {
+  it('shows the logo and leaves the moment the kho is ready', async () => {
+    const { deps } = fakeKho();
+    const base = fakePrefs({ 'judexp.kho': JSON.stringify({ rootUri: ROOT_URI, label: 'Hieu' }) });
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    // The first thing start-up does; holding it keeps the app opening.
+    const prefs: PrefsStore = {
+      ...base,
+      async remove(key) {
+        await gate;
+        return base.remove(key);
+      },
+    };
+
+    render(<AppShell reminders={noReminders()} deps={deps} prefs={prefs} snapshots={memorySnapshots()} clock={() => NOW} />);
+    expect(screen.getByText('Judexp')).toBeInTheDocument();
+    expect(screen.getByText('Đang mở kho...')).toBeInTheDocument();
+
+    await act(async () => release());
+    expect(await screen.findByRole('searchbox')).toBeInTheDocument();
+    expect(screen.queryByText('Đang mở kho...')).not.toBeInTheDocument();
+  });
+});
+
 describe('AppShell, index snapshot', () => {
   it('keeps the index snapshot out of Preferences', async () => {
     const { deps } = fakeKho();
@@ -310,6 +335,9 @@ describe('AppShell, when the kho cannot be opened', () => {
     expect(await screen.findByText(/không mở được kho/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /chọn folder kho/i })).toBeInTheDocument();
     expect(screen.queryByText(/đang mở kho/i)).not.toBeInTheDocument();
+    // Settings doubles as the kho error screen: the logo heads it, the banner stays.
+    expect(screen.getByText('Judexp')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
   // Reading `.message` off a bare rejection threw inside the catch, so no

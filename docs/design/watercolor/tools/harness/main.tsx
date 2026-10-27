@@ -82,10 +82,13 @@ if (params.get('pin')) mem.set('judexp.pin', params.get('pin')!);
 if (params.get('sync') !== 'none') {
   mem.set('judexp.syncthing', JSON.stringify({ baseUrl: 'https://127.0.0.1:8384', apiKey: 'k3yAbCdEf0123456789xyz', folderId: 'judexp-hieu-qa', atommanDeviceId: ATOMMAN }));
 }
+// ?boot=1: Preferences never answer, so the app stays on the boot screen to be looked at.
+const never = new Promise<never>(() => {});
+const boot = params.get('boot') === '1';
 const prefs: PrefsStore = {
-  async get(k) { return mem.get(k) ?? null; },
+  async get(k) { if (boot) await never; return mem.get(k) ?? null; },
   async set(k, v) { mem.set(k, v); },
-  async remove(k) { mem.delete(k); },
+  async remove(k) { if (boot) await never; mem.delete(k); },
 };
 
 let snapshot: string | null = null;

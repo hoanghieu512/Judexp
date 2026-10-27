@@ -16,6 +16,8 @@ JOBS = [
     # The not-met doodle shows 210px wide.
     ("empty-state-day.webp", "empty-day.webp", 420, 85),
     ("empty-state-night.webp", "empty-night.webp", 420, 85),
+    # The cyclo of the logo lockup: 84% of a frame up to about 350px wide.
+    ("master/logo-cyclo-d1-cutout.webp", "logo-cyclo.webp", 640, 88),
 ]
 
 

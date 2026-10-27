@@ -18,4 +18,4 @@ Chạy harness:
 2. `cd harness && npx vite --config vite.config.mjs` (cổng 5199; `node_modules` và `src` lấy từ gốc repo)
 3. `NODE_PATH=$(npm root -g) node shoot-themes.cjs <thư mục ra> D2,D2N`
 
-Tham số khác của harness: `?nokho=1` (lần đầu chưa chọn kho), `?pin=1234`, `?empty=1&noremind=1` (kho trống), `?sync=offline|pending|none`.
+Tham số khác của harness: `?boot=1` (đứng yên ở màn chờ mở kho để xem sao bật), `?nokho=1` (lần đầu chưa chọn kho), `?pin=1234`, `?empty=1&noremind=1` (kho trống), `?sync=offline|pending|none`.

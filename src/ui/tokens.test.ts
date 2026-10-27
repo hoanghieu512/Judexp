@@ -97,7 +97,7 @@ describe('Watercolor frame', () => {
   });
 
   it('takes no text from CSS', () => {
-    expect(css).not.toMatch(/content\s*:/);
+    expect(css).not.toMatch(/(^|[\s{;])content\s*:/);
   });
 
   it('keeps the code fields and plates mono', () => {
