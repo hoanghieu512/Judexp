@@ -133,7 +133,7 @@ export default function SettingsPage({
       </label>
       <input
         id="jx-st-url"
-        className="jx-search"
+        className="jx-search jx-code"
         value={draft.baseUrl}
         onChange={(e) => setDraft({ ...draft, baseUrl: e.target.value.trim() })}
       />
@@ -143,7 +143,7 @@ export default function SettingsPage({
       </label>
       <input
         id="jx-st-key"
-        className="jx-search"
+        className="jx-search jx-code"
         value={draft.apiKey}
         onChange={(e) => setDraft({ ...draft, apiKey: e.target.value.trim() })}
       />
@@ -160,7 +160,7 @@ export default function SettingsPage({
       </label>
       <input
         id="jx-st-atomman"
-        className="jx-search"
+        className="jx-search jx-code"
         value={draft.atommanDeviceId}
         onChange={(e) => setDraft({ ...draft, atommanDeviceId: e.target.value.trim() })}
       />
@@ -170,7 +170,7 @@ export default function SettingsPage({
       </label>
       <input
         id="jx-st-folder"
-        className="jx-search"
+        className="jx-search jx-code"
         value={draft.folderId}
         onChange={(e) => setDraft({ ...draft, folderId: e.target.value.trim() })}
       />

@@ -106,6 +106,8 @@
   --jx-radius-sm: 8px;
   --jx-radius-md: 14px;
   --jx-radius-lg: 20px;
+  /* Rows, cards, inputs, verdict buttons: the soft corner of the Watercolor theme. */
+  --jx-radius-card: 18px;
 
   /* Targets: thumb-sized, because this gets used while walking. */
   --jx-touch-min: 56px;

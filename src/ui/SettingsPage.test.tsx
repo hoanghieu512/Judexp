@@ -119,6 +119,19 @@ describe('SettingsPage', () => {
   });
 });
 
+describe('SettingsPage, fonts of the fields', () => {
+  it('sets the Syncthing code fields in mono and the name fields not', () => {
+    // Codes are where 0 against O and 1 against l really bite (W13).
+    show();
+    for (const label of [/địa chỉ syncthing/i, /api key syncthing/i, /device id của atomman/i, /folder id của kho/i]) {
+      expect(screen.getByLabelText(label)).toHaveClass('jx-code');
+    }
+    for (const label of [/người ghi/i, /tên máy/i, /pin mở app/i]) {
+      expect(screen.getByLabelText(label)).not.toHaveClass('jx-code');
+    }
+  });
+});
+
 describe('SettingsPage, pin', () => {
   it('saves a pin huynh types', () => {
     const props = show();
