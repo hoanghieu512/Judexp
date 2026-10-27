@@ -1,6 +1,6 @@
 # Judexp: Theme Watercolor Sài Gòn và bộ nhận diện
 
-> **Trạng thái:** chốt qua mười vòng moodboard từ 2026-10-23 tới 2026-10-27 với huynh và Gú. Qua một lượt review độc lập đối chiếu với code ngày 2026-10-27: sửa các chỗ lệch với repo, thêm W13 tới W17. Chưa có plan, chưa có dòng code nào.
+> **Trạng thái:** chốt qua mười vòng moodboard từ 2026-10-23 tới 2026-10-27 với huynh và Gú. Qua một lượt review độc lập đối chiếu với code ngày 2026-10-27: sửa các chỗ lệch với repo, thêm W13 tới W17. **Huynh duyệt spec ngày 2026-10-27.** Chưa có plan, chưa có dòng code nào.
 > **Quan hệ với spec gốc:** tài liệu này sửa §2, §13, §16, §17 và §19.2 của [spec gốc](2026-10-16-judexp-design.md), chi tiết ở §11. Phần nào ở đây không nhắc thì spec gốc vẫn đúng.
 > **Moodboard:** https://claude.ai/artifact/JBhcNugQbDveTpNYYBvASw, có mọi vòng và lựa chọn đã lưu. Ảnh nguồn đã chốt nằm trong [`docs/design/watercolor/`](../../design/watercolor/). CSS thử của bản đã duyệt là hướng `D2` và `D2N` trong `docs/design/watercolor/tools/harness/directions.css`: chỉ để tham khảo, chỗ nào khác tài liệu này thì tài liệu này thắng.
 
@@ -237,7 +237,7 @@ Chữ và vệt đường dựng thật (không phải ảnh) để tự đổi 
 
 ## 7. Tài sản
 
-Ảnh nguồn đã chốt nằm trong [`docs/design/watercolor/`](../../design/watercolor/), kèm `README.md` ghi nguồn gốc và `prompts.json` để vẽ lại cùng nét. Công cụ đã dùng (vẽ qua OpenRouter, tách nền, harness chạy app trên trình duyệt với plugin giả, script chụp) ở `docs/design/watercolor/tools/`.
+Ảnh nguồn đã chốt nằm trong [`docs/design/watercolor/`](../../design/watercolor/), kèm `README.md` ghi nguồn gốc và `prompts.json` để vẽ lại cùng nét. Bốn ảnh sẽ cắt, sửa và xuất (hai ảnh xe, icon launcher, K1) có bản không nén mất dữ liệu trong `master/`: dựng tài sản cuối từ đó. Ảnh chụp màn moodboard đã duyệt nằm trong `screens/`. Công cụ đã dùng (vẽ qua OpenRouter, tách nền, harness chạy app trên trình duyệt với plugin giả, script chụp) ở `docs/design/watercolor/tools/`.
 
 | File | Dùng để làm |
 |---|---|

@@ -1,0 +1,65 @@
+[
+  {
+    "theme": "noir-luxury",
+    "file": "noir-luxury/icon-1.webp",
+    "moodboard_name": "A1-icon",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: classic noir luxury. Deep glossy black lacquer background. A refined monogram letter J in an elegant high-contrast Didone serif, rendered in warm metallic gold foil, encircled by a single fine gold hairline ring. Quiet, expensive, like a luxury watch brand. Output: a square full-bleed app icon artwork for an Android launcher, which will be masked to a circle or squircle, so keep the main symbol inside the central 60 percent safe area and let the background fill the whole canvas edge to edge. Bold, simple silhouette that still reads at 48 pixels. No device mockup, no drawn rounded frame, no drop shadow around the canvas."
+  },
+  {
+    "theme": "noir-luxury",
+    "file": "noir-luxury/icon-2.webp",
+    "moodboard_name": "A2-icon",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: classic noir luxury with Art Deco geometry. Matte black background. A symmetrical gold Art Deco emblem: a stylized open eye at the center of a fan-shaped sunburst frame, crisp fine gold lines, subtle metallic sheen. Output: a square full-bleed app icon artwork for an Android launcher, which will be masked to a circle or squircle, so keep the main symbol inside the central 60 percent safe area and let the background fill the whole canvas edge to edge. Bold, simple silhouette that still reads at 48 pixels. No device mockup, no drawn rounded frame, no drop shadow around the canvas."
+  },
+  {
+    "theme": "noir-luxury",
+    "file": "noir-luxury/kinds.webp",
+    "moodboard_name": "A3-kinds",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: classic noir luxury, Art Deco. Thin elegant gold line icons with a subtle metallic sheen on a matte black background. Output: one square canvas with a 2x2 grid of four separate icons, evenly spaced with generous margins: top left a motorbike (ride-hailing driver), top right a small street food stall with an awning (restaurant), bottom left a noodle bowl with chopsticks (dish), bottom right a map location pin (place). The four icons must share exactly the same style, stroke weight and visual size. No labels, no text, no letters."
+  },
+  {
+    "theme": "so-den",
+    "file": "so-den/icon-1.webp",
+    "moodboard_name": "B1-icon",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: black notebook and ivory ink, modern art minimalism. Matte near-black paper background with very subtle grain. One single continuous ivory line, drawn like a one-line drawing in ink, traces three simple geometric shapes side by side, a circle, a square and a triangle, all linked by the same unbroken stroke. Uniform confident stroke, rounded line caps, nothing else on the canvas. Output: a square full-bleed app icon artwork for an Android launcher, which will be masked to a circle or squircle, so keep the main symbol inside the central 60 percent safe area and let the background fill the whole canvas edge to edge. Bold, simple silhouette that still reads at 48 pixels. No device mockup, no drawn rounded frame, no drop shadow around the canvas."
+  },
+  {
+    "theme": "so-den",
+    "file": "so-den/icon-2.webp",
+    "moodboard_name": "B2-icon",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: black notebook and ivory ink, modern art minimalism. The whole canvas is the front cover of a black leather notebook, seen flat and straight on, with a thin ivory elastic band running vertically near the right edge. In the center of the cover, a small one-line ivory ink drawing of a circle, a square and a triangle in a row. Restrained and quiet, no gold, no text. Output: a square full-bleed app icon artwork for an Android launcher, which will be masked to a circle or squircle, so keep the main symbol inside the central 60 percent safe area and let the background fill the whole canvas edge to edge. Bold, simple silhouette that still reads at 48 pixels. No device mockup, no drawn rounded frame, no drop shadow around the canvas."
+  },
+  {
+    "theme": "so-den",
+    "file": "so-den/kinds.webp",
+    "moodboard_name": "B3-kinds",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: each icon is drawn as a single continuous ivory ink line on a matte near-black background, like a one-line drawing doodle, with rounded line caps and a uniform medium stroke, minimal and still clearly recognizable. Output: one square canvas with a 2x2 grid of four separate icons, evenly spaced with generous margins: top left a motorbike (ride-hailing driver), top right a small street food stall with an awning (restaurant), bottom left a noodle bowl with chopsticks (dish), bottom right a map location pin (place). The four icons must share exactly the same style, stroke weight and visual size. No labels, no text, no letters."
+  },
+  {
+    "theme": "modern-art",
+    "file": "modern-art/icon-1.webp",
+    "moodboard_name": "C1-icon",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: Bauhaus modern art. Warm cream background. Bold flat overlapping geometric shapes in primary colors with a black accent: a red circle, a yellow square and a blue triangle arranged into a balanced composition that subtly suggests the letter J. Flat color, no gradients, no texture. Output: a square full-bleed app icon artwork for an Android launcher, which will be masked to a circle or squircle, so keep the main symbol inside the central 60 percent safe area and let the background fill the whole canvas edge to edge. Bold, simple silhouette that still reads at 48 pixels. No device mockup, no drawn rounded frame, no drop shadow around the canvas."
+  },
+  {
+    "theme": "modern-art",
+    "file": "modern-art/icon-2.webp",
+    "moodboard_name": "C2-icon",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: modern art paper cut-outs in the spirit of mid-century collage. Cream background. Organic hand-cut paper shapes in cobalt blue, coral red and mustard yellow, forming a playful abstract eye with a leaf-like lid. Flat color, visible slightly irregular scissor edges. Output: a square full-bleed app icon artwork for an Android launcher, which will be masked to a circle or squircle, so keep the main symbol inside the central 60 percent safe area and let the background fill the whole canvas edge to edge. Bold, simple silhouette that still reads at 48 pixels. No device mockup, no drawn rounded frame, no drop shadow around the canvas."
+  },
+  {
+    "theme": "modern-art",
+    "file": "modern-art/kinds.webp",
+    "moodboard_name": "C3-kinds",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "prompt": "The app is Judexp, a private memory notebook for everyday experiences in Vietnam: the ride-hailing drivers you rode with, the restaurants and street food stalls you ate at, the dishes you ordered, the places you visited. Its core job is a quick lookup before you accept a ride or order food, and each entry is rated good, okay or bad. Style: Bauhaus modern art. Each icon is built from bold flat geometric shapes in red, yellow, blue and black on a warm cream background, no outlines, no gradients. Output: one square canvas with a 2x2 grid of four separate icons, evenly spaced with generous margins: top left a motorbike (ride-hailing driver), top right a small street food stall with an awning (restaurant), bottom left a noodle bowl with chopsticks (dish), bottom right a map location pin (place). The four icons must share exactly the same style, stroke weight and visual size. No labels, no text, no letters."
+  }
+]

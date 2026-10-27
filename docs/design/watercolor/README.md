@@ -16,7 +16,11 @@
 | `kinds-k1.webp` | Bộ 4 icon loại K1 trên một tấm: xe (taxi cổ xanh vàng và Cub đỏ), quán (xe đẩy mái sọc), món (tô phở), địa điểm (ghim có nhà phố) | 1024 x 1024 |
 | `empty-state-day.webp` | Hình doodle màn tìm không thấy, bản ngày | 1024 x 1024 |
 | `empty-state-night.webp` | Cùng hình, bản đêm trên giấy tối | 1024 x 1024 |
+| `cyclo-three-quarter.webp`, `cyclo-bold.webp` | Hai bước trung gian của chiếc xe (xích lô góc nghiêng, rồi bản nét đậm). `prompts.json` dùng chúng làm ảnh mẫu, nên cần khi vẽ lại hoặc vẽ thêm cùng nét | 1024 x 1024 |
+| `master/` | Bản gốc không nén mất dữ liệu (WebP lossless) của bốn ảnh sẽ cắt, sửa và xuất thành tài sản cuối: `logo-cyclo-d1`, `logo-cyclo-d1-cutout`, `icon-launcher-d1`, `kinds-k1`. Dựng tài sản cuối từ thư mục này; các file cùng tên ở trên là bản nén (WebP 92) để xem nhanh | |
+| `screens/` | Ảnh chụp màn hình bản moodboard đã duyệt: `D2-*` là ngày, `D2N-*` là đêm (Tra cứu, Chấm nhanh, màn tìm không thấy), `v0.2.0-lookup` là giao diện hiện tại để so. Chụp **trước** các chỉnh sửa W13 tới W17 của spec (màu nút chấm, viền dấu, doodle đặt dưới câu trả lời...), nên chỗ nào khác spec thì spec thắng | 540 x 1200 |
 | `prompts.json` | Prompt và ảnh mẫu đã dùng cho từng ảnh, để vẽ lại hoặc vẽ thêm cùng nét | |
+| `tools/` | Script vẽ, tách nền, ghép ảnh và harness chạy app trên trình duyệt; xem `tools/README.md` | |
 
 ## Nguồn gốc
 
