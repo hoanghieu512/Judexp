@@ -183,6 +183,23 @@ html, body, #root { height: 100%; }
   padding: var(--jx-space-4) 0;
 }
 
+/* Pictures drawn twice, on day paper and on night paper: the tokens say
+   which one shows, so they switch with the colours. */
+.jx-day-only { display: var(--jx-show-day); }
+.jx-night-only { display: var(--jx-show-night); }
+
+/* The not-met doodle (W10), as approved on the moodboard: a rounded sheet of
+   its own paper, under the answer. */
+.jx-empty-art img {
+  width: 210px;
+  max-width: 100%;
+  max-height: 40vh;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: 28px;
+}
+
 /* The answer rows, and the near plates under their heading, spaced like the screen. */
 .jx-results { display: flex; flex-direction: column; gap: var(--jx-space-4); }
 
