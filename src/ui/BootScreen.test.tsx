@@ -60,6 +60,12 @@ describe('the boot stars stylesheet', () => {
     expect(names.some((name) => name.startsWith('jx-shimmer'))).toBe(true);
   });
 
+  it('keeps the Settings logo short on a square screen', () => {
+    // 40vw alone is a 192 x 240 dp logo on dGen1 (480 x 480): on the kho error
+    // screen it pushed "Chọn folder kho" below the fold.
+    expect(css).toMatch(/\.jx-logo\s*{[^}]*--logo-w:\s*min\(40vw,\s*24vh\)/);
+  });
+
   it('animates only what the compositor runs, never paint', () => {
     // fill, filter and the like repaint every frame on the main thread, which
     // the kho opening needs at the same moment.

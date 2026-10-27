@@ -5,7 +5,9 @@
  */
 
 .jx-logo {
-  --logo-w: 40vw;
+  /* About 40 % of the width (spec §5), but never so tall that on a square
+     screen like dGen1's it pushes the kho button below the fold. */
+  --logo-w: min(40vw, 24vh);
   position: relative;
   width: var(--logo-w);
   aspect-ratio: 4 / 5;
