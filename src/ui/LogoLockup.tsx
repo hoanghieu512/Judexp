@@ -37,18 +37,40 @@ export default function LogoLockup({ variant }: { variant: 'boot' | 'header' }) 
         <path d={ROAD} />
       </svg>
       {variant === 'boot' && (
-        // 100 x 125 is the frame; each star sits in its own group so the
-        // animation's transform does not replace its position.
-        <svg className="jx-logo-stars" viewBox="0 0 100 125" aria-hidden="true">
+        // HTML layers, not SVG paths: only opacity and transform move, which the
+        // compositor runs off the main thread the kho opening needs. Each star
+        // stacks a soft glow, the gold star and a white one that flashes first.
+        <div className="jx-logo-stars" aria-hidden="true">
           {STARS.map((star) => (
-            <g
+            <span
               key={star.delay}
-              transform={`translate(${star.x - star.size / 2} ${star.y * 1.25 - star.size / 2}) scale(${star.size / 24})`}
+              className="jx-star"
+              style={
+                {
+                  // left, width and margins are shares of the frame's width;
+                  // top is a share of its height, as the table gives it.
+                  left: `${star.x - star.size / 2}%`,
+                  top: `${star.y}%`,
+                  marginTop: `${-star.size / 2}%`,
+                  width: `${star.size}%`,
+                  '--star-delay': `${star.delay}ms`,
+                } as CSSProperties
+              }
             >
-              <path className="jx-star" d={STAR} style={{ '--star-delay': `${star.delay}ms` } as CSSProperties} />
-            </g>
+              <span className="jx-star-twinkle">
+                <span className="jx-star-glow" />
+                <svg className="jx-star-gold" viewBox="0 0 24 24">
+                  <path d={STAR} />
+                </svg>
+                <span className="jx-star-flash">
+                  <svg viewBox="0 0 24 24">
+                    <path d={STAR} />
+                  </svg>
+                </span>
+              </span>
+            </span>
           ))}
-        </svg>
+        </div>
       )}
     </div>
   );
