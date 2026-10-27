@@ -32,7 +32,7 @@ Thiết kế, quyết định và rủi ro: **[spec](docs/superpowers/specs/2026
 | M2 | Phase test parser đối đầu (OCR local và vision LLM) | Chưa làm, chờ bộ 25 tới 30 ảnh thật |
 | M3 | Worker, share ảnh, nạp nền từ lịch sử, camera chụp tại chỗ | Chưa làm |
 | M4 | Nhắc chấm 90 phút, nút trên thông báo, hộp Chờ chấm | Xong (`v0.2.0`); spike S5 đã đóng |
-| M5 | Theme Watercolor Sài Gòn (ngày, đêm theo máy) và bộ nhận diện xích lô: icon app, icon thông báo, màn mở app, màn chờ mở kho, bộ 4 icon loại, hình màn tìm không thấy | Spec đã duyệt ([spec Watercolor](docs/superpowers/specs/2026-10-27-judexp-watercolor-design.md)), chưa có plan |
+| M5 | Theme Watercolor Sài Gòn (ngày, đêm theo máy) và bộ nhận diện xích lô: icon app, icon thông báo, màn mở app, màn chờ mở kho, bộ 4 icon loại, hình màn tìm không thấy | Xong trên branch `claude/relaxed-planck-ifz792`, chưa gắn tag ([spec Watercolor](docs/superpowers/specs/2026-10-27-judexp-watercolor-design.md), [plan](docs/superpowers/plans/2026-10-27-judexp-watercolor.md)); spike S6 đã đóng |
 
 Lịch sử thay đổi: **[CHANGELOG.md](CHANGELOG.md)**.
 
@@ -56,7 +56,7 @@ Lịch sử thay đổi: **[CHANGELOG.md](CHANGELOG.md)**.
 
 | Lớp | Công nghệ |
 |-----|-----------|
-| UI | React 19, Ionic React 9, TypeScript 7, token CSS (`src/ui/theme/tokens.css`), font bundle Inter + Roboto Mono |
+| UI | React 19, Ionic React 9, TypeScript 7, token CSS (`src/ui/theme/tokens.css`, ngày ở `:root`, đêm theo chế độ tối của máy), font bundle Fraunces, Nunito, Mali, JetBrains Mono (chỉ subset latin và vietnamese, `src/ui/theme/fonts.css`) |
 | Build | Vite 8, Capacitor CLI 8 |
 | Native | Capacitor 8 (Android, minSdk 24, target/compile SDK 36); plugin tự viết `SafPlugin`, `ShareTargetPlugin`, `SyncthingPlugin` (lấy từ Gu Library) và `ReminderPlugin` cùng các receiver |
 | Lưu trữ | Kho qua SAF; snapshot index, nhắc chờ và câu trả lời nhắc qua `@capacitor/filesystem` (`Directory.Data`); cài đặt qua `@capacitor/preferences` |
@@ -108,6 +108,14 @@ cd android && ./gradlew testDebugUnitTest   # JUnit cho receiver và hàng chờ
 ```
 
 `npm test` không typecheck. Luôn chạy `npm run build` trước khi gọi là xong.
+
+### Đo mở nguội
+
+```bash
+scripts/cold-start.sh <máy> 5 force-stop
+```
+
+Đo từ lúc mở app tới lúc ô tìm có con trỏ (dòng log `[judexp] lookup-ready` của APK đã build), đọc giờ trên chính logcat của máy, in trung vị, nhỏ nhất, lớn nhất. UBS1 dùng `force-stop`; dGen1 dùng `reboot` (không bao giờ `force-stop`, xem Troubleshooting), script đợi huynh mở khóa máy sau mỗi lần khởi động lại. Số đo của từng bản ghi trong CHANGELOG.
 
 ### E2E trên máy thật
 
