@@ -465,7 +465,7 @@ M0.5 đã xong ở `v0.1.0`. Phần sinh ảnh đã làm qua moodboard ngày 202
 | S3 | Thư viện SQLite cho Capacitor | Gú's Library ghi rõ "chưa chốt thư viện". Nếu plugin SQLite gây rắc rối cho build CLI thì **phương án lùi**: giữ index trong bộ nhớ và cache ra một file JSON, vẫn đủ nhanh ở mức vài nghìn event. |
 | S4 | iOS đọc folder Möbius Sync từ Capacitor | Möbius Pro sync được (đã chứng minh với Obsidian), nhưng app của mình đọc folder đó cần document picker và security-scoped bookmark, là việc native, chưa thử. Ngoài v1. |
 | S5 | Nút hành động trên thông báo để chấm không cần mở app | **Đã đóng ở M4 (2026-10-18, UBS1 và dGen1).** Plugin chuẩn mở app khi bấm nút, nên Judexp tự viết phần native: nút là broadcast tới một receiver chỉ ghi câu trả lời vào hàng chờ, không mở activity nào. Hai giới hạn thật: Android chỉ vẽ ba nút đầu (Không đi chuyển vào hộp Chờ chấm), và alarm không chính xác dùng cửa sổ 10 phút (`setWindow`), vì `setAndAllowWhileIdle` cho trễ tới một giờ. |
-| S6 | WebView báo đúng chế độ tối của máy cho CSS (`prefers-color-scheme`) | Cần cho bản đêm tự bật của D13. Theme Android của app đã là DayNight nên nhiều khả năng là có; kiểm trên dGen1 và UBS1 ở đầu plan M5, chưa đóng. Xem [spec Watercolor](2026-10-27-judexp-watercolor-design.md) §10. |
+| S6 | WebView báo đúng chế độ tối của máy cho CSS (`prefers-color-scheme`) | Cần cho bản đêm tự bật của D13. Theme Android của app đã là DayNight nên nhiều khả năng là có. **Đóng ngày 2026-10-27:** trên dGen1 và UBS1, WebView theo đúng chế độ tối ở cả ba ca (mở nguội, đổi khi app đang hiện, đổi khi app ở nền), không cần native đặt `data-scheme`. Chi tiết: [spec Watercolor](2026-10-27-judexp-watercolor-design.md) §10. |
 
 ## 17. Mốc triển khai
 
