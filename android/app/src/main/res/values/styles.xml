@@ -13,10 +13,18 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- What shows between the system splash and the WebView's first paint;
+             Capacitor's SystemBars also paints the status and nav bars with it. -->
+        <item name="android:windowBackground">@color/jx_window_bg</item>
     </style>
 
 
-    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+    <!-- The system splash: the launcher cyclo on a cream disc, on the page colour of
+         day or night. Capacitor never calls installSplashScreen(); BridgeActivity
+         switches to AppTheme.NoActionBar itself, so no postSplashScreenTheme. -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/jx_window_bg</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/jx_splash_icon_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
     </style>
 </resources>
