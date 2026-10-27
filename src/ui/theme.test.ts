@@ -77,6 +77,17 @@ describe('day and night', () => {
     expect(missing).toEqual([]);
   });
 
+  it('preloads what the boot screen draws first, so its first frame is not a fallback font', () => {
+    for (const href of [
+      '/src/assets/watercolor/logo-cyclo.webp',
+      '/node_modules/@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2',
+      '/node_modules/@fontsource/mali/files/mali-latin-400-normal.woff2',
+      '/node_modules/@fontsource/mali/files/mali-vietnamese-400-normal.woff2',
+    ]) {
+      expect(html).toMatch(new RegExp(`<link rel="preload"[^>]*href="${href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
+    }
+  });
+
   it('paints the page before React does', () => {
     expect(html).toContain('<meta name="color-scheme" content="light dark"');
     expect(html).toContain('#f6eddd');
