@@ -1,0 +1,47 @@
+[
+  {
+    "asset": "cyclo-three-quarter (bước trung gian)",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "references": [
+      "kinds-k1"
+    ],
+    "prompt": "Keep exactly the same art style as the references: bright vintage Saigon watercolor with soft washes, visible cold-press paper grain, fine slightly wobbly sepia ink outlines, warm palette of jade teal, terracotta, butter yellow, cream and sky blue. Draw a classic Saigon cyclo (xich lo): a three-wheeled pedal rickshaw with the passenger seat in front between two wheels, a small folded hood, and the rider's saddle and rear wheel behind. Three-quarter front view from slightly above, so the empty front passenger seat faces the viewer and reads as a stage. Draw it pale and airy: thin sepia ink lines with very light watery washes. No person, no rider, no passenger, no text. Plain warm cream paper background, generous margin. Square output."
+  },
+  {
+    "asset": "cyclo-bold (bước trung gian)",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "references": [
+      "cyclo-three-quarter"
+    ],
+    "prompt": "Same subject, same three-quarter angle and same design as the reference cyclo, but now as the main logo: full-strength bright vintage Saigon watercolor, confident sepia ink outlines, jade teal frame, butter yellow canopy, terracotta seat cushion, cream details. Bolder ink lines than the reference and simplified wheels with fewer spokes, so it still reads at small sizes. Centered with generous margin on a plain warm cream paper background. No person, no text. Square output."
+  },
+  {
+    "asset": "logo-cyclo-d1",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "references": [
+      "cyclo-bold",
+      "chữ Judexp dựng bằng font Fraunces 650, trục SOFT 100, màu #b5532a"
+    ],
+    "prompt": "Reference 1 is our cyclo logo. Reference 2 is the exact lettering of our app name. Redraw reference 1 exactly: the same cyclo, same three-quarter angle, same colors, same watercolor and ink style, same plain warm cream background. Then paint the word from reference 2 onto the butter yellow canopy hood, copying its letterforms exactly: the same soft, chunky serif typeface with the same J, u, d, e, x, p shapes, spelled J-u-d-e-x-p, in the same terracotta color, looking hand-painted on the fabric with a light watercolor texture and following the curve and perspective of the surface. The canopy struts stay in front of the fabric where they cross. No other text. Square output. Put the word on the large side panel of the canopy, the part facing the viewer on the right of the hood, as big as fits."
+  },
+  {
+    "asset": "kinds-k1",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "references": [],
+    "prompt": "The app is Judexp, a private memory notebook for everyday life in Saigon: the ride-hailing drivers you rode with (motorbikes and cars), the street food stalls and restaurants you ate at, the dishes you ordered, the places you visited. Style: bright, cheerful vintage Saigon watercolor illustration with doodle charm. Loose hand-painted watercolor washes with soft blooms and visible cold-press paper grain, fine dark sepia ink pen outlines drawn a little wobbly like a sketchbook doodle, warm sunny palette of terracotta orange, butter yellow, jade teal, sky blue and cream. Soft, rounded, friendly shapes, nostalgic 1960s Saigon mood. Output: one square canvas on warm cream paper with a 2x2 grid of four separate icons, evenly spaced with generous margins, all in exactly the same style and visual size: top left, a cute chubby little vintage taxi from 1950s Saigon: a tiny round two-tone sky blue and butter yellow compact car with bulging rounded fenders, round headlights, a short rounded hood and a small roof sign with no text with a cute small classic step-through underbone motorbike in cream and terracotta red, with a round headlight, a curved leg shield and a little rear rack parked in front of it (vehicles); top right, a small Saigon street food cart with a striped awning (restaurants); bottom left, a steaming bowl of pho noodle soup with chopsticks and fresh herbs (dishes); bottom right, a round map location pin with a tiny shophouse with green shutters inside it (places). No labels, no text."
+  },
+  {
+    "asset": "empty-state-day",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "references": [],
+    "prompt": "The app is Judexp, a private memory notebook for everyday life in Saigon: the ride-hailing drivers you rode with (motorbikes and cars), the street food stalls and restaurants you ate at, the dishes you ordered, the places you visited. Style: bright, cheerful vintage Saigon watercolor illustration with doodle charm. Loose hand-painted watercolor washes with soft blooms and visible cold-press paper grain, fine dark sepia ink pen outlines drawn a little wobbly like a sketchbook doodle, warm sunny palette of terracotta orange, butter yellow, jade teal, sky blue and cream. Soft, rounded, friendly shapes, nostalgic 1960s Saigon mood. Subject: an empty-state illustration for 'never met this driver before': a cute small open notebook with a blank page and a big friendly doodled question mark floating above it, a tiny paper boat and a few loose doodle stars, light and airy with lots of white space. Output: square, on a plain warm cream paper background, no text, no frame."
+  },
+  {
+    "asset": "empty-state-night",
+    "model": "google/gemini-3-pro-image (OpenRouter)",
+    "references": [
+      "empty-state-day"
+    ],
+    "prompt": "Redraw the reference illustration with the same composition (open notebook with a blank page, a big friendly question mark floating above, a tiny paper boat, a few doodle stars) for a night theme: a deep warm charcoal paper background with subtle grain, cream ink doodle outlines, and soft glowing pastel watercolor washes in peach, butter yellow and sky blue. Calm and cozy, not bright. No text. Square output."
+  }
+]

@@ -32,7 +32,7 @@ Thiết kế, quyết định và rủi ro: **[spec](docs/superpowers/specs/2026
 | M2 | Phase test parser đối đầu (OCR local và vision LLM) | Chưa làm, chờ bộ 25 tới 30 ảnh thật |
 | M3 | Worker, share ảnh, nạp nền từ lịch sử, camera chụp tại chỗ | Chưa làm |
 | M4 | Nhắc chấm 90 phút, nút trên thông báo, hộp Chờ chấm | Xong (`v0.2.0`); spike S5 đã đóng |
-| M5 | Bộ icon app và icon bốn loại | Chưa làm |
+| M5 | Theme Watercolor Sài Gòn (ngày, đêm theo máy) và bộ nhận diện xích lô: icon app, icon thông báo, màn mở app, màn chờ mở kho, bộ 4 icon loại | Đã chốt thiết kế ([spec Watercolor](docs/superpowers/specs/2026-10-27-judexp-watercolor-design.md)), chưa làm |
 
 Lịch sử thay đổi: **[CHANGELOG.md](CHANGELOG.md)**.
 
@@ -184,4 +184,5 @@ Máy QA: **dGen1** (màn vuông 480x480 dp, Android 15) ghép `judexp-hieu-qa`; 
 - Plan 1, nền tảng app (M0, M0.5, M1): [`docs/superpowers/plans/2026-10-16-judexp-nen-tang-app.md`](docs/superpowers/plans/2026-10-16-judexp-nen-tang-app.md)
 - Plan 4, nhắc chấm (M4): [`docs/superpowers/plans/2026-10-18-judexp-nhac-cham.md`](docs/superpowers/plans/2026-10-18-judexp-nhac-cham.md)
 - Mockup thiết kế: [`docs/design/mockups.html`](docs/design/mockups.html)
+- Spec Watercolor, theme và bộ nhận diện (M5): [`docs/superpowers/specs/2026-10-27-judexp-watercolor-design.md`](docs/superpowers/specs/2026-10-27-judexp-watercolor-design.md); ảnh nguồn trong [`docs/design/watercolor/`](docs/design/watercolor/)
 - Ledger SDD (mọi ruling đệ làm thay huynh) nằm trong `.superpowers/sdd/`, đã gitignore nên chỉ có trên máy Mac. Log phiên nằm trong vault Obsidian (`claude-sessions/judexp/`), ngoài repo.

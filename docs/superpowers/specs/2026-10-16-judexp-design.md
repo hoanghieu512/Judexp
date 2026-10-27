@@ -53,6 +53,7 @@ Ghi rõ để sau này không ai tưởng là bị bỏ quên:
 | D10 | Tách hẳn luồng Hỏi và luồng Ghi, `verdict` thành tùy chọn | Thời điểm quyết định và thời điểm đánh giá là hai thời điểm khác nhau. Chuyến cũ nạp từ lịch sử thì huynh không còn nhớ, nên vào app dưới dạng đã gặp chưa chấm. Góp ý của huynh ngày 2026-10-16. |
 | D11 | Nhắc chấm 90 phút sau mỗi lần tra cứu, bốn nút trên thông báo | Bắt nhãn lúc còn nóng mà không thêm bước nào cho huynh. Gom cuối ngày thì nhớ lơ mơ hơn; không nhắc thì hộp Chờ chấm sẽ đầy dần rồi bị bỏ qua. |
 | D12 | Điện thoại chỉ giữ ảnh biển hiệu **thu nhỏ**, bản đầy đủ nằm trên Atomman | Ý của huynh ngày 2026-10-16 về dung lượng. Bản 320px lấy được 92% lợi ích dung lượng mà không mất khả năng nhận ra quán lúc đứng ngoài đường không mạng. Luồng xin ảnh gốc đẩy sang §19.2. |
+| D13 | Theme Watercolor Sài Gòn: ngày làm chính, đêm theo chế độ tối của máy; logo là chiếc xích lô chở tên Judexp | Chốt qua mười vòng moodboard với huynh và Gú, 2026-10-23 tới 2026-10-27. Thay "dark mode mặc định" ở §13. Chi tiết: [spec Watercolor](2026-10-27-judexp-watercolor-design.md). |
 
 ### Hai hướng đã xét và loại
 
@@ -422,12 +423,14 @@ Bảo vệ thực tế gồm: khóa máy sẵn có của Android, cộng **PIN t
 Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **một tay**, có thể giữa trưa nắng gắt hoặc tối thui, và đang gấp vì tài xế đã nhận cuốc.
 
 - **Tương phản cao, chữ to, vùng chạm lớn.** Không có chỗ cho chữ nhỏ thanh mảnh.
-- **Dark mode mặc định**, sáng là tùy chọn.
+- **Theme Watercolor Sài Gòn: ngày làm chính, đêm theo chế độ tối của máy** (D13, thay cho "dark mode mặc định" ban đầu). Màu nước chỉ nằm ở hình minh họa, không đè lên tín hiệu verdict.
 - **Màu không được là tín hiệu duy nhất.** Ba mức verdict phải phân biệt được cả khi mù màu đỏ lục, nên mỗi mức có icon và hình dạng riêng.
 - **Biển số render bằng font mono.** Font thường thì `0` với `O`, `1` với `l` nhìn như nhau, mà app này sống chết ở chỗ đọc đúng biển số.
 - **Chuyển động tối giản**, vì chạy trong webview và máy test thuộc lớp yếu.
 
 Đầu ra phase thiết kế (trước khi code UI): một file token (màu, cỡ chữ, bán kính, khoảng cách) cộng ba màn hình mẫu. Phần sinh ảnh bằng API để dành cho **icon app và bộ icon bốn loại** (xe, quán, món, địa điểm), làm sau khi luồng đã chạy, lúc đó mới biết cần đúng bao nhiêu icon và cỡ nào.
+
+M0.5 đã xong ở `v0.1.0`. Phần sinh ảnh đã làm qua moodboard ngày 2026-10-23 tới 2026-10-27; màu, font, icon, màn mở app và màn chờ mở kho của M5 theo [spec Watercolor](2026-10-27-judexp-watercolor-design.md), tài liệu đó thắng ở mọi chỗ nó nhắc tới.
 
 ## 14. Các ca xấu
 
@@ -462,6 +465,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | S3 | Thư viện SQLite cho Capacitor | Gú's Library ghi rõ "chưa chốt thư viện". Nếu plugin SQLite gây rắc rối cho build CLI thì **phương án lùi**: giữ index trong bộ nhớ và cache ra một file JSON, vẫn đủ nhanh ở mức vài nghìn event. |
 | S4 | iOS đọc folder Möbius Sync từ Capacitor | Möbius Pro sync được (đã chứng minh với Obsidian), nhưng app của mình đọc folder đó cần document picker và security-scoped bookmark, là việc native, chưa thử. Ngoài v1. |
 | S5 | Nút hành động trên thông báo để chấm không cần mở app | **Đã đóng ở M4 (2026-10-18, UBS1 và dGen1).** Plugin chuẩn mở app khi bấm nút, nên Judexp tự viết phần native: nút là broadcast tới một receiver chỉ ghi câu trả lời vào hàng chờ, không mở activity nào. Hai giới hạn thật: Android chỉ vẽ ba nút đầu (Không đi chuyển vào hộp Chờ chấm), và alarm không chính xác dùng cửa sổ 10 phút (`setWindow`), vì `setAndAllowWhileIdle` cho trễ tới một giờ. |
+| S6 | WebView báo đúng chế độ tối của máy cho CSS (`prefers-color-scheme`) | Cần cho bản đêm tự bật của D13. Theme Android của app đã là DayNight nên nhiều khả năng là có; kiểm trên dGen1 và UBS1 ở đầu plan M5, chưa đóng. Xem [spec Watercolor](2026-10-27-judexp-watercolor-design.md) §10. |
 
 ## 17. Mốc triển khai
 
@@ -473,7 +477,7 @@ Bối cảnh dùng quyết định mọi thứ: đứng ngoài đường, **mộ
 | **M2** | Phase test parser đối đầu, ba nhóm ảnh | Có bảng số đo, chốt parser theo quy tắc §10. |
 | **M3** | Worker, share ảnh lịch sử (một ảnh nhiều dòng), nạp nền §9.4, share ảnh màn ghép tài xế, **camera chụp tại chỗ §9.5** | Chụp một ảnh lịch sử ra đúng số dòng, chấm được từng dòng. Chụp một quán ngoài đường, lưu được kèm toạ độ, và sau khi worker xử lý thì trên máy chỉ còn bản thu nhỏ. |
 | **M4** | Nhắc chấm 90 phút, ba nút trên thông báo cùng hộp Chờ chấm (§9.3) | Tra một biển số, 90 phút sau (trễ tối đa 10 phút) nhận thông báo, chạm một nút là xong không mở app, và lần mở app kế tiếp event vào kho. |
-| **M5** | Bộ icon app và icon bốn loại | Khớp với hệ thiết kế M0.5. |
+| **M5** | Theme Watercolor Sài Gòn (ngày, đêm theo máy) và bộ nhận diện: icon màn hình chính xích lô, icon thông báo, màn mở app, màn chờ mở kho có sao, bộ 4 icon loại, hình màn tìm không thấy ([spec Watercolor](2026-10-27-judexp-watercolor-design.md)) | Đạt §8 của spec Watercolor: test và e2e xanh không sửa bộ chọn, độ tương phản đạt bảng §3, icon và bản đêm đúng trên dGen1 và UBS1, mở app không chậm hơn v0.2.0. |
 
 M0 cố tình đứng đầu vì nó là **rủi ro cao nhất**, không phải vì nó dễ. M4 không phải tính năng phụ: không có nó thì nhãn verdict không tích lũy, và §19.1 vĩnh viễn không có dữ liệu để hiệu chỉnh.
 
@@ -509,6 +513,8 @@ M0 cố tình đứng đầu vì nó là **rủi ro cao nhất**, không phải 
 ### 19.2 Những cái khác đã nhắc tới
 
 **Xin ảnh gốc từ Atomman.** App không có kênh hỏi Atomman vì nó không gọi API nào. Muốn xem bản đầy đủ của một ảnh thì phải dựng một luồng hỏi đáp giả lập qua file: app ghi `requests/<uuid>.json` vào kho, worker thấy thì chép ảnh từ archive ngược vào `attachments/`, Syncthing đẩy về, app hiện, rồi worker dọn sau vài ngày. Mất một tới ba phút và chỉ chạy khi Atomman đang bật. Để ngoài v1 vì bản thu nhỏ đã phủ gần hết nhu cầu nhận diện; nó chỉ cần khi muốn đọc chữ trên biển hoặc đối chiếu một ca parse sai. **Không phải đổi gì ở v1 để sau này làm được**, vì ảnh gốc vẫn luôn nằm trên Atomman theo đúng `imageRef`.
+
+**Mục Theme trong Cài đặt và chọn icon app.** Thêm Noir luxury, Sổ đen, Modern art bên cạnh Watercolor, mỗi theme có bộ font, icon loại và cặp xe riêng; icon app là một mục chọn riêng, đổi kèm cảnh báo app sẽ đóng lại. Huynh duyệt hướng ngày 2026-10-23, làm sau M5. Chi tiết: [spec Watercolor](2026-10-27-judexp-watercolor-design.md) §9.
 
 Ngoài ra: chia sẻ cảnh báo chéo với Gú (đã chừa `visibility`), iOS (S4), nối dữ liệu với Ăn Khéo, và thống kê dạng "tháng này huynh đi 23 chuyến, 3 chuyến tệ".
 
