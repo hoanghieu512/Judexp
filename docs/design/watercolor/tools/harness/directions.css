@@ -1,0 +1,175 @@
+/* Harness-only theme overrides for the three design directions. Loaded after the app's CSS. */
+
+/* ---------- A: classic noir (black, gold, serif) ---------- */
+:root[data-dir='A'] {
+  --jx-bg: #0a0a0b; --jx-surface: #131315; --jx-surface-raised: #1b1b1e; --jx-border: #3a3222;
+  --jx-text: #f4f0ec; --jx-text-dim: #a8a197; --jx-gold: #d4af37;
+}
+:root[data-dir='A'] .jx-section-title { font-family: 'Cormorant Garamond', serif; color: var(--jx-gold); font-size: 1rem; letter-spacing: .22em; font-weight: 600; }
+:root[data-dir='A'] .jx-name { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 600; }
+:root[data-dir='A'] .jx-nav-item { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; letter-spacing: .04em; }
+:root[data-dir='A'] .jx-nav-item[data-selected='true'] { border-color: var(--jx-gold); color: var(--jx-gold); }
+:root[data-dir='A'] .jx-search { border-color: var(--jx-gold); }
+:root[data-dir='A'] .jx-search:not(.jx-plate) { font-family: 'Cormorant Garamond', serif; }
+:root[data-dir='A'] .jx-row { border-width: 1px; }
+:root[data-dir='A'] .jx-tag { border: 1px solid #3a3222; background: transparent; color: #c9b98a; }
+
+/* ---------- B: black notebook (warm black, ivory ink, shape-coded verdicts) ---------- */
+:root[data-dir='B'] {
+  --jx-bg: #0e0d0c; --jx-surface: #161514; --jx-surface-raised: #1f1d1b; --jx-border: #2f2c28;
+  --jx-text: #f2ede4; --jx-text-dim: #a49e93;
+}
+:root[data-dir='B'] .jx-section-title { font-family: 'Instrument Serif', serif; font-style: italic; text-transform: none; letter-spacing: 0; font-size: 1.5rem; color: var(--jx-text); }
+:root[data-dir='B'] .jx-nav-item[data-selected='true'] { border-color: var(--jx-text); background: var(--jx-text); color: var(--jx-bg); }
+:root[data-dir='B'] .jx-search { border-color: #f2ede4; }
+:root[data-dir='B'] .jx-search:not(.jx-plate) { font-family: var(--jx-font); }
+:root[data-dir='B'] .jx-search::placeholder { color: #6f6a62; }
+/* Verdict by shape as well as colour: circle, square, triangle, dashed circle. */
+:root[data-dir='B'] .jx-mark[data-color='yellow'], :root[data-dir='B'] .jx-mark[data-color='ok'] { border-radius: 8px; }
+:root[data-dir='B'] .jx-mark[data-color='red'], :root[data-dir='B'] .jx-mark[data-color='bad'] {
+  border-radius: 0; clip-path: polygon(50% 4%, 98% 92%, 2% 92%); padding-top: 9px; width: 40px; height: 38px; font-size: .8rem;
+}
+:root[data-dir='B'] .jx-mark[data-color='grey'], :root[data-dir='B'] .jx-mark[data-color='unrated'] { background: transparent; border: 2px dashed var(--jx-unrated); }
+:root[data-dir='B'] .jx-tag { background: transparent; border: 1px solid #3a3631; }
+
+/* ---------- C: modern art colour blocks (cream, primaries, bold outlines) ---------- */
+:root[data-dir='C'] {
+  color-scheme: light;
+  --jx-bg: #f3eee3; --jx-surface: #fffdf8; --jx-surface-raised: #fbf6ea; --jx-border: #151515;
+  --jx-text: #151515; --jx-text-dim: #5a5650; --jx-text-on-accent: #fffdf8;
+  --jx-good: #16885a; --jx-ok: #9a6f06; --jx-bad: #c6303a; --jx-unrated: #5c6b7c;
+  --jx-good-soft: #16885a26; --jx-ok-soft: #e0a80033; --jx-bad-soft: #c6303a26; --jx-unrated-soft: #5c6b7c22;
+}
+:root[data-dir='C'] .jx-row, :root[data-dir='C'] .jx-search, :root[data-dir='C'] .jx-prompt { border-width: 2px; border-radius: 4px; box-shadow: 4px 4px 0 #151515; }
+:root[data-dir='C'] .jx-nav-item { border: 2px solid #151515; border-radius: 4px; font-family: 'Archivo Black', sans-serif; font-weight: 400; color: #151515; }
+:root[data-dir='C'] .jx-nav-item:nth-child(1) { background: #1f4fbf; color: #fffdf8; }
+:root[data-dir='C'] .jx-nav-item:nth-child(2) { background: #e2312b; color: #fffdf8; }
+:root[data-dir='C'] .jx-nav-item:nth-child(3) { background: #f2b705; }
+:root[data-dir='C'] .jx-nav-item[data-selected='true'] { outline: 3px solid #151515; outline-offset: 2px; }
+:root[data-dir='C'] .jx-section-title { font-family: 'Archivo Black', sans-serif; color: #151515; font-size: .95rem; letter-spacing: .06em; display: flex; align-items: center; gap: 8px; }
+:root[data-dir='C'] .jx-section-title::before { content: ''; width: 14px; height: 14px; background: #e2312b; border-radius: 50%; box-shadow: 18px 0 0 #f2b705, 36px 0 0 #1f4fbf; margin-right: 40px; }
+:root[data-dir='C'] .jx-name { font-family: 'Archivo Black', sans-serif; font-weight: 400; }
+:root[data-dir='C'] .jx-search:not(.jx-plate) { font-family: var(--jx-font); }
+:root[data-dir='C'] .jx-tag { background: #f3eee3; border: 1.5px solid #151515; color: #151515; border-radius: 2px; }
+:root[data-dir='A'] .jx-tag[data-selected='true'] { background: var(--jx-gold); color: #0a0a0b; border-color: var(--jx-gold); }
+:root[data-dir='B'] .jx-tag[data-selected='true'] { background: var(--jx-text); color: var(--jx-bg); border-color: var(--jx-text); }
+:root[data-dir='C'] .jx-tag[data-selected='true'] { background: #151515; color: #fffdf8; }
+
+/* ================= Round 2 ================= */
+
+/* Shared by D1 and D2: verdict by shape as well as colour. */
+:root[data-dir^='D'] .jx-mark[data-color='yellow'], :root[data-dir^='D'] .jx-mark[data-color='ok'] { border-radius: 9px; }
+:root[data-dir^='D'] .jx-mark[data-color='red'], :root[data-dir^='D'] .jx-mark[data-color='bad'] {
+  border-radius: 0; clip-path: polygon(50% 4%, 98% 92%, 2% 92%); padding-top: 9px; width: 40px; height: 38px; font-size: .8rem;
+}
+:root[data-dir^='D'] .jx-mark[data-color='grey'], :root[data-dir^='D'] .jx-mark[data-color='unrated'] { background: transparent; border: 2px dashed var(--jx-unrated); }
+:root[data-dir^='D'] .jx-app, :root[data-dir^='D'] .jx-nav-item, :root[data-dir^='D'] .jx-verdict, :root[data-dir^='D'] .jx-tag, :root[data-dir^='D'] .jx-row { font-family: var(--jx-font); }
+:root[data-dir^='D'] .jx-section-title { font-family: 'Fraunces', serif; font-variation-settings: 'SOFT' 100; text-transform: none; letter-spacing: 0; font-weight: 650; font-size: 1.4rem; }
+:root[data-dir^='D'] .jx-name { font-family: 'Fraunces', serif; font-variation-settings: 'SOFT' 100; font-weight: 600; font-size: 1.15rem; }
+:root[data-dir^='D'] .jx-nav-item { border-radius: 999px; font-weight: 800; font-size: .95rem; }
+:root[data-dir^='D'] .jx-search, :root[data-dir^='D'] .jx-row, :root[data-dir^='D'] .jx-prompt, :root[data-dir^='D'] .jx-verdict { border-radius: 18px; }
+:root[data-dir^='D'] .jx-search:not(.jx-plate) { font-family: var(--jx-font); font-weight: 600; }
+:root[data-dir^='D'] .jx-tag { border-radius: 999px; font-weight: 700; }
+:root[data-dir^='D'] .jx-empty { font-family: 'Mali', cursive; font-size: 1.2rem; line-height: 1.5; text-align: center; }
+:root[data-dir^='D'] .jx-empty[data-testid='no-match']::before {
+  content: ''; display: block; width: 210px; height: 210px; margin: 8px auto 12px; border-radius: 28px;
+  background: url('/e1.webp') center / cover no-repeat;
+}
+
+/* ---------- D1: Saigon sketchbook. Dark cover for asking, bright paper for rating. ---------- */
+:root[data-dir='D1'] {
+  --jx-bg: #15120f; --jx-surface: #1f1a16; --jx-surface-raised: #29231e; --jx-border: #3b342c;
+  --jx-text: #f6efe3; --jx-text-dim: #b8ad9b; --jx-text-on-accent: #15120f;
+  --jx-font: 'Nunito', system-ui, sans-serif; --jx-font-mono: 'JetBrains Mono', monospace;
+  --jx-sky: #8ec3e6;
+}
+:root[data-dir='D1'] .jx-section-title { color: var(--jx-text); padding-bottom: 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='8' viewBox='0 0 120 8'%3E%3Cpath d='M2 5 C 20 1, 40 8, 60 4 S 100 1, 118 5' fill='none' stroke='%238ec3e6' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") left bottom / 120px 8px no-repeat; }
+:root[data-dir='D1'] .jx-nav-item[data-selected='true'] { background: var(--jx-text); color: var(--jx-bg); border-color: var(--jx-text); }
+:root[data-dir='D1'] .jx-search { border-color: var(--jx-sky); }
+:root[data-dir='D1'] .jx-tag[data-selected='true'] { background: var(--jx-sky); color: #15120f; }
+/* The Ghi moment turns to paper: the reminder card in Chờ chấm, and the whole rating screen. */
+:root[data-dir='D1'] .jx-prompt, :root[data-dir='D1'] .jx-screen:has(#jx-entity) {
+  --jx-surface: #fffaf1; --jx-surface-raised: #f1e6d3; --jx-border: #e2d2b8;
+  --jx-text: #2b2118; --jx-text-dim: #6f6250; --jx-text-on-accent: #fffaf1;
+  --jx-good: #16885a; --jx-ok: #9a6f06; --jx-bad: #c6303a; --jx-unrated: #5c6b7c;
+  --jx-good-soft: #16885a22; --jx-ok-soft: #e0a8002e; --jx-bad-soft: #c6303a22; --jx-unrated-soft: #5c6b7c1f;
+  color: var(--jx-text);
+}
+:root[data-dir='D1'] .jx-prompt {
+  background: radial-gradient(120% 80% at 0% 0%, #fde3c8 0%, transparent 55%), radial-gradient(90% 70% at 100% 100%, #cfe6f3 0%, transparent 60%), #fbf3e6;
+  border: 0; box-shadow: 0 6px 18px #0006;
+}
+:root[data-dir='D1'] .jx-screen:has(#jx-entity) {
+  background: radial-gradient(70% 30% at 10% 0%, #fde0c4 0%, transparent 70%), radial-gradient(60% 35% at 100% 20%, #d3e9f5 0%, transparent 70%), #f8efe1;
+  border-radius: 26px 26px 0 0; margin-top: 10px;
+}
+:root[data-dir='D1'] .jx-screen:has(#jx-entity) .jx-tag { background: #ffffffb3; border: 1px solid #e2d2b8; color: #4b3e30; }
+:root[data-dir='D1'] .jx-screen:has(#jx-entity) .jx-tag[data-selected='true'] { background: #2b2118; color: #fffaf1; }
+:root[data-dir='D1'] .jx-screen:has(#jx-entity) .jx-sub { color: #6f6250; }
+:root[data-dir='D1'] .jx-screen:has(#jx-entity) .jx-search { border-color: #2b2118; background: #fffaf1; }
+
+/* ---------- D2: Saigon watercolor, paper everywhere. ---------- */
+:root[data-dir='D2'] {
+  color-scheme: light;
+  --jx-bg: #f6eddd; --jx-surface: #fffaf1; --jx-surface-raised: #efe3cd; --jx-border: #e0cfb3;
+  --jx-text: #2b2118; --jx-text-dim: #6f6250; --jx-text-on-accent: #fffaf1;
+  --jx-good: #16885a; --jx-ok: #9a6f06; --jx-bad: #c6303a; --jx-unrated: #5c6b7c;
+  --jx-good-soft: #16885a22; --jx-ok-soft: #e0a8002e; --jx-bad-soft: #c6303a22; --jx-unrated-soft: #5c6b7c1f;
+  --jx-font: 'Nunito', system-ui, sans-serif; --jx-font-mono: 'JetBrains Mono', monospace;
+  --jx-sky: #3d7fb0; --jx-sepia: #6b3f24;
+}
+:root[data-dir='D2'] .jx-app, :root[data-dir='D2'] .jx-screen, :root[data-dir='D2'] .jx-nav {
+  background: transparent;
+}
+:root[data-dir='D2'] .jx-app {
+  background: radial-gradient(60% 25% at 0% 0%, #fbd9bd 0%, transparent 70%), radial-gradient(55% 25% at 100% 35%, #cde4f2 0%, transparent 70%),
+              radial-gradient(60% 25% at 10% 85%, #d7ecd9 0%, transparent 70%), #f6eddd;
+}
+:root[data-dir='D2'] .jx-section-title { color: var(--jx-sepia); }
+:root[data-dir='D2'] .jx-nav-item { background: #fffaf1; border: 1.5px solid #3b2a1e; color: #2b2118; }
+:root[data-dir='D2'] .jx-nav-item[data-selected='true'] { background: var(--jx-sky); color: #fffaf1; border-color: var(--jx-sky); }
+:root[data-dir='D2'] .jx-search { background: #fffaf1; border: 2px solid #3b2a1e; }
+:root[data-dir='D2'] .jx-row { background: #fffaf1e6; border: 1px solid #e3d3b8; box-shadow: 0 3px 0 #e3d3b8; }
+:root[data-dir='D2'] .jx-prompt { background: #fffaf1; border: 1.5px dashed #c9b391; }
+:root[data-dir='D2'] .jx-tag { background: #8ec3e633; color: #3a4e5c; }
+:root[data-dir='D2'] .jx-tag[data-selected='true'] { background: #2b2118; color: #fffaf1; }
+
+/* ---------- A2: classic noir with fonts that carry Vietnamese ---------- */
+:root[data-dir='A2'] {
+  --jx-bg: #0a0a0b; --jx-surface: #131315; --jx-surface-raised: #1b1b1e; --jx-border: #3a3222;
+  --jx-text: #f4f0ec; --jx-text-dim: #a8a197; --jx-gold: #d4af37;
+  --jx-font: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+:root[data-dir='A2'] .jx-app, :root[data-dir='A2'] .jx-nav-item, :root[data-dir='A2'] .jx-verdict, :root[data-dir='A2'] .jx-tag, :root[data-dir='A2'] .jx-row { font-family: var(--jx-font); }
+:root[data-dir='A2'] .jx-section-title { font-family: 'Playfair Display', serif; color: var(--jx-gold); font-size: .95rem; letter-spacing: .18em; font-weight: 600; }
+:root[data-dir='A2'] .jx-name { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600; }
+:root[data-dir='A2'] .jx-nav-item { font-family: 'Playfair Display', serif; font-weight: 600; }
+:root[data-dir='A2'] .jx-nav-item[data-selected='true'] { border-color: var(--jx-gold); color: var(--jx-gold); }
+:root[data-dir='A2'] .jx-search { border-color: var(--jx-gold); }
+:root[data-dir='A2'] .jx-search:not(.jx-plate) { font-family: 'Playfair Display', serif; }
+:root[data-dir='A2'] .jx-tag { border: 1px solid #3a3222; background: transparent; color: #c9b98a; }
+:root[data-dir='A2'] .jx-tag[data-selected='true'] { background: var(--jx-gold); color: #0a0a0b; border-color: var(--jx-gold); }
+
+/* ---------- D2N: Saigon watercolor at night (dark paper, glowing washes) ---------- */
+:root[data-dir='D2N'] {
+  --jx-bg: #1a1714; --jx-surface: #24201c; --jx-surface-raised: #2e2924; --jx-border: #3d362f;
+  --jx-text: #f6eee2; --jx-text-dim: #bcb09e; --jx-text-on-accent: #1a1714;
+  --jx-font: 'Nunito', system-ui, sans-serif; --jx-font-mono: 'JetBrains Mono', monospace;
+  --jx-sky: #8ec3e6; --jx-peach: #f3b994;
+}
+:root[data-dir='D2N'] .jx-app, :root[data-dir='D2N'] .jx-screen, :root[data-dir='D2N'] .jx-nav { background: transparent; }
+:root[data-dir='D2N'] .jx-app {
+  background: radial-gradient(60% 25% at 0% 0%, #5a3a2a55 0%, transparent 70%), radial-gradient(55% 25% at 100% 35%, #2f4f6655 0%, transparent 70%),
+              radial-gradient(60% 25% at 10% 85%, #2f4d3a44 0%, transparent 70%), #1a1714;
+}
+:root[data-dir='D2N'] .jx-section-title { color: var(--jx-peach); }
+:root[data-dir='D2N'] .jx-nav-item { background: #24201c; border: 1.5px solid #4a4138; color: var(--jx-text); }
+:root[data-dir='D2N'] .jx-nav-item[data-selected='true'] { background: var(--jx-sky); color: #1a1714; border-color: var(--jx-sky); }
+:root[data-dir='D2N'] .jx-search { background: #24201c; border: 2px solid #d9cdb8; }
+:root[data-dir='D2N'] .jx-row { background: #24201ce6; border: 1px solid #3d362f; box-shadow: 0 3px 0 #0f0d0b; }
+:root[data-dir='D2N'] .jx-prompt { background: #24201c; border: 1.5px dashed #5a4f43; }
+:root[data-dir='D2N'] .jx-tag { background: #8ec3e626; color: #cfe3f1; }
+:root[data-dir='D2N'] .jx-tag[data-selected='true'] { background: var(--jx-text); color: #1a1714; }
+:root[data-dir='D2N'] .jx-empty[data-testid='no-match']::before { filter: brightness(.92); box-shadow: 0 0 0 6px #ffffff0d; }
+:root[data-dir='D2N'] .jx-empty[data-testid='no-match']::before { background-image: url('/e1n.webp'); filter: none; box-shadow: none; }
