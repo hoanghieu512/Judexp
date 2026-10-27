@@ -105,7 +105,7 @@ export default function QuickRateSheet({
             <button
               key={k.value}
               type="button"
-              className="jx-tag"
+              className="jx-tag jx-kind-chip"
               data-selected={kind === k.value}
               aria-pressed={kind === k.value}
               onClick={() => {

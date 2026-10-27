@@ -151,6 +151,14 @@ html, body, #root { height: 100%; }
 /* The K1 kind icon: fixed size, never squeezed by a long name. */
 .jx-kind { flex: none; }
 
+/* Kind chips carry a 28dp icon. With the plain chip padding the four do not
+   fit one row at 360dp: "Địa điểm" wrapped and pushed Lưu off a UBS1 screen.
+   The icon has air of its own, so the chip pads less on its side. */
+.jx-tag.jx-kind-chip {
+  padding: 2px var(--jx-space-2) 2px var(--jx-space-1);
+  gap: 2px;
+}
+
 /* A reminder card's first line: the kind icon, then the name. */
 .jx-prompt-head {
   display: flex;
