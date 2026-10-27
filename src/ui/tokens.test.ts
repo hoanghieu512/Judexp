@@ -105,6 +105,17 @@ describe('Watercolor frame', () => {
     expect(rule('.jx-plate')).toMatch(/font-family:\s*var\(--jx-font-mono\)/);
   });
 
+  it('gives every verdict mark a shape with a border in its colour', () => {
+    // Without a border the soft fill is all but invisible on a card (W15).
+    expect(css).toMatch(/\.jx-mark\[data-color='good'\]\s*{[^}]*border:\s*2px solid var\(--jx-good\)/);
+    expect(css).toMatch(/\.jx-mark\[data-color='ok'\]\s*{[^}]*border:\s*2px solid var\(--jx-ok\)/);
+    expect(css).toMatch(/\.jx-mark\[data-color='unrated'\]\s*{[^}]*border:\s*2px dashed var\(--jx-unrated\)/);
+  });
+
+  it('never clips a mark, which would cut its border off', () => {
+    expect(css).not.toMatch(/clip-path/);
+  });
+
   it('marks the error banner without a thick side stripe', () => {
     expect(rule('.jx-problem')).not.toMatch(/border-left/);
     expect(rule('.jx-problem')).toMatch(/background:\s*var\(--jx-bad-soft\)/);

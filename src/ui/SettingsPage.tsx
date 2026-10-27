@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { SyncState } from '../sync/status';
 import type { KhoChoice } from '../profile/settings';
 import { isLikelyDeviceId, looksLikeDeviceId, type SyncConfig } from '../sync/status';
+import VerdictMark, { type MarkColor } from './VerdictMark';
 import './ui.css';
 
 const LIGHT: Record<SyncState, string> = {
@@ -13,7 +14,8 @@ const LIGHT: Record<SyncState, string> = {
   unconfigured: 'Chưa cấu hình Syncthing',
 };
 
-const LIGHT_COLOR: Record<SyncState, string> = {
+// The light borrows the verdict marks, so a red light is a triangle too: "something is wrong".
+const LIGHT_COLOR: Record<SyncState, MarkColor> = {
   synced: 'good',
   pending: 'ok',
   'atomman-offline': 'bad',
@@ -116,9 +118,7 @@ export default function SettingsPage({
 
       <h2 className="jx-section-title">Đồng bộ</h2>
       <div className="jx-row" data-testid="sync-light" data-status={status}>
-        <span className="jx-mark" data-color={LIGHT_COLOR[status]}>
-          {LIGHT_MARK[status]}
-        </span>
+        <VerdictMark color={LIGHT_COLOR[status]} glyph={LIGHT_MARK[status]} />
         <span className="jx-name">{LIGHT[status]}</span>
       </div>
 

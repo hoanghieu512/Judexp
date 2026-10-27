@@ -79,7 +79,13 @@ html, body, #root { height: 100%; }
   color: inherit;
 }
 
+/* A verdict by shape as well as colour (W4), each shape outlined in its
+   colour so it shows on a card (W15). Isolated so Xấu's triangle can sit
+   behind the glyph and still above the mark's own background. */
 .jx-mark {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
   width: 36px;
   height: 36px;
   flex: none;
@@ -94,16 +100,34 @@ html, body, #root { height: 100%; }
    own VERDICT (good/ok/bad). Both are styled here, because a badge with an
    unstyled value is invisible and jsdom would never notice. */
 .jx-mark[data-color='green'],
-.jx-mark[data-color='good'] { background: var(--jx-good-soft); color: var(--jx-good); }
+.jx-mark[data-color='good'] { background: var(--jx-good-soft); border: 2px solid var(--jx-good); color: var(--jx-good); }
 
 .jx-mark[data-color='yellow'],
-.jx-mark[data-color='ok'] { background: var(--jx-ok-soft); color: var(--jx-ok); }
+.jx-mark[data-color='ok'] { background: var(--jx-ok-soft); border: 2px solid var(--jx-ok); border-radius: 9px; color: var(--jx-ok); }
 
+/* The triangle is the SVG inside; the glyph drops to its visual centre. */
 .jx-mark[data-color='red'],
-.jx-mark[data-color='bad'] { background: var(--jx-bad-soft); color: var(--jx-bad); }
+.jx-mark[data-color='bad'] { background: transparent; border-radius: 0; padding-top: 8px; font-size: 0.85em; color: var(--jx-bad); }
 
 .jx-mark[data-color='grey'],
-.jx-mark[data-color='unrated'] { background: transparent; color: var(--jx-unrated); }
+.jx-mark[data-color='unrated'] { background: transparent; border: 2px dashed var(--jx-unrated); color: var(--jx-unrated); }
+
+.jx-mark-shape {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.jx-mark-shape path {
+  fill: var(--jx-bad-soft);
+  stroke: var(--jx-bad);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
 
 /* Plates in mono: 0 against O and 1 against l decide who this driver is. */
 .jx-plate {
