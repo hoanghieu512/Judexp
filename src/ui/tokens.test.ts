@@ -75,3 +75,49 @@ describe('navigation is thumb sized', () => {
     expect(css).toMatch(/\.jx-nav-item\s*{[^}]*min-height:\s*var\(--jx-touch-min\)/);
   });
 });
+
+/** The first rule for exactly this selector, as text. */
+function rule(selector: string): string {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|[}\\s])${escaped}\\s*{([^}]*)}`).exec(css)?.[2] ?? '';
+}
+
+describe('Watercolor frame', () => {
+  it('lets the washes show through the screen', () => {
+    const app = rule('.jx-app');
+    expect(app).toMatch(/radial-gradient/);
+    for (const wash of ['peach', 'sky', 'mint']) expect(app).toContain(`var(--jx-wash-${wash})`);
+    expect(rule('.jx-screen')).toMatch(/background:\s*transparent/);
+    expect(rule('.jx-nav')).toMatch(/background:\s*transparent/);
+  });
+
+  it('does not uppercase section titles with CSS', () => {
+    // Uppercase from CSS reaches the accessibility tree (e2e/README.md, Bẫy).
+    expect(css).not.toMatch(/text-transform:\s*uppercase/);
+  });
+
+  it('takes no text from CSS', () => {
+    expect(css).not.toMatch(/(^|[\s{;])content\s*:/);
+  });
+
+  it('keeps the code fields and plates mono', () => {
+    expect(rule('.jx-search.jx-code')).toMatch(/font-family:\s*var\(--jx-font-mono\)/);
+    expect(rule('.jx-plate')).toMatch(/font-family:\s*var\(--jx-font-mono\)/);
+  });
+
+  it('gives every verdict mark a shape with a border in its colour', () => {
+    // Without a border the soft fill is all but invisible on a card (W15).
+    expect(css).toMatch(/\.jx-mark\[data-color='good'\]\s*{[^}]*border:\s*2px solid var\(--jx-good\)/);
+    expect(css).toMatch(/\.jx-mark\[data-color='ok'\]\s*{[^}]*border:\s*2px solid var\(--jx-ok\)/);
+    expect(css).toMatch(/\.jx-mark\[data-color='unrated'\]\s*{[^}]*border:\s*2px dashed var\(--jx-unrated\)/);
+  });
+
+  it('never clips a mark, which would cut its border off', () => {
+    expect(css).not.toMatch(/clip-path/);
+  });
+
+  it('marks the error banner without a thick side stripe', () => {
+    expect(rule('.jx-problem')).not.toMatch(/border-left/);
+    expect(rule('.jx-problem')).toMatch(/background:\s*var\(--jx-bad-soft\)/);
+  });
+});

@@ -4,6 +4,7 @@ import QuickRateSheet from './ui/QuickRateSheet';
 import EntityPage from './ui/EntityPage';
 import SettingsPage from './ui/SettingsPage';
 import PinGate from './ui/PinGate';
+import BootScreen from './ui/BootScreen';
 import { ensureKhoLayout, KhoUnreadableError, readWorkerLog, writeEvent, type KhoDeps, type KhoDirs } from './storage/kho';
 import { loadIndex, rebuildIndex, type Snapshot } from './index/store';
 import type { SnapshotStore } from './index/snapshotStore';
@@ -31,6 +32,7 @@ import { Saf } from './plugins/saf';
 import { Syncthing } from './plugins/syncthing';
 import { syncStatus, type SyncConfig, type SyncState } from './sync/status';
 import type { JudexpEvent } from './domain/events';
+import './ui/theme/fonts.css';
 import './ui/theme/tokens.css';
 import './ui/ui.css';
 
@@ -419,7 +421,7 @@ export default function AppShell({
     }
   }
 
-  if (!ready) return <div className="jx-app"><p className="jx-empty">Đang mở kho...</p></div>;
+  if (!ready) return <BootScreen />;
 
   const banner = problem ? (
     <p className="jx-problem" role="alert">

@@ -22,6 +22,17 @@ function show(over: Partial<Parameters<typeof PendingBox>[0]> = {}) {
   return { ...props, view };
 }
 
+describe('PendingBox, kind icons', () => {
+  it('shows the kind before the name on a reminder card', () => {
+    show();
+    const row = screen.getByTestId('reminder-driver:59H123456');
+    const picture = row.querySelector('img[data-kind="driver"]');
+    expect(picture).toHaveAttribute('width', '22');
+    const label = within(row).getByText('59H1-234.56');
+    expect(picture!.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
 describe('PendingBox', () => {
   it('lists each pending reminder with the four answers', () => {
     show();

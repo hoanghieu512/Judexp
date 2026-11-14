@@ -119,6 +119,49 @@ describe('SettingsPage', () => {
   });
 });
 
+describe('SettingsPage, logo', () => {
+  it('puts the logo, without stars, above the Kho heading', () => {
+    const { container } = render(
+      <SettingsPage
+        kho={null}
+        status="unconfigured"
+        deviceId="zflip4"
+        skipped={[]}
+        workerLog=""
+        syncConfig={{ baseUrl: '', apiKey: '', folderId: '', atommanDeviceId: '' }}
+        pin={null}
+        author="hieu"
+        khoLog={[]}
+        onPin={vi.fn()}
+        onAuthor={vi.fn()}
+        onPickKho={vi.fn()}
+        onSyncConfig={vi.fn()}
+        onRebuild={vi.fn()}
+        onDeviceId={vi.fn()}
+        notifications="unknown"
+        onAskNotifications={vi.fn()}
+      />,
+    );
+    const word = screen.getByText('Judexp');
+    const heading = screen.getByRole('heading', { name: 'Kho' });
+    expect(word.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelector('.jx-star')).toBeNull();
+  });
+});
+
+describe('SettingsPage, fonts of the fields', () => {
+  it('sets the Syncthing code fields in mono and the name fields not', () => {
+    // Codes are where 0 against O and 1 against l really bite (W13).
+    show();
+    for (const label of [/địa chỉ syncthing/i, /api key syncthing/i, /device id của atomman/i, /folder id của kho/i]) {
+      expect(screen.getByLabelText(label)).toHaveClass('jx-code');
+    }
+    for (const label of [/người ghi/i, /tên máy/i, /pin mở app/i]) {
+      expect(screen.getByLabelText(label)).not.toHaveClass('jx-code');
+    }
+  });
+});
+
 describe('SettingsPage, pin', () => {
   it('saves a pin huynh types', () => {
     const props = show();

@@ -37,6 +37,17 @@ function show(state: State, key: string) {
   return { onSave };
 }
 
+describe('EntityPage, kind icon', () => {
+  it('opens with a 32dp kind icon after the mark', () => {
+    show(stateWith(met('bun bo hue 14', 'Bún Bò Huế 14', 'good')), 'bun bo hue 14');
+    const head = document.querySelector('.jx-screen > .jx-row') as HTMLElement;
+    const [mark, picture] = [...head.children];
+    expect(mark).toHaveClass('jx-mark');
+    expect(picture).toHaveAttribute('data-kind', 'restaurant');
+    expect(picture).toHaveAttribute('width', '32');
+  });
+});
+
 describe('EntityPage', () => {
   it('lists encounters newest first with verdict and tags', () => {
     const state = stateWith(

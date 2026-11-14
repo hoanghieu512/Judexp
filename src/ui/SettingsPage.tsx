@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { SyncState } from '../sync/status';
 import type { KhoChoice } from '../profile/settings';
 import { isLikelyDeviceId, looksLikeDeviceId, type SyncConfig } from '../sync/status';
+import VerdictMark, { type MarkColor } from './VerdictMark';
+import LogoLockup from './LogoLockup';
 import './ui.css';
 
 const LIGHT: Record<SyncState, string> = {
@@ -13,7 +15,8 @@ const LIGHT: Record<SyncState, string> = {
   unconfigured: 'Chưa cấu hình Syncthing',
 };
 
-const LIGHT_COLOR: Record<SyncState, string> = {
+// The light borrows the verdict marks, so a red light is a triangle too: "something is wrong".
+const LIGHT_COLOR: Record<SyncState, MarkColor> = {
   synced: 'good',
   pending: 'ok',
   'atomman-offline': 'bad',
@@ -104,6 +107,8 @@ export default function SettingsPage({
 
   return (
     <div className="jx-screen">
+      {/* Also the first-run screen and the kho error screen, so the logo greets all three. */}
+      <LogoLockup variant="header" />
       <h2 className="jx-section-title">Kho</h2>
       <div className="jx-row">
         <span className="jx-name" data-testid="kho-label">
@@ -116,9 +121,7 @@ export default function SettingsPage({
 
       <h2 className="jx-section-title">Đồng bộ</h2>
       <div className="jx-row" data-testid="sync-light" data-status={status}>
-        <span className="jx-mark" data-color={LIGHT_COLOR[status]}>
-          {LIGHT_MARK[status]}
-        </span>
+        <VerdictMark color={LIGHT_COLOR[status]} glyph={LIGHT_MARK[status]} />
         <span className="jx-name">{LIGHT[status]}</span>
       </div>
 
@@ -133,7 +136,7 @@ export default function SettingsPage({
       </label>
       <input
         id="jx-st-url"
-        className="jx-search"
+        className="jx-search jx-code"
         value={draft.baseUrl}
         onChange={(e) => setDraft({ ...draft, baseUrl: e.target.value.trim() })}
       />
@@ -143,7 +146,7 @@ export default function SettingsPage({
       </label>
       <input
         id="jx-st-key"
-        className="jx-search"
+        className="jx-search jx-code"
         value={draft.apiKey}
         onChange={(e) => setDraft({ ...draft, apiKey: e.target.value.trim() })}
       />
@@ -160,7 +163,7 @@ export default function SettingsPage({
       </label>
       <input
         id="jx-st-atomman"
-        className="jx-search"
+        className="jx-search jx-code"
         value={draft.atommanDeviceId}
         onChange={(e) => setDraft({ ...draft, atommanDeviceId: e.target.value.trim() })}
       />
@@ -170,7 +173,7 @@ export default function SettingsPage({
       </label>
       <input
         id="jx-st-folder"
-        className="jx-search"
+        className="jx-search jx-code"
         value={draft.folderId}
         onChange={(e) => setDraft({ ...draft, folderId: e.target.value.trim() })}
       />

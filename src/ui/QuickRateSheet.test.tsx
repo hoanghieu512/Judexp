@@ -11,6 +11,16 @@ function setup(kind: 'driver' | 'place' = 'driver', extra: Record<string, unknow
 
 const saveButton = () => screen.getByRole('button', { name: /lưu/i });
 
+describe('QuickRateSheet, kind chips', () => {
+  it('puts a 28dp icon on each kind chip and keeps the chip names', () => {
+    render(<QuickRateSheet author="huynh" device="zflip4" onSave={vi.fn()} />);
+    for (const [name, kind] of [[/^xe$/i, 'driver'], [/^quán$/i, 'restaurant'], [/^món$/i, 'dish'], [/^địa điểm$/i, 'place']] as const) {
+      const chip = screen.getByRole('button', { name });
+      expect(chip.querySelector(`img[data-kind="${kind}"]`)).toHaveAttribute('width', '28');
+    }
+  });
+});
+
 describe('QuickRateSheet', () => {
   it('requires a verdict before saving', () => {
     setup();

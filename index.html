@@ -3,7 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
     <title>Judexp</title>
+    <!-- What the boot screen draws first: the cyclo, the Judexp word and the
+         "Đang mở kho..." line. Without these the first frame can show a
+         fallback font. Vite rewrites each href to the bundled file. -->
+    <link rel="preload" as="image" href="/src/assets/watercolor/logo-cyclo.webp" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/node_modules/@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/node_modules/@fontsource/mali/files/mali-latin-400-normal.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/node_modules/@fontsource/mali/files/mali-vietnamese-400-normal.woff2" />
+    <!-- The page colour before any script runs, so nothing flashes between the
+         system splash and React's first paint. Mirrors tokens.css. -->
+    <style>
+      html { background: #f6eddd; }
+      @media (prefers-color-scheme: dark) { html:not([data-scheme='light']) { background: #1a1714; } }
+      html[data-scheme='dark'] { background: #1a1714; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -6,6 +6,8 @@ import { newEncounter, type JudexpEvent, type Verdict } from '../domain/events';
 import { instant, type State } from '../domain/reduce';
 import MergePrompt from './MergePrompt';
 import { relativeTime } from './relativeTime';
+import VerdictMark from './VerdictMark';
+import KindIcon from './KindIcon';
 import './ui.css';
 
 const VERDICT_MARKS: Record<string, string> = { good: '✔', ok: '–', bad: '✕', grey: '?' };
@@ -80,9 +82,12 @@ export default function EntityPage({
   return (
     <div className="jx-screen">
       <div className="jx-row">
-        <span className="jx-mark" data-color={entityColor(entity)} aria-label={COLOR_LABELS[entityColor(entity)]}>
-          {COLOR_MARKS[entityColor(entity)]}
-        </span>
+        <VerdictMark
+          color={entityColor(entity)}
+          glyph={COLOR_MARKS[entityColor(entity)]}
+          label={COLOR_LABELS[entityColor(entity)]}
+        />
+        <KindIcon kind={entity.kind} size={32} />
         <span>
           <span className={entity.kind === 'driver' ? 'jx-plate' : 'jx-name'}>{entityKey}</span>
           <span className="jx-sub" data-testid="labels">
@@ -120,9 +125,7 @@ export default function EntityPage({
           data-verdict={enc.verdict ?? 'unrated'}
           onClick={() => setEditing(editing === enc.eventId ? null : enc.eventId)}
         >
-          <span className="jx-mark" data-color={enc.verdict ?? 'grey'}>
-            {VERDICT_MARKS[enc.verdict ?? 'grey']}
-          </span>
+          <VerdictMark color={enc.verdict ?? 'grey'} glyph={VERDICT_MARKS[enc.verdict ?? 'grey']} />
           <span>
             <span className="jx-sub">{relativeTime(enc.happenedAt, now)}</span>
             {enc.tags.length > 0 && (

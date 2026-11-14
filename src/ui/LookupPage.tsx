@@ -63,6 +63,9 @@ export default function LookupPage({
 
   useEffect(() => {
     box.current?.focus();
+    // The end mark of a cold start (scripts/cold-start.sh): the box has the
+    // caret. Build only, so test runs stay quiet.
+    if (import.meta.env.PROD) console.info('[judexp] lookup-ready');
   }, []);
 
   const hits = useMemo(() => searchHits(state, query), [state, query]);

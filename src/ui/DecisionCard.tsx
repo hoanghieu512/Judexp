@@ -1,6 +1,8 @@
 import { looksLikeFullPlate, looksLikePlate } from '../domain/keys';
 import type { SearchHit } from '../search/fuzzy';
 import EntityRow from './EntityRow';
+import emptyDay from '../assets/watercolor/empty-day.webp';
+import emptyNight from '../assets/watercolor/empty-night.webp';
 
 /**
  * What the search box answers with.
@@ -40,6 +42,15 @@ export default function DecisionCard({
           {/* A plate is a driver, anything else is somewhere to eat or go. */}
           {looksLikePlate(query) ? 'Chưa gặp người này.' : 'Chưa ghé chỗ này.'} Không có gì để nhớ lại.
         </p>
+      )}
+      {/* Under the answer, never above it: the keyboard is up while huynh
+          reads (W16). Only when nothing comes close, or it would sit between
+          the answer and the near plates. */}
+      {answers.length === 0 && near.length === 0 && (
+        <div className="jx-empty-art" data-testid="empty-art" aria-hidden="true">
+          <img className="jx-day-only" src={emptyDay} alt="" />
+          <img className="jx-night-only" src={emptyNight} alt="" />
+        </div>
       )}
       {near.length > 0 && (
         <section className="jx-results" data-testid="near-plates" aria-labelledby="jx-near-title">

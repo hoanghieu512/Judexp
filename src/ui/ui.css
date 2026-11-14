@@ -2,18 +2,30 @@ html, body, #root { height: 100%; }
 
 /* Ionic pins ion-app to the viewport and hides its overflow, so the app needs
    its own scroll container. Without this the settings screen just stops at the
-   bottom edge of the phone and nothing below it can be reached. */
+   bottom edge of the phone and nothing below it can be reached. The page is
+   cream paper with three watercolour washes; screens stay transparent so the
+   washes show through. */
 .jx-app {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  background: var(--jx-bg);
+  background:
+    radial-gradient(60% 25% at 0% 0%, var(--jx-wash-peach) 0%, transparent 70%),
+    radial-gradient(55% 25% at 100% 35%, var(--jx-wash-sky) 0%, transparent 70%),
+    radial-gradient(60% 25% at 10% 85%, var(--jx-wash-mint) 0%, transparent 70%),
+    var(--jx-bg);
+  color: var(--jx-text);
+  font-family: var(--jx-font);
   padding-bottom: var(--jx-space-6);
 }
 
+/* Buttons and inputs do not inherit the page font on their own. Zero
+   specificity, so .jx-plate and .jx-code still win. */
+:where(.jx-app) :where(button, input) { font-family: inherit; }
+
 .jx-screen {
-  background: var(--jx-bg);
+  background: transparent;
   color: var(--jx-text);
   font-family: var(--jx-font);
   min-height: 100%;
@@ -27,19 +39,28 @@ html, body, #root { height: 100%; }
   width: 100%;
   min-height: var(--jx-touch-min);
   background: var(--jx-surface);
-  border: 1px solid var(--jx-border);
-  border-radius: var(--jx-radius-md);
+  border: 2px solid var(--jx-ink);
+  border-radius: var(--jx-radius-card);
   padding: 0 var(--jx-space-4);
   color: var(--jx-text);
-  font-family: var(--jx-font-mono);
+  font-family: var(--jx-font);
+  font-weight: var(--jx-weight-medium);
   font-size: var(--jx-text-lg);
 }
 
+/* Addresses, keys and ids in Settings: where 0 against O really bites (W13). */
+.jx-search.jx-code {
+  font-family: var(--jx-font-mono);
+  font-weight: 500;
+}
+
 .jx-section-title {
-  font-size: var(--jx-text-xs);
-  color: var(--jx-text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: var(--jx-font-display);
+  font-variation-settings: 'SOFT' 100, 'WONK' 0;
+  font-weight: var(--jx-weight-display);
+  font-size: var(--jx-text-title);
+  line-height: 1.2;
+  color: var(--jx-title);
   margin: 0;
 }
 
@@ -51,13 +72,20 @@ html, body, #root { height: 100%; }
   text-align: left;
   background: var(--jx-surface);
   border: 1px solid var(--jx-border);
-  border-radius: var(--jx-radius-md);
+  border-radius: var(--jx-radius-card);
+  box-shadow: 0 3px 0 var(--jx-shadow);
   padding: var(--jx-space-3) var(--jx-space-4);
   min-height: var(--jx-touch-min);
   color: inherit;
 }
 
+/* A verdict by shape as well as colour (W4), each shape outlined in its
+   colour so it shows on a card (W15). Isolated so Xấu's triangle can sit
+   behind the glyph and still above the mark's own background. */
 .jx-mark {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
   width: 36px;
   height: 36px;
   flex: none;
@@ -72,27 +100,47 @@ html, body, #root { height: 100%; }
    own VERDICT (good/ok/bad). Both are styled here, because a badge with an
    unstyled value is invisible and jsdom would never notice. */
 .jx-mark[data-color='green'],
-.jx-mark[data-color='good'] { background: var(--jx-good-soft); color: var(--jx-good); }
+.jx-mark[data-color='good'] { background: var(--jx-good-soft); border: 2px solid var(--jx-good); color: var(--jx-good); }
 
 .jx-mark[data-color='yellow'],
-.jx-mark[data-color='ok'] { background: var(--jx-ok-soft); color: var(--jx-ok); }
+.jx-mark[data-color='ok'] { background: var(--jx-ok-soft); border: 2px solid var(--jx-ok); border-radius: 9px; color: var(--jx-ok); }
 
+/* The triangle is the SVG inside; the glyph drops to its visual centre. */
 .jx-mark[data-color='red'],
-.jx-mark[data-color='bad'] { background: var(--jx-bad-soft); color: var(--jx-bad); }
+.jx-mark[data-color='bad'] { background: transparent; border-radius: 0; padding-top: 8px; font-size: 0.85em; color: var(--jx-bad); }
 
 .jx-mark[data-color='grey'],
-.jx-mark[data-color='unrated'] { background: var(--jx-unrated-soft); color: var(--jx-unrated); }
+.jx-mark[data-color='unrated'] { background: transparent; border: 2px dashed var(--jx-unrated); color: var(--jx-unrated); }
+
+.jx-mark-shape {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.jx-mark-shape path {
+  fill: var(--jx-bad-soft);
+  stroke: var(--jx-bad);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
 
 /* Plates in mono: 0 against O and 1 against l decide who this driver is. */
 .jx-plate {
   font-family: var(--jx-font-mono);
   font-size: var(--jx-text-md);
-  font-weight: var(--jx-weight-medium);
+  font-weight: var(--jx-weight-bold);
   letter-spacing: 0.04em;
 }
 
 .jx-name {
-  font-size: var(--jx-text-md);
+  font-family: var(--jx-font-display);
+  font-variation-settings: 'SOFT' 100, 'WONK' 0;
+  font-size: var(--jx-text-name);
   font-weight: var(--jx-weight-medium);
 }
 
@@ -100,15 +148,65 @@ html, body, #root { height: 100%; }
 
 .jx-tags { display: flex; gap: var(--jx-space-2); flex-wrap: wrap; margin-top: var(--jx-space-1); }
 
+/* The K1 kind icon: fixed size, never squeezed by a long name. */
+.jx-kind { flex: none; }
+
+/* Kind chips carry a 28dp icon. With the plain chip padding the four do not
+   fit one row at 360dp: "Địa điểm" wrapped and pushed Lưu off a UBS1 screen.
+   The icon has air of its own, so the chip pads less on its side. */
+.jx-tag.jx-kind-chip {
+  padding: 2px var(--jx-space-2) 2px var(--jx-space-1);
+  gap: 2px;
+}
+
+/* A reminder card's first line: the kind icon, then the name. */
+.jx-prompt-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--jx-space-2);
+  margin: 0;
+}
+
 .jx-tag {
-  background: var(--jx-surface-raised);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--jx-space-1);
+  background: var(--jx-chip-bg);
+  border: none;
   border-radius: 999px;
   padding: 2px var(--jx-space-3);
   font-size: var(--jx-text-xs);
-  color: var(--jx-text-dim);
+  font-weight: var(--jx-weight-bold);
+  color: var(--jx-chip-text);
 }
 
-.jx-empty { color: var(--jx-text-dim); font-size: var(--jx-text-md); padding: var(--jx-space-4) 0; }
+/* Doodle lines: the not-met answer, the boot screen, an empty screen. */
+.jx-empty {
+  color: var(--jx-text-dim);
+  font-family: var(--jx-font-hand);
+  font-size: var(--jx-text-hand);
+  line-height: 1.5;
+  text-align: center;
+  padding: var(--jx-space-4) 0;
+}
+
+/* Pictures drawn twice, on day paper and on night paper: the tokens say
+   which one shows, so they switch with the colours. */
+.jx-day-only { display: var(--jx-show-day); }
+.jx-night-only { display: var(--jx-show-night); }
+
+/* The not-met doodle (W10), as approved on the moodboard: a rounded sheet of
+   its own paper, under the answer. */
+.jx-empty-art img {
+  width: 210px;
+  max-width: 100%;
+  max-height: 40vh;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: 28px;
+}
 
 /* The answer rows, and the near plates under their heading, spaced like the screen. */
 .jx-results { display: flex; flex-direction: column; gap: var(--jx-space-4); }
@@ -119,7 +217,7 @@ html, body, #root { height: 100%; }
 
 .jx-verdict {
   min-height: var(--jx-touch-verdict);
-  border-radius: var(--jx-radius-md);
+  border-radius: var(--jx-radius-card);
   display: grid;
   place-items: center;
   gap: var(--jx-space-1);
@@ -135,12 +233,13 @@ html, body, #root { height: 100%; }
 .jx-verdict[data-color='bad'] { background: var(--jx-bad-soft); color: var(--jx-bad); }
 .jx-verdict[data-selected='true'] { border-color: currentColor; }
 
-.jx-tag[data-selected='true'] { background: var(--jx-text); color: var(--jx-text-on-accent); }
+.jx-tag[data-selected='true'] { background: var(--jx-ink); color: var(--jx-text-on-accent); }
 
+/* A question put to huynh: a reminder in Chờ chấm, a merge, a rebuild. */
 .jx-prompt {
-  background: var(--jx-surface-raised);
-  border: 1px solid var(--jx-border);
-  border-radius: var(--jx-radius-md);
+  background: var(--jx-surface);
+  border: 1.5px dashed var(--jx-dash);
+  border-radius: var(--jx-radius-card);
   padding: var(--jx-space-4);
   display: flex;
   flex-direction: column;
@@ -153,7 +252,7 @@ html, body, #root { height: 100%; }
   display: flex;
   gap: var(--jx-space-2);
   padding: var(--jx-space-3) var(--jx-space-4) 0;
-  background: var(--jx-bg);
+  background: transparent;
 }
 
 /* Thumb sized, per the token the rest of the app honours: this gets tapped
@@ -162,25 +261,27 @@ html, body, #root { height: 100%; }
   min-height: var(--jx-touch-min);
   flex: 1;
   padding: 0 var(--jx-space-3);
-  border-radius: var(--jx-radius-md);
+  border-radius: 999px;
   background: var(--jx-surface);
-  border: 1px solid var(--jx-border);
+  border: 1.5px solid var(--jx-nav-border);
   color: var(--jx-text);
   font-size: var(--jx-text-sm);
-  font-weight: var(--jx-weight-medium);
+  font-weight: var(--jx-weight-heavy);
 }
 
 .jx-nav-item[data-selected='true'] {
-  background: var(--jx-surface-raised);
-  border-color: var(--jx-text-dim);
+  background: var(--jx-accent);
+  border-color: var(--jx-accent);
+  color: var(--jx-text-on-accent);
 }
 
+/* Errors: the bad colour as a quiet tint and a thin outline, not a stripe. */
 .jx-problem {
   margin: 0 var(--jx-space-4);
   padding: var(--jx-space-3) var(--jx-space-4);
   background: var(--jx-bad-soft);
-  border-left: 4px solid var(--jx-bad);
-  border-radius: var(--jx-radius-sm);
+  border: 1.5px solid var(--jx-bad);
+  border-radius: var(--jx-radius-card);
   color: var(--jx-text);
   font-size: var(--jx-text-sm);
 }

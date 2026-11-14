@@ -41,6 +41,17 @@ function typeQuery(state: State, query: string) {
 }
 
 describe('LookupPage', () => {
+  it('puts the kind icon between the mark and the name, and keeps the row label', () => {
+    typeQuery(stateWith(met('driver', '59H123456', 'bad')), '59h1');
+    const row = screen.getByTestId('entity-59H123456');
+    const [mark, picture] = [...row.children];
+    expect(mark).toHaveClass('jx-mark');
+    expect(picture).toHaveAttribute('data-kind', 'driver');
+    expect(picture).toHaveAttribute('width', '22');
+    // The e2e tests find a row by this exact label; the icon adds nothing to it.
+    expect(row).toHaveAttribute('aria-label', 'Mở 59H123456, xấu, 1 lần gặp, 2 ngày trước');
+  });
+
   it('focuses the search box on mount', () => {
     render(<LookupPage state={emptyState()} now={NOW} />);
     expect(screen.getByRole('searchbox')).toHaveFocus();
@@ -85,6 +96,31 @@ describe('LookupPage', () => {
     const row = screen.getByTestId('entity-59H123456');
     expect(row).toHaveAttribute('data-color', 'grey');
     expect(row).toHaveTextContent('chưa chấm lần nào');
+  });
+
+  it('puts the doodle under the answer, not inside it', () => {
+    // Above the answer it would push "Chưa gặp người này" under the keyboard (W16).
+    typeQuery(emptyState(), '59H123456');
+    const answer = screen.getByTestId('no-match');
+    const art = screen.getByTestId('empty-art');
+    expect(answer.nextElementSibling).toBe(art);
+    expect(answer.querySelector('img')).toBeNull();
+    expect(art).toHaveAttribute('aria-hidden', 'true');
+    const pictures = [...art.querySelectorAll('img')];
+    expect(pictures.map((img) => img.className)).toEqual(['jx-day-only', 'jx-night-only']);
+    for (const img of pictures) expect(img).toHaveAttribute('alt', '');
+  });
+
+  it('shows no doodle when a near plate is shown', () => {
+    typeQuery(stateWith(met('driver', '59H123456', 'bad')), '59H123458');
+    expect(screen.getByTestId('near-plates')).toBeInTheDocument();
+    expect(screen.queryByTestId('empty-art')).not.toBeInTheDocument();
+  });
+
+  it('gives a name nobody has visited the doodle too', () => {
+    typeQuery(emptyState(), 'bánh xèo cô Mười');
+    expect(screen.getByTestId('no-match')).toHaveTextContent(/chưa ghé chỗ này/i);
+    expect(screen.getByTestId('empty-art')).toBeInTheDocument();
   });
 
   it('says "chưa gặp người này" instead of rendering an empty list', () => {

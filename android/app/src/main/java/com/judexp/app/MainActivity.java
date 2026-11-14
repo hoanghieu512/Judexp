@@ -5,6 +5,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
+import androidx.core.content.ContextCompat;
+import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 
 import java.util.ArrayList;
@@ -17,7 +19,21 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ShareTargetPlugin.class);
         registerPlugin(ReminderPlugin.class);
         super.onCreate(savedInstanceState);
+        // A WebView is white (black at night) until the page paints, which flashed
+        // between the splash and the boot screen. Paint it the page colour instead;
+        // the resource has a night variant, so it follows the phone like the CSS.
+        paintWebView(getBridge(), ContextCompat.getColor(this, R.color.jx_window_bg));
         handleSendIntent(getIntent());
+    }
+
+    /**
+     * Sets the colour under the page. The bridge is null when no WebView could
+     * be created (Android System WebView updating or disabled): Capacitor then
+     * shows its own message, which this must not turn into a crash.
+     */
+    static void paintWebView(Bridge bridge, int colour) {
+        if (bridge == null || bridge.getWebView() == null) return;
+        bridge.getWebView().setBackgroundColor(colour);
     }
 
     @Override

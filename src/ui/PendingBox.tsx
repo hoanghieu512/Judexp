@@ -2,6 +2,7 @@ import type { Entity } from '../domain/reduce';
 import type { Reminder } from '../domain/reminders';
 import type { Answer } from '../reminders/reminderStore';
 import EntityRow from './EntityRow';
+import KindIcon from './KindIcon';
 import { VERDICTS } from './QuickRateSheet';
 import { relativeTime } from './relativeTime';
 import './ui.css';
@@ -33,7 +34,8 @@ export default function PendingBox({
       <h2 className="jx-section-title">Chờ chấm</h2>
       {newestFirst.map((r) => (
         <div key={r.id} className="jx-prompt" data-testid={`reminder-${r.id}`}>
-          <p>
+          <p className="jx-prompt-head">
+            <KindIcon kind={r.kind} size={22} />
             <span className={r.kind === 'driver' ? 'jx-plate' : 'jx-name'}>{r.label}</span>{' '}
             <span className="jx-sub">tra {relativeTime(r.lookedUpAt, now)}</span>
           </p>

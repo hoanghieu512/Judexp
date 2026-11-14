@@ -1,0 +1,23 @@
+# Công cụ làm moodboard và tài sản Watercolor
+
+Các script đã dùng để vẽ, tách nền, ghép ảnh và chụp app ở moodboard ngày 2026-10-23 tới 2026-10-27. Giữ lại để dựng tài sản cuối của M5 và để chụp kiểm giao diện mà không cần điện thoại. Không phải code của app: không nằm trong `tsconfig` (chỉ `src`), không vào APK.
+
+| File | Làm gì |
+|---|---|
+| `gen.py` | Vẽ ảnh qua OpenRouter (`google/gemini-3-pro-image`), nhận file job JSON gồm `name`, `prompt`, `refs` (ảnh mẫu). Key không nằm trong script: proxy của môi trường cloud tự gắn header `Authorization` cho `openrouter.ai`. Cách chạy: `python3 gen.py jobs.json <thư mục ra> [tên job...]` |
+| `cutout.py` | Tách chủ thể khỏi nền giấy trơn: vùng gần màu giấy nối với mép ảnh thành trong suốt. `python3 cutout.py vào.png ra.png [ngưỡng]`; script khác dùng lại hàm `cut(ảnh, ngưỡng)` |
+| `export_kinds.py` | Dựng bốn icon loại của app từ `master/kinds-k1.webp` (lưới 2 x 2: xe, quán, món, địa điểm): tách nền, đệm thành hình vuông, xuất WebP 44, 56, 64, 66, 84, 96 px (2x và 3x của 22, 28, 32dp) vào `src/assets/kinds/`. Chạy từ gốc repo: `python3 docs/design/watercolor/tools/export_kinds.py` |
+| `export_art.py` | Thu tranh màu nước về khoảng 2x cỡ hiển thị lớn nhất (danh sách `JOBS`: nguồn, đích, bề rộng, chất lượng) và xuất WebP vào `src/assets/watercolor/`. Chạy từ gốc repo: `python3 docs/design/watercolor/tools/export_art.py` |
+| `export_android_icons.py` | Icon launcher từ `master/icon-launcher-d1.webp`: tách xe, thu còn 90%, căn tâm khung 108dp, **dừng với mã 1 nếu điểm mực xa nhất quá 33dp** (vòng an toàn 66dp), rồi ghi lớp trước adaptive icon và icon cũ vuông, tròn cho mọi mật độ vào `android/app/src/main/res/mipmap-*`. Lần xuất ngày 2026-10-27: điểm xa nhất 32,0dp. Chạy từ gốc repo: `python3 docs/design/watercolor/tools/export_android_icons.py` |
+| `silhouette.py` | Hình bóng một màu của xe D1, vẽ tay bằng hình cơ bản đo trên ảnh nguồn (lần theo tranh màu nước ra một cục), đặt đúng như lớp trước rồi cho potrace làm mượt, ghi VectorDrawable. Cần `brew install potrace`. `python3 docs/design/watercolor/tools/silhouette.py monochrome` (lớp một màu 108dp) và `... notification` (icon thông báo 24dp, mui ngắn, nét dày). `--preview <thư mục>` ghi thêm ảnh hình vẽ phủ lên ảnh nguồn và bản potrace dựng ra. Chỉnh là sửa tọa độ hình hoặc độ dày trong script |
+| `compose_cyclo.py`, `compose_badge.py` | Ghép xích lô mờ sau hoặc dưới một hình khác (dùng ở các vòng moodboard, giữ để tham khảo cách làm mờ đúng mức đã duyệt: 42%, bão hòa 0,55) |
+| `harness/` | Chạy chính `AppShell` của app trên trình duyệt với plugin native giả (`mocks.ts`): kho trong bộ nhớ có dữ liệu mẫu đủ bốn loại và bốn màu, một nhắc chờ chấm. `directions.css` phủ các hướng thiết kế theo tham số `?dir=` (`D2` là Watercolor ngày, `D2N` là đêm; `A`, `B`, `C`, `D1`, `A2` là các hướng khác) |
+| `shoot-screens.cjs`, `shoot-themes.cjs` | Chụp các màn chính bằng Playwright từ harness |
+
+Chạy harness:
+
+1. `python3 harness/fetch_fonts.py` (tải font Google về `harness/public/`, đã gitignore)
+2. `cd harness && npx vite --config vite.config.mjs` (cổng 5199; `node_modules` và `src` lấy từ gốc repo)
+3. `NODE_PATH=$(npm root -g) node shoot-themes.cjs <thư mục ra> D2,D2N`
+
+Tham số khác của harness: `?boot=1` (đứng yên ở màn chờ mở kho để xem sao bật), `?nokho=1` (lần đầu chưa chọn kho), `?pin=1234`, `?empty=1&noremind=1` (kho trống), `?sync=offline|pending|none`.

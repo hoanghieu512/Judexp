@@ -52,7 +52,10 @@ export class Phone {
    * keyboard is up only closes the keyboard: the keyboard takes the key, the app never sees it.
    */
   async hideKeyboard(): Promise<void> {
-    if (!/mInputShown=true/.test(this.shell('dumpsys input_method'))) return;
+    // Filtered on the phone: the whole dump grows with the keyboard's history and passed
+    // execFileSync's 1 MB buffer on UBS1 (ENOBUFS), failing every test. `; true` because
+    // grep exits 1 when the line is missing.
+    if (!/mInputShown=true/.test(this.shell('dumpsys input_method | grep -m1 mInputShown; true'))) return;
     this.shell('input keyevent 4');
     await sleep(600);
   }

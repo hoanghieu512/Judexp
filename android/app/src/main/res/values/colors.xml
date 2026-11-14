@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The page colour of the Watercolor theme (the jx-bg token in tokens.css): the system
+         splash, and what shows between it and the WebView's first paint. -->
+    <color name="jx_window_bg">#F6EDDD</color>
+    <!-- The cream disc behind the cyclo on the system splash, day and night (W17):
+         the cyclo still carries paper inside its wheels and hood. -->
+    <color name="jx_splash_icon_bg">#F7EEDB</color>
+</resources>
